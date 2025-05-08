@@ -375,7 +375,7 @@
 
 ### Patch Changes
 
-- - Added nativeTokenAddress to SelectPaymentSettings to allow for custom native token addresses
+- Added nativeTokenAddress to SelectPaymentSettings to allow for custom native token addresses
   - Added options to setOpenWalletModal
   - Added config for disabling social login tooltips
 - Updated dependencies []:
