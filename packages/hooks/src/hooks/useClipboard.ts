@@ -1,3 +1,4 @@
+import copy from 'copy-to-clipboard'
 import { useEffect, useState } from 'react'
 
 interface UseClipboardProps {
@@ -22,18 +23,9 @@ export const useClipboard = (props?: UseClipboardProps) => {
 
   return [
     isCopied,
-    async (text: string) => {
-      return copy(text).then(() => {
-        setIsCopied(true)
-      })
+    (text: string) => {
+      copy(text)
+      setIsCopied(true)
     }
   ] as const
-}
-
-const copy = async (text: string): Promise<void> => {
-  if (!navigator?.clipboard) {
-    throw new Error('Clipboard API not supported')
-  }
-
-  return navigator.clipboard.writeText(text)
 }
