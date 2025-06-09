@@ -1,5 +1,16 @@
 # @0xsequence/kit-wallet
 
+## 5.3.5
+
+### Patch Changes
+
+- Epic Auth support
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.5
+  - @0xsequence/connect@5.3.5
+  - @0xsequence/hooks@5.3.5
+
 ## 5.3.4
 
 ### Patch Changes
