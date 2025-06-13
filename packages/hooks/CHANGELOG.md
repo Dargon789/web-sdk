@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.6
+
+### Patch Changes
+
+- Minor fixes for Epic Auth
+
 ## 5.3.5
 
 ### Patch Changes

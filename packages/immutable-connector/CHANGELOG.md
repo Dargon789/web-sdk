@@ -1,5 +1,14 @@
 # @0xsequence/immutable-connector
 
+## 5.3.6
+
+### Patch Changes
+
+- Minor fixes for Epic Auth
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.6
+
 ## 5.3.5
 
 ### Patch Changes
