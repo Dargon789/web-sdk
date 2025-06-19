@@ -10,6 +10,7 @@ import { epicWaas } from '../connectors/epic/epicWaas.js'
 import { facebook } from '../connectors/facebook/facebook.js'
 import { google } from '../connectors/google/google.js'
 import { googleWaas } from '../connectors/google/googleWaas.js'
+import { guestWaas } from '../connectors/guest/guestWaas.js'
 import { metaMask } from '../connectors/metaMask/metaMask.js'
 import { sequence } from '../connectors/sequence/sequence.js'
 import { twitch } from '../connectors/twitch/twitch.js'
@@ -26,6 +27,8 @@ export interface CommonConnectorOptions {
 export interface DefaultWaasConnectorOptions extends CommonConnectorOptions {
   waasConfigKey: string
   enableConfirmationModal?: boolean
+
+  guest?: boolean
 
   email?: boolean
 
@@ -117,7 +120,18 @@ export const getDefaultWaasConnectors = (options: DefaultWaasConnectorOptions): 
 
   const wallets: Wallet[] = []
 
-  if (options.email !== false) {
+  if (options.guest) {
+    wallets.push(
+      guestWaas({
+        projectAccessKey,
+        waasConfigKey,
+        enableConfirmationModal,
+        network: defaultChainId
+      })
+    )
+  }
+
+  if (options.email) {
     wallets.push(
       emailWaas({
         projectAccessKey,
