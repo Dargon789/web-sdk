@@ -1,4 +1,4 @@
-import { TransactionSwapProvider, type CheckoutOptionsSalesContractArgs } from '@0xsequence/marketplace'
+import { type CheckoutOptionsSalesContractArgs } from '@0xsequence/marketplace'
 import { findSupportedNetwork } from '@0xsequence/network'
 import { encodeFunctionData, toHex, zeroAddress, type Abi, type Hex } from 'viem'
 import { useReadContract, useReadContracts } from 'wagmi'
@@ -183,8 +183,6 @@ export const useERC1155SaleContractCheckout = ({
         recipientAddress: wallet,
         collectionAddress,
         targetContractAddress: contractAddress,
-        enableMainCurrencyPayment: true,
-        enableSwapPayments: checkoutOptions?.options?.swap?.includes(TransactionSwapProvider.zerox) || false,
         creditCardProviders: checkoutOptions?.options.nftCheckout || [],
         onRampProvider: checkoutOptions?.options.onRamp?.[0],
         ...restArgs
