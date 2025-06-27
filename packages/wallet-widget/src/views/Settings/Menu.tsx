@@ -1,14 +1,16 @@
-import { useWallets } from '@0xsequence/connect'
-import { CurrencyIcon, NetworkIcon, Text, WalletIcon } from '@0xsequence/design-system'
+import { useSocialLink, useWallets } from '@0xsequence/connect'
+import { CurrencyIcon, Text, WalletIcon } from '@0xsequence/design-system'
 
 import { StackedIconTag } from '../../components/IconWrappers/StackedIconTag.js'
-import { ListCardNav } from '../../components/ListCard/ListCardNav.js'
-import { HEADER_HEIGHT } from '../../constants/index.js'
+import { ListCard } from '../../components/ListCard/ListCard.js'
 import { useNavigation, useSettings } from '../../hooks/index.js'
+import { useShared } from '../../hooks/useShared.js'
 
 export const SettingsMenu = () => {
+  const { setIsSocialLinkOpen } = useSocialLink()
   const { wallets } = useWallets()
-  const { selectedNetworks, fiatCurrency } = useSettings()
+  const { fiatCurrency } = useSettings()
+  const { isGuest } = useShared()
   // const activeWallet = wallets.find(wallet => wallet.isActive)
   // const isEmbedded = activeWallet?.id.includes('waas')
 
@@ -17,12 +19,6 @@ export const SettingsMenu = () => {
   const onClickWallets = () => {
     setNavigation({
       location: 'settings-wallets'
-    })
-  }
-
-  const onClickNetworks = () => {
-    setNavigation({
-      location: 'settings-networks'
     })
   }
 
@@ -44,6 +40,10 @@ export const SettingsMenu = () => {
     })
   }
 
+  const onClickGuest = () => {
+    setIsSocialLinkOpen(true)
+  }
+
   const onClickPreferences = () => {
     setNavigation({
       location: 'settings-preferences'
@@ -59,15 +59,6 @@ export const SettingsMenu = () => {
     />
   )
 
-  const networksPreview = (
-    <StackedIconTag
-      label={<Text color="primary">{selectedNetworks.length}</Text>}
-      iconList={selectedNetworks.map(network => {
-        return `https://assets.sequence.info/images/networks/medium/${network}.webp`
-      })}
-    />
-  )
-
   const currencyPreview = (
     <Text nowrap color="primary">
       {fiatCurrency.symbol} {fiatCurrency.sign}
@@ -75,38 +66,39 @@ export const SettingsMenu = () => {
   )
 
   return (
-    <div className="px-4 pb-4" style={{ paddingTop: HEADER_HEIGHT }}>
+    <div className="px-4 pb-4">
       <div className="flex flex-col gap-2">
-        <ListCardNav rightChildren={walletsPreview} onClick={onClickWallets} style={{ height: '64px' }}>
+        <ListCard type="chevron" rightChildren={walletsPreview} onClick={onClickWallets}>
           <WalletIcon className="text-primary w-6 h-6" />
           <Text color="primary" fontWeight="medium" variant="normal">
             Manage Wallets
           </Text>
-        </ListCardNav>
-        <ListCardNav rightChildren={networksPreview} onClick={onClickNetworks} style={{ height: '64px' }}>
-          <NetworkIcon className="text-primary w-6 h-6" />
-          <Text color="primary" fontWeight="medium" variant="normal">
-            Manage Networks
-          </Text>
-        </ListCardNav>
-        <ListCardNav rightChildren={currencyPreview} onClick={onClickCurrency} style={{ height: '64px' }}>
+        </ListCard>
+        <ListCard type="chevron" rightChildren={currencyPreview} onClick={onClickCurrency}>
           <CurrencyIcon className="text-primary w-6 h-6" />
           <Text color="primary" fontWeight="medium" variant="normal">
             Manage Currency
           </Text>
-        </ListCardNav>
+        </ListCard>
         {/* {isEmbedded && (
-          <ListCardNav onClick={onClickProfiles} style={{ height: '64px' }}>
+          <ListCard type="chevron" onClick={onClickProfiles}>
             <Text color="primary" fontWeight="medium" variant="normal">
               Manage Profiles
             </Text>
-          </ListCardNav>
+          </ListCard>
         )} */}
-        <ListCardNav onClick={onClickPreferences} style={{ height: '64px' }}>
+        <ListCard type="chevron" onClick={onClickPreferences}>
           <Text color="primary" fontWeight="medium" variant="normal">
             Preferences
           </Text>
-        </ListCardNav>
+        </ListCard>
+        {isGuest && (
+          <ListCard type="chevron" onClick={onClickGuest}>
+            <Text color="warning" fontWeight="medium" variant="normal">
+              Link Guest Account
+            </Text>
+          </ListCard>
+        )}
       </div>
     </div>
   )
