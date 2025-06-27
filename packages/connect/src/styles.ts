@@ -1276,6 +1276,9 @@ export const styles = String.raw`
   .text-primary {
     color: var(--seq-color-primary);
   }
+  .text-red-500 {
+    color: var(--color-red-500);
+  }
   .text-secondary {
     color: var(--seq-color-secondary);
   }
