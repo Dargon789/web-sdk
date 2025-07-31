@@ -116,6 +116,9 @@ importers:
       '@0xsequence/wallet-widget':
         specifier: workspace:*
         version: link:../../packages/wallet-widget
+      '@radix-ui/react-select':
+        specifier: ^2.2.5
+        version: 2.2.5(@types/react-dom@19.1.6(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tailwindcss/postcss':
         specifier: ^4.1.4
         version: 4.1.8
@@ -198,6 +201,9 @@ importers:
       '@imtbl/sdk':
         specifier: ^2.2.0
         version: 2.2.4(bufferutil@4.0.9)(hardhat@2.24.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
+      '@radix-ui/react-select':
+        specifier: ^2.2.5
+        version: 2.2.5(@types/react-dom@19.1.6(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-query':
         specifier: ^5.74.11
         version: 5.80.5(react@19.1.0)
