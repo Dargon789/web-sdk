@@ -99,4 +99,9 @@ export type StorageItem = {
   [LocalStorageKey.WaasAppleRedirectURI]: string
   [LocalStorageKey.WaasActiveLoginType]: string
   [LocalStorageKey.WaasSignInEmail]: string
+  [LocalStorageKey.WaasXAuthUrl]: string
+  [LocalStorageKey.WaasXClientID]: string
+  [LocalStorageKey.WaasXRedirectURI]: string
+  [LocalStorageKey.WaasXCodeVerifier]: string
+  [LocalStorageKey.WaasXIdToken]: string
 }
