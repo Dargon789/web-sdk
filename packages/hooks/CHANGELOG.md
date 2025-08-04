@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.8
+
+### Patch Changes
+
+- erc1155SaleContract fix
+
 ## 5.3.7
 
 ### Patch Changes

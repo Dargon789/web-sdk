@@ -1,5 +1,16 @@
 # @0xsequence/kit-wallet
 
+## 5.3.8
+
+### Patch Changes
+
+- erc1155SaleContract fix
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.8
+  - @0xsequence/connect@5.3.8
+  - @0xsequence/hooks@5.3.8
+
 ## 5.3.7
 
 ### Patch Changes
