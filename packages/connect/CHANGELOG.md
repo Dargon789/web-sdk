@@ -1,5 +1,14 @@
 # @0xsequence/connect
 
+## 5.3.11
+
+### Patch Changes
+
+- Fix for waas connector modal
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.3.11
+
 ## 5.3.10
 
 ### Patch Changes

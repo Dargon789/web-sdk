@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.11
+
+### Patch Changes
+
+- Fix for waas connector modal
+
 ## 5.3.10
 
 ### Patch Changes
