@@ -460,9 +460,6 @@ export const styles = String.raw`
   .h-\[64px\] {
     height: 64px;
   }
-  .h-\[128px\] {
-    height: 128px;
-  }
   .h-\[206px\] {
     height: 206px;
   }
@@ -498,6 +495,9 @@ export const styles = String.raw`
   }
   .min-h-\[100px\] {
     min-height: 100px;
+  }
+  .min-h-\[128px\] {
+    min-height: 128px;
   }
   .min-h-full {
     min-height: 100%;
