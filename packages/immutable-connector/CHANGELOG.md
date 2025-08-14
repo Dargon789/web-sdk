@@ -1,5 +1,14 @@
 # @0xsequence/immutable-connector
 
+## 5.3.12
+
+### Patch Changes
+
+- Checkout SDK fixes and improvements
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.12
+
 ## 5.3.11
 
 ### Patch Changes

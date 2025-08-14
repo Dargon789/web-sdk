@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.12
+
+### Patch Changes
+
+- Checkout SDK fixes and improvements
+
 ## 5.3.11
 
 ### Patch Changes
