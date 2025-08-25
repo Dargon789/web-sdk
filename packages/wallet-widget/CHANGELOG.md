@@ -1,5 +1,16 @@
 # @0xsequence/kit-wallet
 
+## 5.3.13
+
+### Patch Changes
+
+- Minor fixes
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.13
+  - @0xsequence/connect@5.3.13
+  - @0xsequence/hooks@5.3.13
+
 ## 5.3.12
 
 ### Patch Changes
