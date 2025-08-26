@@ -330,7 +330,7 @@ export const TransactionStatus = () => {
 
   const SuccessActionButtons = () => {
     return (
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-row gap-2 web-sdk-tx-status-success-buttons">
         {successActionButtons.map(button => {
           const action = () => {
             closeTransactionStatusModal()
