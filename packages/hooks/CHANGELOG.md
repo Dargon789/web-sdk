@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.14
+
+### Patch Changes
+
+- Customization class in checkout
+
 ## 5.3.13
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @0xsequence/checkout
 
+## 5.3.14
+
+### Patch Changes
+
+- Customization class in checkout
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.14
+  - @0xsequence/hooks@5.3.14
+
 ## 5.3.13
 
 ### Patch Changes
