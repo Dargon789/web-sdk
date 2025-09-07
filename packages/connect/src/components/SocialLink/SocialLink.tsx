@@ -262,13 +262,30 @@ const DEVICE_EMOJIS = [
   ...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷🕸🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐓🦃🦚🦜🦢🦩🕊🐇🦝🦨🦡🦦🦥🐁🐀🐿🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿🍀🎍🎋🍃👣🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🥭🍍🥥🥝🍅🥑🥦🥬🥒🌶🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🥪🥙🧆🌮🌯🥗🥘🥫🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜👀👂👃👄👅👆👇👈👉👊👋👌👍👎👏👐👑👒👓🎯🎰🎱🎲🎳👾👯👺👻👽🏂🏃🏄'
 ]
 
+// Helper for cryptographically secure random integers [0, max)
+function getSecureRandomInt(max: number): number {
+  if (!(window.crypto && window.crypto.getRandomValues)) {
+    // fallback for test environment; should never be used in production
+    return Math.floor(Math.random() * max)
+  }
+  // Calculate the min number of bytes needed
+  const array = new Uint32Array(1)
+  const range = Math.floor(0xFFFFFFFF / max) * max
+  let rand
+  do {
+    window.crypto.getRandomValues(array)
+    rand = array[0]
+  } while (rand >= range)
+  return rand % max
+}
+
 function randomName() {
   const wordlistSize = 2048
   const words = ethers.wordlists.en
 
-  const randomEmoji = DEVICE_EMOJIS[Math.floor(Math.random() * DEVICE_EMOJIS.length)]
-  const randomWord1 = words.getWord(Math.floor(Math.random() * wordlistSize))
-  const randomWord2 = words.getWord(Math.floor(Math.random() * wordlistSize))
+  const randomEmoji = DEVICE_EMOJIS[getSecureRandomInt(DEVICE_EMOJIS.length)]
+  const randomWord1 = words.getWord(getSecureRandomInt(wordlistSize))
+  const randomWord2 = words.getWord(getSecureRandomInt(wordlistSize))
 
   return `${randomEmoji} ${randomWord1} ${randomWord2}`
 }
