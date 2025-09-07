@@ -139,7 +139,7 @@ function App() {
 ```
 
 #### Note about X (formerly Twitter) authentication. X authentication specifically needs a callback route; either a frontend page or a backend endpoint. A frontend example callback page is below:
-Please ensure that the redirect uri and the callback page route is identical or X will refuse the authentication
+Please ensure that the redirect URI and the callback page route is identical or X will refuse the authentication
 
 ```js
 export function XAuthCallback() {
