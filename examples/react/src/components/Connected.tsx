@@ -243,7 +243,7 @@ export const Connected = () => {
   }
 
   const signSIWE = async () => {
-    if (!walletClient || !publicClient) {
+    if (!walletClient || !publicClient || !address) {
       return
     }
 
