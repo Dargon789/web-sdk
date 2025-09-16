@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.15
+
+### Patch Changes
+
+- Forte Pay NFT checkout support
+
 ## 5.3.14
 
 ### Patch Changes

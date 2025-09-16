@@ -1,5 +1,5 @@
-import { TransactionOnRampProvider } from '@0xsequence/marketplace'
 import { type SequenceIndexer, type TransactionReceipt } from '@0xsequence/indexer'
+import { TransactionOnRampProvider } from '@0xsequence/marketplace'
 import type { Hex } from 'viem'
 
 import type { ForteConfig, TransakConfig } from '../contexts/CheckoutModal.js'

@@ -13,9 +13,9 @@ import {
 } from '@0xsequence/design-system'
 import { useGetContractInfo, useGetTokenMetadata, useIndexerClient } from '@0xsequence/hooks'
 import {
+  TransactionStatus as TransactionStatusSequence,
   type SequenceIndexer,
-  type TransactionReceipt,
-  TransactionStatus as TransactionStatusSequence
+  type TransactionReceipt
 } from '@0xsequence/indexer'
 import { findSupportedNetwork } from '@0xsequence/network'
 import { formatDistanceToNow } from 'date-fns'

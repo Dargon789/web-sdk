@@ -1,5 +1,14 @@
 # @0xsequence/immutable-connector
 
+## 5.3.15
+
+### Patch Changes
+
+- Forte Pay NFT checkout support
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.15
+
 ## 5.3.14
 
 ### Patch Changes
