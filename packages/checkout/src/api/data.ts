@@ -1,6 +1,6 @@
 import type { SequenceAPIClient } from '@0xsequence/api'
 import type { TokenMetadata } from '@0xsequence/metadata'
-import { findSupportedNetwork, networks, type ChainId } from '@0xsequence/network'
+import { findSupportedNetwork, networks, ChainId as Chains, type ChainId } from '@0xsequence/network'
 import { zeroAddress } from 'viem'
 
 import { type CreditCardCheckout, type ForteConfig, type StructuredCalldata } from '../contexts/index.js'
@@ -273,6 +273,7 @@ export interface CreateFortePaymentIntentArgs {
   signature?: string
   nftAddress: string
   currencyAddress: string
+  currencySymbol: string
   targetContractAddress: string
   nftName: string
   imageUrl: string
@@ -284,25 +285,25 @@ export interface CreateFortePaymentIntentArgs {
 }
 
 const forteCurrencyMap: { [chainId: string]: { [currencyAddress: string]: string } } = {
-  '1': {
+  [Chains.MAINNET]: {
     [zeroAddress]: 'ETH',
     ['0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'.toLowerCase()]: 'USDC_ETH'
   },
-  '137': {
+  [Chains.POLYGON]: {
     [zeroAddress]: 'POL',
     ['0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'.toLowerCase()]: 'USDC_POLYGON'
   },
-  '8453': {
+  [Chains.BASE]: {
     [zeroAddress]: 'BASE_ETH'
   },
-  '11155111': {
+  [Chains.SEPOLIA]: {
     [zeroAddress]: 'ETH',
     ['0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14'.toLowerCase()]: 'WETH'
   }
 }
 
-const getForteCurrency = (chainId: string, currencyAddress: string) => {
-  return forteCurrencyMap[chainId]?.[currencyAddress.toLowerCase()] || 'ETH'
+const getForteCurrency = (chainId: string, currencyAddress: string, defaultCurrencySymbol: string) => {
+  return forteCurrencyMap[chainId]?.[currencyAddress.toLowerCase()] || defaultCurrencySymbol
 }
 
 export const createFortePaymentIntent = async (
@@ -321,6 +322,7 @@ export const createFortePaymentIntent = async (
     tokenId,
     protocolConfig,
     currencyAddress,
+    currencySymbol,
     currencyQuantity,
     approvedSpenderAddress
   } = args
@@ -351,10 +353,10 @@ export const createFortePaymentIntent = async (
     intent = {
       ...intent,
       transactionType: 'BUY_NFT_MINT',
-      currency: getForteCurrency(chainId, currencyAddress),
+      currency: getForteCurrency(chainId, currencyAddress, currencySymbol),
       seller: {
         wallet: {
-          address: protocolConfig.sellerAddress,
+          address: protocolConfig.sellerAddress.toLowerCase(),
           blockchain: forteBlockchainName
         }
       },
@@ -365,10 +367,10 @@ export const createFortePaymentIntent = async (
           imageUrl: imageUrl,
           title: nftName,
           mintData: {
-            ...(approvedSpenderAddress ? { payToAddress: approvedSpenderAddress } : {}),
-            tokenContractAddress: nftAddress,
+            ...(approvedSpenderAddress ? { payToAddress: approvedSpenderAddress.toLowerCase() } : {}),
+            tokenContractAddress: nftAddress.toLowerCase(),
             tokenIds: tokenId ? [tokenId] : [],
-            protocolAddress: targetContractAddress,
+            protocolAddress: targetContractAddress.toLowerCase(),
             protocol: 'custom_evm_call',
             ...(typeof calldata === 'string'
               ? {
@@ -389,9 +391,9 @@ export const createFortePaymentIntent = async (
 
     if (protocolConfig.protocol == 'custom_evm_call') {
       listingData = {
-        ...(approvedSpenderAddress ? { payToAddress: approvedSpenderAddress } : {}),
+        ...(approvedSpenderAddress ? { payToAddress: approvedSpenderAddress.toLowerCase() } : {}),
         protocol: protocolConfig.protocol,
-        protocolAddress: targetContractAddress,
+        protocolAddress: targetContractAddress.toLowerCase(),
         ...(typeof protocolConfig.calldata === 'string'
           ? { calldata: protocolConfig.calldata }
           : {
@@ -406,7 +408,7 @@ export const createFortePaymentIntent = async (
     intent = {
       ...intent,
       transactionType: 'BUY_NFT',
-      currency: getForteCurrency(chainId, currencyAddress),
+      currency: getForteCurrency(chainId, currencyAddress, currencySymbol),
       items: [
         {
           amount: currencyQuantity,
@@ -414,7 +416,7 @@ export const createFortePaymentIntent = async (
           imageUrl: imageUrl,
           listingData: listingData,
           nftData: {
-            contractAddress: nftAddress,
+            contractAddress: nftAddress.toLowerCase(),
             tokenId: tokenId
           },
           title: nftName
