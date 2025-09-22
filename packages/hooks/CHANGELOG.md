@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.16
+
+### Patch Changes
+
+- Improve connect sdk preview, add custom embedded wallet title option
+
 ## 5.3.15
 
 ### Patch Changes

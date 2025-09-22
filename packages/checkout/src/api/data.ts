@@ -1,6 +1,6 @@
 import type { SequenceAPIClient } from '@0xsequence/api'
 import type { TokenMetadata } from '@0xsequence/metadata'
-import { findSupportedNetwork, networks, ChainId as Chains, type ChainId } from '@0xsequence/network'
+import { ChainId as Chains, findSupportedNetwork, networks, type ChainId } from '@0xsequence/network'
 import { zeroAddress } from 'viem'
 
 import { type CreditCardCheckout, type ForteConfig, type StructuredCalldata } from '../contexts/index.js'

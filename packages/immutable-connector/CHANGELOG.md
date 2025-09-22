@@ -1,5 +1,14 @@
 # @0xsequence/immutable-connector
 
+## 5.3.16
+
+### Patch Changes
+
+- Improve connect sdk preview, add custom embedded wallet title option
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.16
+
 ## 5.3.15
 
 ### Patch Changes
