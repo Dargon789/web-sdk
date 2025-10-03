@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.18
+
+### Patch Changes
+
+- Bug fixes
+
 ## 5.3.17
 
 ### Patch Changes

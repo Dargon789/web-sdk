@@ -1,5 +1,15 @@
 # @0xsequence/checkout
 
+## 5.3.18
+
+### Patch Changes
+
+- Bug fixes
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.18
+  - @0xsequence/hooks@5.3.18
+
 ## 5.3.17
 
 ### Patch Changes
