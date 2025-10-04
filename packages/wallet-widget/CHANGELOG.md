@@ -1,5 +1,16 @@
 # @0xsequence/kit-wallet
 
+## 5.3.19
+
+### Patch Changes
+
+- Fix for ERC20: insufficient allowance bug during swap and pay
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.19
+  - @0xsequence/connect@5.3.19
+  - @0xsequence/hooks@5.3.19
+
 ## 5.3.18
 
 ### Patch Changes
