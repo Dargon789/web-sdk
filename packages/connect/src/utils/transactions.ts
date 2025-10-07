@@ -206,9 +206,29 @@ export const waitForTransactionReceipt = async ({
   publicClient,
   confirmations
 }: WaitForTransactionReceiptInput): Promise<TransactionReceipt> => {
-  const { receipt } = await indexerClient.fetchTransactionReceipt({
-    txnHash
-  })
+  const RECEIPT_MAX_WAIT_MINUTES = 3
+  const WAIT_TIME_BETWEEN_REQUESTS_MS = 3000
+  const startTime = Date.now()
+  const maxWaitTime = RECEIPT_MAX_WAIT_MINUTES * 60 * 1000
+
+  let receipt: TransactionReceipt | undefined
+
+  while (Date.now() - startTime < maxWaitTime && !receipt) {
+    const response = await indexerClient.fetchTransactionReceipt({
+      txnHash
+    })
+
+    receipt = response.receipt
+
+    // Additional wait time between requests. fetchTransactionReceipt will wait for 400 blocks, but this could be short amount of time if the blocktime is very short
+    if (!receipt) {
+      await new Promise(resolve => setTimeout(resolve, WAIT_TIME_BETWEEN_REQUESTS_MS))
+    }
+  }
+
+  if (!receipt) {
+    throw new Error('Timeout: Transaction receipt not found')
+  }
 
   if (confirmations) {
     const blockConfirmationPromise = new Promise<void>(resolve => {
