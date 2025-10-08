@@ -1,5 +1,14 @@
 # @0xsequence/immutable-connector
 
+## 5.3.23
+
+### Patch Changes
+
+- Allow disabling Add Funds button
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.23
+
 ## 5.3.22
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @0xsequence/kit-wallet
 
+## 5.3.23
+
+### Patch Changes
+
+- Allow disabling Add Funds button
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.23
+  - @0xsequence/connect@5.3.23
+  - @0xsequence/hooks@5.3.23
+
 ## 5.3.22
 
 ### Patch Changes
