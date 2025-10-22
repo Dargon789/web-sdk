@@ -1,5 +1,14 @@
 # @0xsequence/connect
 
+## 5.3.25
+
+### Patch Changes
+
+- Improvement for wallet URL init
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.3.25
+
 ## 5.3.24
 
 ### Patch Changes

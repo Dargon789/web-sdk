@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.25
+
+### Patch Changes
+
+- Improvement for wallet URL init
+
 ## 5.3.24
 
 ### Patch Changes
