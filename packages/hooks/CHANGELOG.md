@@ -1,5 +1,11 @@
 # @0xsequence/hooks
 
+## 5.3.26
+
+### Patch Changes
+
+- Chain id override optio
+
 ## 5.3.25
 
 ### Patch Changes

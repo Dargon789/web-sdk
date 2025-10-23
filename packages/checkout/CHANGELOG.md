@@ -1,5 +1,15 @@
 # @0xsequence/checkout
 
+## 5.3.26
+
+### Patch Changes
+
+- Chain id override optio
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.26
+  - @0xsequence/hooks@5.3.26
+
 ## 5.3.25
 
 ### Patch Changes
