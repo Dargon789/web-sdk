@@ -1,5 +1,77 @@
 # @0xsequence/hooks
 
+## 5.4.1
+
+### Patch Changes
+
+- Fix for add funds setting
+
+## 5.4.0
+
+### Major Changes
+
+- Removal of transak-related configuration parameters
+
+## 5.3.29
+
+### Patch Changes
+
+- Preview mode
+
+## 5.3.28
+
+### Patch Changes
+
+- Minor fixes and improvements
+
+## 5.3.27
+
+### Patch Changes
+
+- fix for databeat events
+
+## 5.3.26
+
+### Patch Changes
+
+- Chain id override optio
+
+## 5.3.25
+
+### Patch Changes
+
+- Improvement for wallet URL init
+
+## 5.3.24
+
+### Patch Changes
+
+- removed default networks from add funds
+
+## 5.3.23
+
+### Patch Changes
+
+- Allow disabling Add Funds button
+
+## 5.3.22
+
+### Patch Changes
+
+- Fix fetchTransaction receipt condition
+
+## 5.3.21
+
+### Patch Changes
+
+- Transaction receipt fetch improvement
+
+## 5.3.20
+
+### Patch Changes
+
+- Removed subscription for receipts in favor of api call
+
 ## 5.3.19
 
 ### Patch Changes

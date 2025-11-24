@@ -447,6 +447,12 @@ export const styles = String.raw`
   .h-24 {
     height: calc(var(--spacing) * 24);
   }
+  .h-200 {
+    height: calc(var(--spacing) * 200);
+  }
+  .h-400 {
+    height: calc(var(--spacing) * 400);
+  }
   .h-\[1px\] {
     height: 1px;
   }
@@ -467,6 +473,9 @@ export const styles = String.raw`
   }
   .h-\[64px\] {
     height: 64px;
+  }
+  .h-\[200px\] {
+    height: 200px;
   }
   .h-\[206px\] {
     height: 206px;
@@ -624,8 +633,14 @@ export const styles = String.raw`
   .min-w-full {
     min-width: 100%;
   }
+  .flex-1 {
+    flex: 1;
+  }
   .flex-shrink {
     flex-shrink: 1;
+  }
+  .flex-shrink-0 {
+    flex-shrink: 0;
   }
   .shrink-0 {
     flex-shrink: 0;
@@ -706,6 +721,9 @@ export const styles = String.raw`
   }
   .flex-row {
     flex-direction: row;
+  }
+  .flex-wrap {
+    flex-wrap: wrap;
   }
   .place-items-center {
     place-items: center;
@@ -1184,6 +1202,10 @@ export const styles = String.raw`
   .leading-0 {
     --tw-leading: calc(var(--spacing) * 0);
     line-height: calc(var(--spacing) * 0);
+  }
+  .leading-1 {
+    --tw-leading: calc(var(--spacing) * 1);
+    line-height: calc(var(--spacing) * 1);
   }
   .leading-4 {
     --tw-leading: calc(var(--spacing) * 4);
@@ -2500,6 +2522,4 @@ export const styles = String.raw`
       --tw-gradient-to-position: 100%;
     }
   }
-}
-
-`
+}`

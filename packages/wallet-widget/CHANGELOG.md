@@ -1,5 +1,139 @@
 # @0xsequence/kit-wallet
 
+## 5.4.1
+
+### Patch Changes
+
+- Fix for add funds setting
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.4.1
+  - @0xsequence/connect@5.4.1
+  - @0xsequence/hooks@5.4.1
+
+## 5.4.0
+
+### Major Changes
+
+- Removal of transak-related configuration parameters
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.4.0
+  - @0xsequence/connect@5.4.0
+  - @0xsequence/hooks@5.4.0
+
+## 5.3.29
+
+### Patch Changes
+
+- Preview mode
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.29
+  - @0xsequence/connect@5.3.29
+  - @0xsequence/hooks@5.3.29
+
+## 5.3.28
+
+### Patch Changes
+
+- Minor fixes and improvements
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.28
+  - @0xsequence/connect@5.3.28
+  - @0xsequence/hooks@5.3.28
+
+## 5.3.27
+
+### Patch Changes
+
+- fix for databeat events
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.27
+  - @0xsequence/connect@5.3.27
+  - @0xsequence/hooks@5.3.27
+
+## 5.3.26
+
+### Patch Changes
+
+- Chain id override optio
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.26
+  - @0xsequence/connect@5.3.26
+  - @0xsequence/hooks@5.3.26
+
+## 5.3.25
+
+### Patch Changes
+
+- Improvement for wallet URL init
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.25
+  - @0xsequence/connect@5.3.25
+  - @0xsequence/hooks@5.3.25
+
+## 5.3.24
+
+### Patch Changes
+
+- removed default networks from add funds
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.24
+  - @0xsequence/connect@5.3.24
+  - @0xsequence/hooks@5.3.24
+
+## 5.3.23
+
+### Patch Changes
+
+- Allow disabling Add Funds button
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.23
+  - @0xsequence/connect@5.3.23
+  - @0xsequence/hooks@5.3.23
+
+## 5.3.22
+
+### Patch Changes
+
+- Fix fetchTransaction receipt condition
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.22
+  - @0xsequence/connect@5.3.22
+  - @0xsequence/hooks@5.3.22
+
+## 5.3.21
+
+### Patch Changes
+
+- Transaction receipt fetch improvement
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.21
+  - @0xsequence/connect@5.3.21
+  - @0xsequence/hooks@5.3.21
+
+## 5.3.20
+
+### Patch Changes
+
+- Removed subscription for receipts in favor of api call
+
+- Updated dependencies []:
+  - @0xsequence/checkout@5.3.20
+  - @0xsequence/connect@5.3.20
+  - @0xsequence/hooks@5.3.20
+
 ## 5.3.19
 
 ### Patch Changes

@@ -77,7 +77,7 @@ export const getERC1155SaleContractConfig = ({
  * - Generating the proper transaction data
  * - Opening and managing the checkout modal
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useERC1155SaleContractCheckout} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/checkout-sdk/hooks/useERC1155SaleContractCheckout} for more detailed documentation.
  *
  * @param {object} params - Configuration options for the ERC-1155 sale contract checkout
  * @param {number} params.chain - Chain ID where the sale contract is deployed
@@ -162,9 +162,16 @@ export const useERC1155SaleContractCheckout = ({
   const error = isErrorCheckoutOptions || isErrorSaleConfig
 
   const openCheckoutModal = () => {
-    if (isLoading || error) {
-      console.error('Error loading checkout options or sale config', { isLoading, error })
-      return
+    if (isLoading) {
+      throw new Error('Checkout options are still loading. Please wait and try again.')
+    }
+    if (error) {
+      throw new Error(
+        'Failed to load checkout options or sale configuration. Please check your network connection and try again.',
+        {
+          cause: error
+        }
+      )
     }
 
     openSelectPaymentModal(

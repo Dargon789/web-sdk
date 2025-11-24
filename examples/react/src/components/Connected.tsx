@@ -5,6 +5,7 @@ import {
   useERC1155SaleContractCheckout,
   useSelectPaymentModal,
   useSwapModal,
+  useTransactionStatusModal,
   type SwapModalSettings
 } from '@0xsequence/checkout'
 import {
@@ -23,7 +24,7 @@ import { useOpenWalletModal } from '@0xsequence/wallet-widget'
 import { CardButton, Header, WalletListItem } from 'example-shared-components'
 import { AnimatePresence } from 'motion/react'
 import React, { useEffect, type ComponentProps } from 'react'
-import { encodeFunctionData, formatUnits, parseAbi } from 'viem'
+import { encodeFunctionData, formatUnits, parseAbi, zeroAddress } from 'viem'
 import { createSiweMessage, generateSiweNonce } from 'viem/siwe'
 import { useAccount, useChainId, usePublicClient, useSendTransaction, useWalletClient, useWriteContract } from 'wagmi'
 
@@ -41,9 +42,10 @@ const searchParams = new URLSearchParams(location.search)
 const isDebugMode = searchParams.has('debug')
 const checkoutProvider = searchParams.get('checkoutProvider')
 const onRampProvider = searchParams.get('onRampProvider')
-const checkoutPreset = searchParams.get('checkoutPreset') || 'forte-payment-erc1155-sale-native-token-testnet'
+const checkoutPreset = searchParams.get('checkoutPreset') || 'forte-transak-payment-erc1155-sale-native-token-testnet'
 
 export const Connected = () => {
+  const { openTransactionStatusModal } = useTransactionStatusModal()
   const [isOpenCustomCheckout, setIsOpenCustomCheckout] = React.useState(false)
   const { setOpenConnectModal } = useOpenConnectModal()
   const { address } = useAccount()
@@ -419,9 +421,6 @@ export const Connected = () => {
       recipientAddress: address,
       creditCardProviders: [creditCardProvider],
       onRampProvider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak,
-      transakConfig: {
-        contractId: '674eb5613d739107bbd18ed2'
-      },
       onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
       },
@@ -468,7 +467,8 @@ export const Connected = () => {
   const onClickAddFunds = () => {
     triggerAddFunds({
       walletAddress: address || '',
-      provider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak
+      provider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak,
+      transakOnRampKind: 'default'
     })
   }
 
@@ -478,6 +478,23 @@ export const Connected = () => {
 
   const onClickSocialLink = () => {
     setIsSocialLinkOpen(true)
+  }
+
+  const onClickTransactionStatus = () => {
+    openTransactionStatusModal({
+      chainId: 137,
+      currencyAddress: zeroAddress,
+      collectionAddress: '0x92473261f2c26f2264429c451f70b0192f858795',
+      txHash: '0x7824a5f7107a964553f799a82d8178fd66ff5055e84f586010ccd80e5e40145b',
+      items: [
+        {
+          tokenId: '1',
+          quantity: '1',
+          decimals: 18,
+          price: '1000'
+        }
+      ]
+    })
   }
 
   useEffect(() => {
@@ -641,19 +658,34 @@ export const Connected = () => {
                         option => option.token.name === selectedFeeOptionTokenName
                       )
 
-                      if (selected?.token.contractAddress !== undefined) {
-                        if (!('hasEnoughBalanceForFee' in selected) || !selected.hasEnoughBalanceForFee) {
-                          setFeeOptionAlert({
-                            title: 'Insufficient balance',
-                            description: `You do not have enough balance to pay the fee with ${selected.token.name}, please make sure you have enough balance in your wallet for the selected fee option.`,
-                            secondaryDescription:
-                              'You can also switch network to Arbitrum Sepolia to test a gasless transaction.',
-                            variant: 'warning'
-                          })
-                          return
-                        }
+                      if (!selected) {
+                        setFeeOptionAlert({
+                          title: 'No option selected',
+                          description: 'Please select a fee option before confirming.',
+                          variant: 'warning'
+                        })
+                        return
+                      }
 
-                        confirmPendingFeeOption(pendingFeeOptionConfirmation?.id, selected.token.contractAddress)
+                      if (!('hasEnoughBalanceForFee' in selected) || !selected.hasEnoughBalanceForFee) {
+                        console.log('Insufficient balance for selected option')
+                        setFeeOptionAlert({
+                          title: 'Insufficient balance',
+                          description: `You do not have enough balance to pay the fee with ${selected.token.name}, please make sure you have enough balance in your wallet for the selected fee option.`,
+                          secondaryDescription: 'You can also switch network to Arbitrum Sepolia to test a gasless transaction.',
+                          variant: 'warning'
+                        })
+                        return
+                      }
+
+                      const feeTokenAddress: string | null =
+                        selected.token.contractAddress === zeroAddress || selected.token.contractAddress === null
+                          ? null
+                          : selected.token.contractAddress || null
+
+                      console.log('Confirming fee option with token address:', feeTokenAddress)
+                      if (pendingFeeOptionConfirmation?.id) {
+                        confirmPendingFeeOption(pendingFeeOptionConfirmation.id, feeTokenAddress)
                       }
                     }}
                     label="Confirm fee option"
@@ -776,6 +808,12 @@ export const Connected = () => {
                   description="Purchase with useERC1155SaleContractCheckout hook"
                   onClick={openCheckoutModal}
                   isPending={erc1155CheckoutLoading}
+                />
+
+                <CardButton
+                  title="Transaction Status Modal"
+                  description="Transaction status modal"
+                  onClick={onClickTransactionStatus}
                 />
               </>
             )}
