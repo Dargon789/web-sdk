@@ -264,8 +264,8 @@ const DEVICE_EMOJIS = [
 
 // Helper for cryptographically secure random integers [0, max)
 function getSecureRandomInt(max: number): number {
-  if (!(window.crypto && window.crypto.getRandomValues)) {
-    // fallback for test environment; should never be used in production
+  if (typeof window === 'undefined' || !window.crypto || !window.crypto.getRandomValues) {
+    // fallback for test environment or SSR; should never be used in production browsers
     return Math.floor(Math.random() * max)
   }
   // Calculate the min number of bytes needed
