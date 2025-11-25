@@ -2,8 +2,8 @@
   import { SequenceConnect, createConfig } from '@0xsequence/connect'
 
   export function App() {
-    const projectAccessKey = "AQAAAAAAAJbd_5JOcE50AqglZCtvu51YlGI"
-    const waasConfigKey = "eyJwcm9qZWN0SWQiOjM4NjIxLCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0=" // Pass in your waasConfigKey
+    const projectAccessKey = process.env.REACT_APP_PROJECT_ACCESS_KEY || "AQAAAAAAAJbd_5JOcE50AqglZCtvu51YlGI"
+    const waasConfigKey = process.env.REACT_APP_WAAS_CONFIG_KEY || "eyJwcm9qZWN0SWQiOjM4NjIxLCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0=" // Pass in your waasConfigKey
     const enableConfirmationModal = true // change to your preference
     const googleClientId = 'YOUR_GOOGLE_CLIENT_ID' // Google Client ID
     const appleClientId = 'YOUR_APPLE_CLIENT_ID' // Apple Client ID
