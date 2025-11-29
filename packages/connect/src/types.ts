@@ -71,6 +71,7 @@ export interface ConnectConfig {
   position?: ModalPosition
   signIn?: {
     logoUrl?: string
+    showWalletAuthOptionsFirst?: boolean
     descriptiveSocials?: boolean
     disableTooltipForDescriptiveSocials?: boolean
     projectName?: string
@@ -85,6 +86,8 @@ export interface ConnectConfig {
   hideConnectedWallets?: boolean
   customCSS?: string
   embeddedWalletTitle?: string
+  renderInline?: boolean
+  onConnectSuccess?: (address: string) => void
 }
 
 export type StorageItem = {

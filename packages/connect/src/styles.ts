@@ -447,6 +447,12 @@ export const styles = String.raw`
   .h-24 {
     height: calc(var(--spacing) * 24);
   }
+  .h-200 {
+    height: calc(var(--spacing) * 200);
+  }
+  .h-400 {
+    height: calc(var(--spacing) * 400);
+  }
   .h-\[1px\] {
     height: 1px;
   }
@@ -468,11 +474,17 @@ export const styles = String.raw`
   .h-\[64px\] {
     height: 64px;
   }
+  .h-\[200px\] {
+    height: 200px;
+  }
   .h-\[206px\] {
     height: 206px;
   }
   .h-\[calc\(100dvh-70px\)\] {
     height: calc(100dvh - 70px);
+  }
+  .h-auto {
+    height: auto;
   }
   .h-fit {
     height: fit-content;
@@ -576,6 +588,9 @@ export const styles = String.raw`
   .w-\[56px\] {
     width: 56px;
   }
+  .w-\[80px\] {
+    width: 80px;
+  }
   .w-\[100px\] {
     width: 100px;
   }
@@ -584,6 +599,9 @@ export const styles = String.raw`
   }
   .w-\[148px\] {
     width: 148px;
+  }
+  .w-auto {
+    width: auto;
   }
   .w-fit {
     width: fit-content;

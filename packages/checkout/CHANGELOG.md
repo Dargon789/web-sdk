@@ -1,5 +1,75 @@
 # @0xsequence/checkout
 
+## 5.4.3
+
+### Patch Changes
+
+- Minor fix for Sequence logo
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.3
+  - @0xsequence/hooks@5.4.3
+
+## 5.4.2
+
+### Patch Changes
+
+- - **Onramp**: Add optional Transak alternate flow with default and windowed modes (#549)
+  - Add `showWalletAuthOptionsFirst` parameter to control connector ordering (#563)
+  - Update Sequence logos with newest logo (#561)
+  - Better logic for initial balance check (#562)
+  - Change injected connector logic to display before others (#563)
+  - Fix Transak parameters (#557)
+  - Add funds height when error state (#556)
+  - Add message for rejected transactions (#559)
+  - Deprecate `findVersion` (#560)
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.2
+  - @0xsequence/hooks@5.4.2
+
+## 5.4.1
+
+### Patch Changes
+
+- Fix for add funds setting
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.1
+  - @0xsequence/hooks@5.4.1
+
+## 5.4.0
+
+### Major Changes
+
+- Removal of transak-related configuration parameters
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.0
+  - @0xsequence/hooks@5.4.0
+
+## 5.3.29
+
+### Patch Changes
+
+- Preview mode
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.29
+  - @0xsequence/hooks@5.3.29
+
+## 5.3.28
+
+### Patch Changes
+
+- Minor fixes and improvements
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.3.28
+  - @0xsequence/hooks@5.3.28
+
 ## 5.3.27
 
 ### Patch Changes
