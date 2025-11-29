@@ -1,8 +1,13 @@
 export { SequenceConnect } from './components/SequenceConnect/index.js'
+export { SequenceConnectInline } from './components/SequenceConnectInline/index.js'
 
 // Provider
 export { SequenceConnectProvider } from './components/SequenceConnectProvider/index.js'
-export { SequenceConnectPreviewProvider } from './components/SequenceConnectPreviewProvider/index.js'
+export { SequenceConnectInlineProvider } from './components/SequenceConnectInlineProvider/index.js'
+
+// Preview
+export { SequenceConnectPreview } from './components/SequenceConnectPreview/index.js'
+export { SequenceConnectPreviewProvider } from './components/SequenceConnectPreview/index.js'
 
 // Types
 export type {
@@ -20,7 +25,7 @@ export type {
 } from './types.js'
 
 // Config
-export { createConfig, type CreateConfigOptions } from './config/createConfig.js'
+export { createConfig, type CreateConfigOptions, type SequenceConnectConfig } from './config/createConfig.js'
 export {
   getDefaultConnectors,
   getDefaultUniversalConnectors,
@@ -58,7 +63,7 @@ export { getModalPositionCss } from './utils/styling.js'
 export { getNetwork, getNetworkBackgroundColor, getNetworkColor } from './utils/networks.js'
 export { publicClientToProvider, walletClientToSigner } from './utils/adapters.js'
 export { signEthAuthProof, validateEthProof } from './utils/ethAuth.js'
-export { sendTransactions, waitForTransactionReceipt } from './utils/transactions.js'
+export { isTxRejected, sendTransactions, waitForTransactionReceipt } from './utils/transactions.js'
 
 // Contexts
 export { ConnectConfigContextProvider, useConnectConfigContext } from './contexts/ConnectConfig.js'

@@ -15,7 +15,7 @@ const walletType: WalletType = searchParams.get('type') === 'universal' ? 'unive
 const isDebugMode = searchParams.has('debug')
 // @ts-ignore
 const isDev = __SEQUENCE_WEB_SDK_IS_DEV__
-const projectAccessKey = isDev ? 'AQAAAAAAAAK2JvvZhWqZ51riasWBftkrVXE' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
+const projectAccessKey = isDev ? 'AQAAAAAAAAbRfXdDS5e-ZD2pNeMcCtNnij4' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
 const walletConnectProjectId = 'c65a6cb1aa83c4e24500130f23a437d8'
 
 export const sponsoredContractAddresses: Record<number, `0x${string}`> = {
@@ -27,7 +27,8 @@ export const connectConfig: ConnectConfig = {
   defaultTheme: 'dark',
   signIn: {
     projectName: 'Sequence Web SDK Demo',
-    useMock: isDebugMode
+    useMock: isDebugMode,
+    showWalletAuthOptionsFirst: false
   },
   // Custom css injected into shadow dom
   // customCSS: `
@@ -99,7 +100,8 @@ export const config =
           ChainId.IMMUTABLE_ZKEVM,
           ChainId.IMMUTABLE_ZKEVM_TESTNET,
           ChainId.BASE_SEPOLIA,
-          ChainId.BASE
+          ChainId.BASE,
+          ChainId.SEPOLIA
         ],
         defaultChainId: ChainId.ARBITRUM_NOVA,
         waasConfigKey: isDebugMode
@@ -143,7 +145,8 @@ export const config =
           ChainId.IMMUTABLE_ZKEVM,
           ChainId.IMMUTABLE_ZKEVM_TESTNET,
           ChainId.BASE_SEPOLIA,
-          ChainId.BASE
+          ChainId.BASE,
+          ChainId.SEPOLIA
         ],
         defaultChainId: ChainId.ARBITRUM_NOVA,
 
@@ -181,10 +184,7 @@ export const getErc1155SaleContractConfig = (walletAddress: string) => ({
 export const checkoutConfig: SequenceCheckoutConfig = {
   env: isDev
     ? {
-        sardineCheckoutUrl: 'https://sardine-checkout-sandbox.sequence.info',
-        sardineOnRampUrl: 'https://crypto.sandbox.sardine.ai/',
-        transakApiUrl: 'https://global-stg.transak.com',
-        transakApiKey: 'c20f2a0e-fe6a-4133-8fa7-77e9f84edf98'
+        forteWidgetUrl: 'https://payments.sandbox.lemmax.com/forte-payments-widget.js'
       }
     : undefined
 }

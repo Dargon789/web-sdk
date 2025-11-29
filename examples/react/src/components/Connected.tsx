@@ -4,9 +4,10 @@ import {
   useCheckoutModal,
   useERC1155SaleContractCheckout,
   useSelectPaymentModal,
-  useSwapModal
+  useSwapModal,
+  useTransactionStatusModal,
+  type SwapModalSettings
 } from '@0xsequence/checkout'
-import type { SwapModalSettings } from '@0xsequence/checkout'
 import {
   getModalPositionCss,
   signEthAuthProof,
@@ -23,16 +24,15 @@ import { useOpenWalletModal } from '@0xsequence/wallet-widget'
 import { CardButton, Header, WalletListItem } from 'example-shared-components'
 import { AnimatePresence } from 'motion/react'
 import React, { useEffect, type ComponentProps } from 'react'
-import { encodeFunctionData, formatUnits, parseAbi, toHex, zeroAddress } from 'viem'
+import { encodeFunctionData, formatUnits, parseAbi, zeroAddress } from 'viem'
 import { createSiweMessage, generateSiweNonce } from 'viem/siwe'
 import { useAccount, useChainId, usePublicClient, useSendTransaction, useWalletClient, useWriteContract } from 'wagmi'
 
 import { sponsoredContractAddresses } from '../config'
 import { messageToSign } from '../constants'
-import { ERC_1155_SALE_CONTRACT } from '../constants/erc1155-sale-contract'
-// import { ERC_721_SALE_CONTRACT } from '../constants/erc721-sale-contract'
 import { abi } from '../constants/nft-abi'
 import { delay, getCheckoutSettings, getOrderbookCalldata } from '../utils'
+import { checkoutPresets } from '../utils/checkout'
 
 import { CustomCheckout } from './CustomCheckout'
 import { Select } from './Select'
@@ -42,8 +42,10 @@ const searchParams = new URLSearchParams(location.search)
 const isDebugMode = searchParams.has('debug')
 const checkoutProvider = searchParams.get('checkoutProvider')
 const onRampProvider = searchParams.get('onRampProvider')
+const checkoutPreset = searchParams.get('checkoutPreset') || 'forte-transak-payment-erc1155-sale-native-token-testnet'
 
 export const Connected = () => {
+  const { openTransactionStatusModal } = useTransactionStatusModal()
   const [isOpenCustomCheckout, setIsOpenCustomCheckout] = React.useState(false)
   const { setOpenConnectModal } = useOpenConnectModal()
   const { address } = useAccount()
@@ -413,78 +415,13 @@ export const Connected = () => {
       return
     }
 
-    // NATIVE token sale
-    const currencyAddress = zeroAddress
-    const salesContractAddress = '0xf0056139095224f4eec53c578ab4de1e227b9597'
-    const collectionAddress = '0x92473261f2c26f2264429c451f70b0192f858795'
-    const price = '200000000000000'
-    const contractId = '674eb55a3d739107bbd18ecb'
-
-    // // ERC-20 contract
-    // const currencyAddress = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
-    // const salesContractAddress = '0xe65b75eb7c58ffc0bf0e671d64d0e1c6cd0d3e5b'
-    // const collectionAddress = '0xdeb398f41ccd290ee5114df7e498cf04fac916cb'
-    // const price = '200000'
-    // const contractId = '674eb5613d739107bbd18ed2'
-
-    const collectibles = [
-      {
-        tokenId: '1',
-        quantity: '1'
-      }
-    ]
-
-    const purchaseTransactionData = encodeFunctionData({
-      abi: ERC_1155_SALE_CONTRACT,
-      functionName: 'mint',
-      // [to, tokenIds, amounts, data, expectedPaymentToken, maxTotal, proof]
-      args: [
-        address,
-        collectibles.map(c => BigInt(c.tokenId)),
-        collectibles.map(c => BigInt(c.quantity)),
-        toHex(0),
-        currencyAddress,
-        price,
-        [toHex(0, { size: 32 })]
-      ]
-    })
-
-    // ERC-721 contract
-    // const currencyAddress = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
-    // const salesContractAddress = '0xa0284905d29cbeb19f4be486f9091fac215b7a6a'
-    // const collectionAddress = '0xd705db0a96075b98758c4bdafe8161d8566a68f8'
-    // const price = '1'
-    // const contractId = '674eb5613d739107bbd18ed2'
-
-    // const chainId = 137
-
-    // const collectibles = [
-    //   {
-    //     quantity: '1'
-    //   }
-    // ]
-
-    // const purchaseTransactionData = encodeFunctionData({
-    //   abi: ERC_721_SALE_CONTRACT,
-    //   functionName: 'mint',
-    //   // [to, amount, expectedPaymentToken, maxTotal, proof]
-    //   args: [address, BigInt(1), currencyAddress, price, [toHex(0, { size: 32 })]]
-    // })
+    const creditCardProvider = checkoutProvider || 'forte'
 
     openSelectPaymentModal({
-      collectibles,
-      chain: chainId,
-      price,
-      targetContractAddress: salesContractAddress,
       recipientAddress: address,
-      currencyAddress,
-      collectionAddress,
-      creditCardProviders: [checkoutProvider || 'transak'],
+      creditCardProviders: [creditCardProvider],
       onRampProvider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak,
-      transakConfig: {
-        contractId
-      },
-      onSuccess: (txnHash: string) => {
+      onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
       },
       onError: (error: Error) => {
@@ -493,7 +430,7 @@ export const Connected = () => {
       onClose: () => {
         console.log('modal closed!')
       },
-      txData: purchaseTransactionData
+      ...checkoutPresets[checkoutPreset as keyof typeof checkoutPresets](address || '')
     })
   }
 
@@ -530,7 +467,8 @@ export const Connected = () => {
   const onClickAddFunds = () => {
     triggerAddFunds({
       walletAddress: address || '',
-      provider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak
+      provider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak,
+      transakOnRampKind: 'default'
     })
   }
 
@@ -540,6 +478,23 @@ export const Connected = () => {
 
   const onClickSocialLink = () => {
     setIsSocialLinkOpen(true)
+  }
+
+  const onClickTransactionStatus = () => {
+    openTransactionStatusModal({
+      chainId: 137,
+      currencyAddress: zeroAddress,
+      collectionAddress: '0x92473261f2c26f2264429c451f70b0192f858795',
+      txHash: '0x7824a5f7107a964553f799a82d8178fd66ff5055e84f586010ccd80e5e40145b',
+      items: [
+        {
+          tokenId: '1',
+          quantity: '1',
+          decimals: 18,
+          price: '1000'
+        }
+      ]
+    })
   }
 
   useEffect(() => {
@@ -703,19 +658,34 @@ export const Connected = () => {
                         option => option.token.name === selectedFeeOptionTokenName
                       )
 
-                      if (selected?.token.contractAddress !== undefined) {
-                        if (!('hasEnoughBalanceForFee' in selected) || !selected.hasEnoughBalanceForFee) {
-                          setFeeOptionAlert({
-                            title: 'Insufficient balance',
-                            description: `You do not have enough balance to pay the fee with ${selected.token.name}, please make sure you have enough balance in your wallet for the selected fee option.`,
-                            secondaryDescription:
-                              'You can also switch network to Arbitrum Sepolia to test a gasless transaction.',
-                            variant: 'warning'
-                          })
-                          return
-                        }
+                      if (!selected) {
+                        setFeeOptionAlert({
+                          title: 'No option selected',
+                          description: 'Please select a fee option before confirming.',
+                          variant: 'warning'
+                        })
+                        return
+                      }
 
-                        confirmPendingFeeOption(pendingFeeOptionConfirmation?.id, selected.token.contractAddress)
+                      if (!('hasEnoughBalanceForFee' in selected) || !selected.hasEnoughBalanceForFee) {
+                        console.log('Insufficient balance for selected option')
+                        setFeeOptionAlert({
+                          title: 'Insufficient balance',
+                          description: `You do not have enough balance to pay the fee with ${selected.token.name}, please make sure you have enough balance in your wallet for the selected fee option.`,
+                          secondaryDescription: 'You can also switch network to Arbitrum Sepolia to test a gasless transaction.',
+                          variant: 'warning'
+                        })
+                        return
+                      }
+
+                      const feeTokenAddress: string | null =
+                        selected.token.contractAddress === zeroAddress || selected.token.contractAddress === null
+                          ? null
+                          : selected.token.contractAddress || null
+
+                      console.log('Confirming fee option with token address:', feeTokenAddress)
+                      if (pendingFeeOptionConfirmation?.id) {
+                        confirmPendingFeeOption(pendingFeeOptionConfirmation.id, feeTokenAddress)
                       }
                     }}
                     label="Confirm fee option"
@@ -838,6 +808,12 @@ export const Connected = () => {
                   description="Purchase with useERC1155SaleContractCheckout hook"
                   onClick={openCheckoutModal}
                   isPending={erc1155CheckoutLoading}
+                />
+
+                <CardButton
+                  title="Transaction Status Modal"
+                  description="Transaction status modal"
+                  onClick={onClickTransactionStatus}
                 />
               </>
             )}

@@ -29,19 +29,13 @@ type Tab = 'crypto' | 'credit-card'
 
 export const PaymentSelectionContent = () => {
   const { selectPaymentSettings = {} as SelectPaymentSettings } = useSelectPaymentModal()
+  const isSwitchingChainRef = useRef(false)
 
   const isFirstRender = useRef<boolean>(true)
   const { collectibles, creditCardProviders = [], onClose = () => {}, price } = selectPaymentSettings
   const { skipOnCloseCallback } = useSkipOnCloseCallback(onClose)
 
   const isFree = Number(price) == 0
-
-  const validCreditCardProviders = creditCardProviders.filter(provider => {
-    if (provider === 'transak') {
-      return !!selectPaymentSettings?.transakConfig
-    }
-    return true
-  })
 
   const [selectedTab, setSelectedTab] = useState<Tab>('crypto')
   const { clearCachedBalances } = useClearCachedBalances()
@@ -52,7 +46,7 @@ export const PaymentSelectionContent = () => {
 
   const isTokenIdUnknown = collectibles.some(collectible => !collectible.tokenId)
 
-  const showCreditCardPayment = validCreditCardProviders.length > 0 && !isTokenIdUnknown && !isFree
+  const showCreditCardPayment = creditCardProviders.length > 0 && !isTokenIdUnknown && !isFree
 
   const tabs: { label: string; value: Tab }[] = [
     { label: 'Crypto', value: 'crypto' as Tab },
@@ -101,7 +95,7 @@ export const PaymentSelectionContent = () => {
           {!isSingleOption && <TabsHeader tabs={tabs} value={selectedTab} />}
           <TabsContent value="crypto">
             <TabWrapper>
-              <PayWithCryptoTab skipOnCloseCallback={skipOnCloseCallback} />
+              <PayWithCryptoTab isSwitchingChainRef={isSwitchingChainRef} skipOnCloseCallback={skipOnCloseCallback} />
             </TabWrapper>
           </TabsContent>
           <TabsContent value="credit-card">
