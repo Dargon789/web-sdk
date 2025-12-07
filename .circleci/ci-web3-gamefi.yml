@@ -43,7 +43,7 @@ workflows:
 jobs:
   build:
     docker:
-      - image: cimg/node:current
+      - image: cimg/node:22.0
       
     working_directory: /tmp
     steps:
