@@ -63,7 +63,7 @@ export { getModalPositionCss } from './utils/styling.js'
 export { getNetwork, getNetworkBackgroundColor, getNetworkColor } from './utils/networks.js'
 export { publicClientToProvider, walletClientToSigner } from './utils/adapters.js'
 export { signEthAuthProof, validateEthProof } from './utils/ethAuth.js'
-export { sendTransactions, waitForTransactionReceipt } from './utils/transactions.js'
+export { isTxRejected, sendTransactions, waitForTransactionReceipt } from './utils/transactions.js'
 
 // Contexts
 export { ConnectConfigContextProvider, useConnectConfigContext } from './contexts/ConnectConfig.js'
@@ -88,6 +88,7 @@ export { mock } from './connectors/mock/mock.js'
 export { sequence, type SequenceOptions } from './connectors/sequence/sequence.js'
 export { twitch, type TwitchOptions } from './connectors/twitch/twitch.js'
 export { walletConnect } from './connectors/walletConnect/walletConnect.js'
+export { metaMask } from './connectors/metaMask/metaMask.js'
 export { ecosystemWallet, type EcosystemWalletOptions } from './connectors/ecosystem/index.js'
 export {
   sequenceWaasWallet,
