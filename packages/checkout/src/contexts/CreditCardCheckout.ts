@@ -1,10 +1,9 @@
 'use client'
 
 import type { Theme } from '@0xsequence/design-system'
-import { type SequenceIndexer, type TransactionReceipt } from '@0xsequence/indexer'
 
 import { createGenericContext } from './genericContext.js'
-import type { ActionButtons, SupplementaryAnalyticsInfo } from './SelectPaymentModal.js'
+import type { SupplementaryAnalyticsInfo } from './SelectPaymentModal.js'
 
 interface CoinQuantity {
   contractAddress: string
@@ -19,6 +18,8 @@ interface OrderSummaryItem {
 }
 
 export interface TransakConfig {
+  apiKey?: string
+  contractId: string
   callDataOverride?: string
 }
 
@@ -32,6 +33,12 @@ export interface StructuredCalldata {
 export interface ForteMintConfig {
   protocol: 'mint'
   calldata: string | StructuredCalldata
+}
+
+export interface ForteSeaportConfig {
+  protocol: 'seaport'
+  orderHash: string
+  seaportProtocolAddress: string
   sellerAddress: string
 }
 
@@ -41,13 +48,7 @@ export interface ForteCustomEvmCallConfig {
   sellerAddress: string
 }
 
-export interface ForteEventsCallbacks {
-  onFortePaymentsBuyNftSuccess?: (e: Event) => void
-  onFortePaymentsBuyNftMintSuccess?: (e: Event) => void
-  onFortePaymentsWidgetClosed?: (e: Event) => void
-}
-
-export type ForteConfig = (ForteMintConfig | ForteCustomEvmCallConfig) & ForteEventsCallbacks
+export type ForteConfig = ForteMintConfig | ForteSeaportConfig | ForteCustomEvmCallConfig
 
 export interface CreditCardCheckout {
   chainId: number
@@ -62,7 +63,7 @@ export interface CreditCardCheckout {
   nftQuantity: string
   nftDecimals?: string
   calldata: string
-  provider?: 'transak' | 'forte'
+  provider?: 'sardine' | 'transak' | 'forte'
   transakConfig?: TransakConfig
   forteConfig?: ForteConfig
   onSuccess?: (transactionHash?: string, settings?: CreditCardCheckout) => void
@@ -70,8 +71,6 @@ export interface CreditCardCheckout {
   onClose?: () => void
   approvedSpenderAddress?: string
   supplementaryAnalyticsInfo?: SupplementaryAnalyticsInfo
-  successActionButtons?: ActionButtons[]
-  onSuccessChecker?: (receipt: TransactionReceipt, indexerClient?: SequenceIndexer) => Promise<void>
 }
 
 export interface CheckoutSettings {

@@ -1,9 +1,9 @@
-import { type CreditCardCheckoutSettings } from '@0xsequence/checkout'
+import { type ForteConfig } from '@0xsequence/checkout'
 import { zeroAddress } from 'viem'
-import { encodeFunctionData, toHex } from 'viem'
 
 import { ERC_1155_SALE_CONTRACT } from '../constants/erc1155-sale-contract'
 import { ERC_721_SALE_CONTRACT } from '../constants/erc721-sale-contract'
+import { encodeFunctionData, toHex } from 'viem'
 import { orderbookAbi } from '../constants/orderbook-abi'
 
 interface PurchaseTransactionDataERC721Sale {
@@ -67,10 +67,21 @@ const getOrderbookTransactionData = ({ recipientAddress, requestId, quantity }: 
   }) as `0x${string}`
 }
 
-export const checkoutPresets: Record<
-  string,
-  (recipientAddress: string) => Omit<CreditCardCheckoutSettings, 'onSuccess' | 'onError' | 'onClose'>
-> = {
+interface CheckoutPreset {
+  chain: number | string
+  currencyAddress: string
+  targetContractAddress: string
+  collectionAddress: string
+  price: string
+  collectibles: {
+    tokenId?: string
+    quantity: string
+  }[]
+  txData: `0x${string}`
+  forteConfig?: ForteConfig
+}
+
+export const checkoutPresets: Record<string, (recipientAddress: string) => CheckoutPreset> = {
   'erc1155-sale-native-token-polygon': (recipientAddress: string) => {
     const collectibles = [
       {
@@ -80,17 +91,13 @@ export const checkoutPresets: Record<
     ]
     const price = '200000000000000'
     return {
-      chainId: 137,
-      contractAddress: '0xf0056139095224f4eec53c578ab4de1e227b9597',
-      recipientAddress,
-      currencyQuantity: price,
-      currencySymbol: 'MATIC',
+      chain: 137,
       currencyAddress: zeroAddress,
-      currencyDecimals: '18',
-      nftId: collectibles[0].tokenId || '',
-      nftAddress: '0x92473261f2c26f2264429c451f70b0192f858795',
-      nftQuantity: collectibles[0].quantity,
-      calldata: getPurchaseTransactionERC1155Sale({
+      targetContractAddress: '0xf0056139095224f4eec53c578ab4de1e227b9597',
+      collectionAddress: '0x92473261f2c26f2264429c451f70b0192f858795',
+      price,
+      collectibles,
+      txData: getPurchaseTransactionERC1155Sale({
         recipientAddress,
         currencyAddress: zeroAddress,
         price,
@@ -107,17 +114,13 @@ export const checkoutPresets: Record<
     ]
     const price = '20000'
     return {
-      chainId: 137,
-      contractAddress: '0xe65b75eb7c58ffc0bf0e671d64d0e1c6cd0d3e5b',
-      recipientAddress,
-      currencyQuantity: price,
-      currencySymbol: 'USDC',
+      chain: 137,
       currencyAddress: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
-      currencyDecimals: '6',
-      nftId: collectibles[0].tokenId || '',
-      nftAddress: '0xdeb398f41ccd290ee5114df7e498cf04fac916cb',
-      nftQuantity: collectibles[0].quantity,
-      calldata: getPurchaseTransactionERC1155Sale({
+      targetContractAddress: '0xe65b75eb7c58ffc0bf0e671d64d0e1c6cd0d3e5b',
+      collectionAddress: '0xdeb398f41ccd290ee5114df7e498cf04fac916cb',
+      price,
+      collectibles,
+      txData: getPurchaseTransactionERC1155Sale({
         recipientAddress,
         currencyAddress: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
         price,
@@ -133,17 +136,13 @@ export const checkoutPresets: Record<
     ]
     const price = '1'
     return {
-      chainId: 137,
-      contractAddress: '0xa0284905d29cbeb19f4be486f9091fac215b7a6a',
-      recipientAddress,
-      currencyQuantity: price,
-      currencySymbol: 'USDC',
+      chain: 137,
       currencyAddress: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
-      currencyDecimals: '6',
-      nftId: '', // ERC721 doesn't have tokenId in collectibles for this preset
-      nftAddress: '0xd705db0a96075b98758c4bdafe8161d8566a68f8',
-      nftQuantity: collectibles[0].quantity,
-      calldata: getPurchaseTransactionERC721Sale({
+      targetContractAddress: '0xa0284905d29cbeb19f4be486f9091fac215b7a6a',
+      collectionAddress: '0xd705db0a96075b98758c4bdafe8161d8566a68f8',
+      price,
+      collectibles,
+      txData: getPurchaseTransactionERC721Sale({
         recipientAddress,
         currencyAddress: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
         price
@@ -158,19 +157,16 @@ export const checkoutPresets: Record<
       }
     ]
     const price = '1000000000000000'
+    // NOTE: placeholder until bug with backend is fixed
     const structuredCalldata = ''
     return {
-      chainId: 11155111,
-      contractAddress: '0x1130e2e03f682f05f298fd702787d9bd0bf94316',
-      recipientAddress,
-      currencyQuantity: price,
-      currencySymbol: 'ETH',
+      chain: 11155111,
       currencyAddress: zeroAddress,
-      currencyDecimals: '18',
-      nftId: collectibles[0].tokenId || '',
-      nftAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
-      nftQuantity: collectibles[0].quantity,
-      calldata: getPurchaseTransactionERC1155Sale({
+      targetContractAddress: '0x1130e2e03f682f05f298fd702787d9bd0bf94316',
+      collectionAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
+      price,
+      collectibles,
+      txData: getPurchaseTransactionERC1155Sale({
         recipientAddress,
         currencyAddress: zeroAddress,
         price,
@@ -181,9 +177,17 @@ export const checkoutPresets: Record<
         calldata: structuredCalldata,
         sellerAddress: '0x184D4F89ad34bb0491563787ca28118273402986'
       }
+      // forteConfig: {
+      //   protocol: 'seaport',
+      //   orderHash: '0xa29984c1892bb28bc35170a0e7e4db64ceacfbd20dc5576bd67f1aae9dd678a3',
+      //   // listings with amount > 1 are bugged
+      //   // orderHash: '0x832b698e52508849fe533fdef53d6d9674be4f43eb1a2eb3415e46041f087af9',
+      //   seaportProtocolAddress: '0x0000000000000068F116a894984e2DB1123eB395',
+      //   sellerAddress: '0x184D4F89ad34bb0491563787ca28118273402986'
+      // }
     }
   },
-  'forte-transak-payment-erc1155-sale-native-token-testnet': (recipientAddress: string) => {
+  'forte-payment-erc1155-sale-native-token-testnet': (recipientAddress: string) => {
     const collectibles = [
       {
         tokenId: '1',
@@ -227,17 +231,13 @@ export const checkoutPresets: Record<
     }
 
     return {
-      chainId: 11155111,
-      contractAddress: '0x1130e2e03f682f05f298fd702787d9bd0bf94316',
-      recipientAddress,
-      currencyQuantity: price,
-      currencySymbol: 'ETH',
+      chain: 11155111,
       currencyAddress: zeroAddress,
-      currencyDecimals: '18',
-      nftId: collectibles[0].tokenId || '',
-      nftAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
-      nftQuantity: collectibles[0].quantity,
-      calldata: getPurchaseTransactionERC1155Sale({
+      targetContractAddress: '0x1130e2e03f682f05f298fd702787d9bd0bf94316',
+      collectionAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
+      price,
+      collectibles,
+      txData: getPurchaseTransactionERC1155Sale({
         recipientAddress,
         currencyAddress: zeroAddress,
         price,
@@ -246,16 +246,7 @@ export const checkoutPresets: Record<
       forteConfig: {
         protocol: 'mint',
         calldata: structuredCalldata,
-        sellerAddress: '0x184D4F89ad34bb0491563787ca28118273402986',
-        onFortePaymentsBuyNftSuccess: e => {
-          console.log('onFortePaymentsBuyNftSuccess', e)
-        },
-        onFortePaymentsBuyNftMintSuccess: e => {
-          console.log('onFortePaymentsBuyNftMintSuccess', e)
-        },
-        onFortePaymentsWidgetClosed: e => {
-          console.log('onFortePaymentsWidgetClosed', e)
-        }
+        sellerAddress: '0x184D4F89ad34bb0491563787ca28118273402986'
       }
     }
   },
@@ -267,7 +258,7 @@ export const checkoutPresets: Record<
       }
     ]
     const price = '1000000000000000'
-    const requestId = '40'
+    const requestId = '34'
     const txData = getOrderbookTransactionData({
       recipientAddress: recipientAddress,
       requestId,
@@ -301,17 +292,13 @@ export const checkoutPresets: Record<
     }
 
     return {
-      chainId: 11155111,
-      contractAddress: '0xfdb42A198a932C8D3B506Ffa5e855bC4b348a712',
-      recipientAddress,
-      currencyQuantity: price,
-      currencySymbol: 'ETH',
+      chain: 11155111,
       currencyAddress: zeroAddress,
-      currencyDecimals: '18',
-      nftId: collectibles[0].tokenId || '',
-      nftAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
-      nftQuantity: collectibles[0].quantity,
-      calldata: txData,
+      targetContractAddress: '0xfdb42A198a932C8D3B506Ffa5e855bC4b348a712',
+      collectionAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
+      price,
+      collectibles,
+      txData,
       forteConfig: {
         protocol: 'custom_evm_call',
         calldata: structuredCalldata,
@@ -364,23 +351,19 @@ export const checkoutPresets: Record<
     }
 
     return {
-      chainId: 11155111,
-      contractAddress: '0x0c29598a69aeda9f3fed0ba64a2d94c54f83e8c6',
-      recipientAddress,
-      currencyQuantity: price,
-      currencySymbol: 'WETH',
+      chain: 11155111,
       currencyAddress,
-      currencyDecimals: '18',
-      nftId: collectibles[0].tokenId || '',
-      nftAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
-      nftQuantity: collectibles[0].quantity,
-      calldata: getPurchaseTransactionERC1155Sale({
+      targetContractAddress: '0x0c29598a69aeda9f3fed0ba64a2d94c54f83e8c6',
+      approvedSpenderAddress: '0x0c29598a69aeda9f3fed0ba64a2d94c54f83e8c6',
+      collectionAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
+      price,
+      collectibles,
+      txData: getPurchaseTransactionERC1155Sale({
         recipientAddress,
         currencyAddress,
         price,
         collectibles
       }),
-      approvedSpenderAddress: '0x0c29598a69aeda9f3fed0ba64a2d94c54f83e8c6',
       forteConfig: {
         protocol: 'mint',
         calldata: structuredCalldata,
@@ -397,7 +380,7 @@ export const checkoutPresets: Record<
     ]
     const price = '1000000000000000'
     const currencyAddress = '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14'
-    const requestId = '41'
+    const requestId = '33'
     const txData = getOrderbookTransactionData({
       recipientAddress: recipientAddress,
       requestId,
@@ -431,17 +414,13 @@ export const checkoutPresets: Record<
     }
 
     return {
-      chainId: 11155111,
-      contractAddress: '0xfdb42A198a932C8D3B506Ffa5e855bC4b348a712',
-      recipientAddress,
-      currencyQuantity: price,
-      currencySymbol: 'WETH',
+      chain: 11155111,
       currencyAddress,
-      currencyDecimals: '18',
-      nftId: collectibles[0].tokenId || '',
-      nftAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
-      nftQuantity: collectibles[0].quantity,
-      calldata: txData,
+      targetContractAddress: '0xfdb42A198a932C8D3B506Ffa5e855bC4b348a712',
+      collectionAddress: '0xb496d64e1fe4f3465fb83f3fd8cb50d8e227101b',
+      price,
+      collectibles,
+      txData,
       forteConfig: {
         protocol: 'custom_evm_call',
         calldata: structuredCalldata,

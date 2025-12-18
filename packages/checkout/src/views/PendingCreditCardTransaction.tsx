@@ -1,22 +1,25 @@
 import { useAnalyticsContext, useProjectAccessKey } from '@0xsequence/connect'
-import { Spinner, Text } from '@0xsequence/design-system'
+import { Button, Spinner, Text } from '@0xsequence/design-system'
 import { useConfig, useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
 import { findSupportedNetwork } from '@0xsequence/network'
 import pako from 'pako'
 import { useEffect, useRef } from 'react'
 import { formatUnits } from 'viem'
 
-import { fetchSardineOrderStatus } from '../api'
-import { EVENT_SOURCE } from '../constants'
-import { useEnvironmentContext, type TransactionPendingNavigation } from '../contexts'
+import { fetchSardineOrderStatus } from '../api/data.js'
+import { EVENT_SOURCE } from '../constants/index.js'
+import { useEnvironmentContext, useFortePaymentController, type TransactionPendingNavigation } from '../contexts/index.js'
+import { type ForteMintConfig, type ForteSeaportConfig } from '../contexts/index.js'
 import {
   useCheckoutModal,
+  useForteAccessToken,
+  useFortePaymentIntent,
   useNavigation,
   useSardineClientToken,
   useSkipOnCloseCallback,
   useTransactionStatusModal
-} from '../hooks'
-import { TRANSAK_PROXY_ADDRESS } from '../utils/transak'
+} from '../hooks/index.js'
+import { TRANSAK_PROXY_ADDRESS } from '../utils/transak.js'
 
 const POLLING_TIME = 10 * 1000
 
@@ -35,6 +38,8 @@ export const PendingCreditCardTransaction = () => {
   const { skipOnCloseCallback } = useSkipOnCloseCallback(onClose)
 
   switch (provider) {
+    case 'forte':
+      return <PendingCreditCardTransactionForte skipOnCloseCallback={skipOnCloseCallback} />
     case 'transak':
       return <PendingCreditCardTransactionTransak skipOnCloseCallback={skipOnCloseCallback} />
     case 'sardine':
@@ -44,7 +49,7 @@ export const PendingCreditCardTransaction = () => {
 }
 
 export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: PendingCreditTransactionProps) => {
-  const { transakApiUrl } = useEnvironmentContext()
+  const { transakApiUrl, transakApiKey: transakGlobalApiKey } = useEnvironmentContext()
   const { analytics } = useAnalyticsContext()
   const { openTransactionStatusModal } = useTransactionStatusModal()
   const nav = useNavigation()
@@ -80,6 +85,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
   const tokenMetadata = tokensMetadata ? tokensMetadata[0] : undefined
 
   const transakConfig = settings?.creditCardCheckout?.transakConfig
+  const transakApiKey = transakConfig?.apiKey || transakGlobalApiKey
 
   // Transak requires the recipient address to be the proxy address
   // so we need to replace the recipient address with the proxy address in the calldata
@@ -121,7 +127,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
   // Note: the network name might not always line up with Transak. A conversion function might be necessary
   const networkName = network?.name.toLowerCase()
 
-  const transakLink = `${transakApiUrl}?apiKey=${transakConfig?.apiKey}&isNFT=true&calldata=${transakCallData}&contractId=${transakConfig?.contractId}&cryptoCurrencyCode=${creditCardCheckout.currencySymbol}&estimatedGasLimit=${estimatedGasLimit}&nftData=${transakNftData}&walletAddress=${creditCardCheckout.recipientAddress}&disableWalletAddressForm=true&partnerOrderId=${partnerOrderId}&network=${networkName}`
+  const transakLink = `${transakApiUrl}?apiKey=${transakApiKey}&isNFT=true&calldata=${transakCallData}&contractId=${transakConfig?.contractId}&cryptoCurrencyCode=${creditCardCheckout.currencySymbol}&estimatedGasLimit=${estimatedGasLimit}&nftData=${transakNftData}&walletAddress=${creditCardCheckout.recipientAddress}&disableWalletAddressForm=true&partnerOrderId=${partnerOrderId}&network=${networkName}`
 
   const isLoading = isLoadingTokenMetadata || isLoadingCollectionInfo
   const isError = isErrorTokenMetadata || isErrorCollectionInfo
@@ -154,7 +160,12 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
             to: creditCardCheckout.contractAddress,
             item_ids: JSON.stringify([creditCardCheckout.nftId]),
             item_quantities: JSON.stringify([JSON.stringify([creditCardCheckout.nftQuantity])]),
+            currencySymbol: creditCardCheckout.currencySymbol,
             txHash
+          },
+          nums: {
+            currencyValue: Number(price),
+            currencyValueDecimal: Number(formatUnits(BigInt(price), Number(creditCardCheckout.currencyDecimals)))
           }
         })
 
@@ -428,6 +439,92 @@ export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: Pen
           width: '100%'
         }}
       />
+    </div>
+  )
+}
+
+export const PendingCreditCardTransactionForte = ({ skipOnCloseCallback }: PendingCreditTransactionProps) => {
+  const { initializeWidget } = useFortePaymentController()
+  const { data: accessTokenData, isLoading: isLoadingAccessToken, isError: isErrorAccessToken } = useForteAccessToken()
+  const nav = useNavigation()
+  const {
+    params: { creditCardCheckout }
+  } = nav.navigation as TransactionPendingNavigation
+  const { closeCheckout } = useCheckoutModal()
+
+  const {
+    data: tokenMetadatas,
+    isLoading: isLoadingTokenMetadata,
+    isError: isErrorTokenMetadata
+  } = useGetTokenMetadata({
+    chainID: String(creditCardCheckout.chainId),
+    contractAddress: creditCardCheckout.nftAddress,
+    tokenIDs: [creditCardCheckout.nftId]
+  })
+
+  const tokenMetadata = tokenMetadatas ? tokenMetadatas[0] : undefined
+
+  const nftQuantity = formatUnits(BigInt(creditCardCheckout.nftQuantity), Number(creditCardCheckout.nftDecimals || 0))
+  const currencyQuantity = formatUnits(
+    BigInt(creditCardCheckout.currencyQuantity),
+    Number(creditCardCheckout.currencyDecimals || 18)
+  )
+
+  const { data: paymentIntentData, isError: isErrorPaymentIntent } = useFortePaymentIntent(
+    {
+      accessToken: accessTokenData?.accessToken || '',
+      tokenType: accessTokenData?.tokenType || '',
+      nftQuantity,
+      recipientAddress: creditCardCheckout.recipientAddress,
+      chainId: creditCardCheckout.chainId.toString(),
+      nftAddress: creditCardCheckout.nftAddress,
+      currencyAddress: creditCardCheckout.currencyAddress,
+      targetContractAddress: creditCardCheckout.contractAddress,
+      nftName: tokenMetadata?.name || '',
+      imageUrl: tokenMetadata?.image || '',
+      tokenId: creditCardCheckout.nftId,
+      protocolConfig: creditCardCheckout.forteConfig!,
+      currencyQuantity,
+      calldata:
+        creditCardCheckout.forteConfig!.protocol === 'mint'
+          ? creditCardCheckout.forteConfig!.calldata
+          : creditCardCheckout.calldata,
+      approvedSpenderAddress: creditCardCheckout.approvedSpenderAddress
+    },
+    {
+      disabled: isLoadingTokenMetadata || isLoadingAccessToken
+    }
+  )
+
+  useEffect(() => {
+    if (!paymentIntentData) {
+      return
+    }
+
+    initializeWidget({
+      paymentIntentId: paymentIntentData.payment_intent_id,
+      widgetData: paymentIntentData,
+      accessToken: accessTokenData?.accessToken || '',
+      tokenType: accessTokenData?.tokenType || '',
+      creditCardCheckout
+    })
+    skipOnCloseCallback()
+    closeCheckout()
+  }, [paymentIntentData])
+
+  const isError = isErrorTokenMetadata || isErrorAccessToken || isErrorPaymentIntent
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center" style={{ height: '770px' }}>
+        <Text color="primary">An error has occurred</Text>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-center" style={{ height: '770px' }}>
+      <Spinner size="lg" />
     </div>
   )
 }

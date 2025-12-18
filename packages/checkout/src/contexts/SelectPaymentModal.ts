@@ -1,17 +1,25 @@
-import { Hex } from 'viem'
 import { TransactionOnRampProvider } from '@0xsequence/marketplace'
+import type { Hex } from 'viem'
 
-import type { TransakConfig } from '../contexts/CheckoutModal'
+import type { ForteConfig, TransakConfig } from '../contexts/CheckoutModal.js'
 
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from './genericContext.js'
 
-export type CreditCardProviders = 'sardine' | 'transak'
+export type CreditCardProviders = 'sardine' | 'transak' | 'forte'
 
 export interface Collectible {
-  tokenId: string
+  tokenId?: string
   quantity: string
   decimals?: number
   price?: string
+}
+
+export interface SupplementaryAnalyticsInfo {
+  [key: string]: string
+}
+
+export interface SardineConfig {
+  approvedSpenderAddress?: string
 }
 
 export interface SelectPaymentSettings {
@@ -25,16 +33,19 @@ export interface SelectPaymentSettings {
   recipientAddress: string | Hex
   approvedSpenderAddress?: string
   transactionConfirmations?: number
-  onSuccess?: (txHash: string) => void
+  onSuccess?: (txHash?: string) => void
   onError?: (error: Error) => void
   onClose?: () => void
   onRampProvider?: TransactionOnRampProvider
-  enableMainCurrencyPayment?: boolean
-  enableSwapPayments?: boolean
-  enableTransferFunds?: boolean
   creditCardProviders?: string[]
-  copyrightText?: string
   transakConfig?: TransakConfig
+  sardineConfig?: SardineConfig
+  forteConfig?: ForteConfig
+  customProviderCallback?: (onSuccess: (txHash: string) => void, onError: (error: Error) => void, onClose: () => void) => void
+  supplementaryAnalyticsInfo?: SupplementaryAnalyticsInfo
+  skipNativeBalanceCheck?: boolean
+  slippageBps?: number
+  nativeTokenAddress?: string
 }
 
 type SelectPaymentModalContext = {
@@ -43,4 +54,6 @@ type SelectPaymentModalContext = {
   selectPaymentSettings?: SelectPaymentSettings
 }
 
-export const [useSelectPaymentContext, SelectPaymentContextProvider] = createGenericContext<SelectPaymentModalContext>()
+const [useSelectPaymentContext, SelectPaymentContextProvider] = createGenericContext<SelectPaymentModalContext>()
+
+export { SelectPaymentContextProvider, useSelectPaymentContext }

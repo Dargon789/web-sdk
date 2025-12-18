@@ -36,13 +36,13 @@ const App = () => {
 }
 ```
 
-# NFT Checkout
+# NFT Checkout (Sequence Pay)
 
 <div align="center">
   <img src="../../public/docs/checkout-modal.png">
 </div>
 
-NFT Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
+Sequence Pay Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
 
 ## Basic Usage
 
@@ -100,7 +100,7 @@ const MyComponent = () => {
       recipientAddress: address,
       currencyAddress,
       collectionAddress,
-      creditCardProviders: ['transak'],
+      creditCardProviders: ['sardine'],
       copyrightText: 'ⓒ2024 Sequence',
       onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
@@ -274,6 +274,10 @@ const CustomCheckoutUI = () => {
     currencyAddress,
     collectionAddress,
     creditCardProvider: 'transak' as CreditCardProviders,
+    transakConfig: {
+      contractId,
+      apiKey: '5911d9ec-46b5-48fa-a755-d59a715ff0cf'
+    },
     onSuccess: (txnHash?: string) => {
       console.log('success!', txnHash)
     },
