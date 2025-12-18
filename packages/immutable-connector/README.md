@@ -1,46 +1,13 @@
-# Immutable connector for Sequence Web-SDK
+<div align="center">
+  <img src="https://raw.githubusercontent.com/0xsequence/kit/master/public/docs/kit-logo-in-one.png">
+</div>
 
-## Installation
+# Immutable Connector for Sequence Kit 🧰
 
-To install this package:
+Connect an Immutable Passport wallet to Sequence Kit.
 
-```bash
-npm install @0xsequence/immutable-connector @imtbl/config @imtbl/sdk
-# or
+## LICENSE
 
-pnpm install @0xsequence/immutable-connector @imtbl/config @imtbl/sdk
-# or
-yarn add @0xsequence/immutable-connector @imtbl/config @imtbl/sdk
-```
+Apache-2.0
 
-## Adding the connect
-
-First, an Immutable Passport instance must be created with valid and correctly configured Immutable keys.
-
-Note, that the application will need a callback route configured similarly to this example: https://github.com/immutable/ts-immutable-sdk/blob/main/examples/passport/login-with-nextjs/src/app/redirect/page.tsx
-
-Also, the `forceScwDeployBeforeMessageSignature` parameter must be set to true for the signing of message to work for new users.
-
-```js
-export const passportInstance = new passport.Passport({
-  baseConfig: {
-    environment: Environment.SANDBOX,
-    publishableKey: 'my_publisheable_key'
-  },
-  forceScwDeployBeforeMessageSignature: true,
-  clientId: 'my_client_id',
-  redirectUri: `${window.location.origin}/auth/callback`,
-  logoutRedirectUri: `${window.location.origin}`,
-  audience: 'platform_api',
-  scope: 'openid offline_access email transact'
-})
-```
-
-Finally, the wallet can be passed down to the web-sdk configuration similarly to other wallets,
-
-```js
-immutable({
-  passportInstance,
-  environment: Environment.SANDBOX
-})
-```
+Copyright (c) 2017-present Horizon Blockchain Games Inc. / https://horizon.io

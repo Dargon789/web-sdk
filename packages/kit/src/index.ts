@@ -12,7 +12,8 @@ export type {
   Theme,
   ModalPosition,
   KitConfig,
-  StorageItem
+  StorageItem,
+  LogoProps
 } from './types'
 
 // Constants
