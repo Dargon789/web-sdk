@@ -1,16 +1,21 @@
 'use client'
 
+import type { Theme } from '@0xsequence/design-system'
 import { type SequenceIndexer, type TransactionReceipt } from '@0xsequence/indexer'
 
 import { createGenericContext } from './genericContext.js'
+import type { ActionButtons, SupplementaryAnalyticsInfo } from './SelectPaymentModal.js'
 
-export interface SupplementaryAnalyticsInfo {
-  [key: string]: string
+interface CoinQuantity {
+  contractAddress: string
+  amountRequiredRaw: string
 }
 
-export interface ActionButtons {
-  label: string
-  action: () => void
+interface OrderSummaryItem {
+  chainId: number
+  contractAddress: string
+  quantityRaw: string
+  tokenId: string
 }
 
 export interface TransakConfig {
@@ -44,7 +49,7 @@ export interface ForteEventsCallbacks {
 
 export type ForteConfig = (ForteMintConfig | ForteCustomEvmCallConfig) & ForteEventsCallbacks
 
-export interface CreditCardCheckoutSettings {
+export interface CreditCardCheckout {
   chainId: number
   contractAddress: string
   recipientAddress: string
@@ -57,11 +62,11 @@ export interface CreditCardCheckoutSettings {
   nftQuantity: string
   nftDecimals?: string
   calldata: string
-  provider?: 'transak' | 'forte' | string
+  provider?: 'transak' | 'forte'
   transakConfig?: TransakConfig
   forteConfig?: ForteConfig
-  onSuccess?: (transactionHash?: string, settings?: CreditCardCheckoutSettings) => void
-  onError?: (error: Error, settings: CreditCardCheckoutSettings) => void
+  onSuccess?: (transactionHash?: string, settings?: CreditCardCheckout) => void
+  onError?: (error: Error, settings: CreditCardCheckout) => void
   onClose?: () => void
   approvedSpenderAddress?: string
   supplementaryAnalyticsInfo?: SupplementaryAnalyticsInfo
@@ -69,13 +74,23 @@ export interface CreditCardCheckoutSettings {
   onSuccessChecker?: (receipt: TransactionReceipt, indexerClient?: SequenceIndexer) => Promise<void>
 }
 
-type CreditCardCheckoutContext = {
-  initiateCreditCardCheckout: (settings: CreditCardCheckoutSettings) => void
-  closeCreditCardCheckout: () => void
-  settings?: CreditCardCheckoutSettings
+export interface CheckoutSettings {
+  creditCardCheckout?: CreditCardCheckout
+  cryptoCheckout?: {
+    chainId: number
+    triggerTransaction: () => void
+    coinQuantity: CoinQuantity
+  }
+  orderSummaryItems?: OrderSummaryItem[]
 }
 
-const [useCreditCardCheckoutModalContext, CreditCardCheckoutModalContextProvider] =
-  createGenericContext<CreditCardCheckoutContext>()
+type CheckoutModalContext = {
+  triggerCheckout: (settings: CheckoutSettings) => void
+  closeCheckout: () => void
+  settings?: CheckoutSettings
+  theme: Theme
+}
 
-export { CreditCardCheckoutModalContextProvider, useCreditCardCheckoutModalContext }
+const [useCheckoutModalContext, CheckoutModalContextProvider] = createGenericContext<CheckoutModalContext>()
+
+export { CheckoutModalContextProvider, useCheckoutModalContext }

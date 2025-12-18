@@ -228,6 +228,12 @@ export const styles = String.raw`
   .top-4 {
     top: calc(var(--spacing) * 4);
   }
+  .top-\[-2px\] {
+    top: -2px;
+  }
+  .top-\[50\%\] {
+    top: 50%;
+  }
   .right-0 {
     right: calc(var(--spacing) * 0);
   }
@@ -245,6 +251,9 @@ export const styles = String.raw`
   }
   .left-4 {
     left: calc(var(--spacing) * 4);
+  }
+  .left-\[50\%\] {
+    left: 50%;
   }
   .z-1 {
     z-index: 1;
@@ -456,17 +465,23 @@ export const styles = String.raw`
   .h-\[52px\] {
     height: 52px;
   }
+  .h-\[56px\] {
+    height: 56px;
+  }
   .h-\[60px\] {
     height: 60px;
   }
   .h-\[64px\] {
     height: 64px;
   }
+  .h-\[200px\] {
+    height: 200px;
+  }
+  .h-\[206px\] {
+    height: 206px;
+  }
   .h-\[calc\(100dvh-70px\)\] {
     height: calc(100dvh - 70px);
-  }
-  .h-auto {
-    height: auto;
   }
   .h-fit {
     height: fit-content;
@@ -497,6 +512,9 @@ export const styles = String.raw`
   }
   .min-h-\[100px\] {
     min-height: 100px;
+  }
+  .min-h-\[128px\] {
+    min-height: 128px;
   }
   .min-h-full {
     min-height: 100%;
@@ -564,14 +582,8 @@ export const styles = String.raw`
   .w-\[52px\] {
     width: 52px;
   }
-  .w-\[80px\] {
-    width: 80px;
-  }
-  .w-\[80px\] {
-    width: 80px;
-  }
-  .w-\[80px\] {
-    width: 80px;
+  .w-\[56px\] {
+    width: 56px;
   }
   .w-\[100px\] {
     width: 100px;
@@ -581,9 +593,6 @@ export const styles = String.raw`
   }
   .w-\[148px\] {
     width: 148px;
-  }
-  .w-auto {
-    width: auto;
   }
   .w-fit {
     width: fit-content;
@@ -652,12 +661,20 @@ export const styles = String.raw`
     --tw-translate-x: calc(var(--spacing) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
+  .-translate-x-1\/2 {
+    --tw-translate-x: calc(calc(1/2 * 100%) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
   .translate-x-0 {
     --tw-translate-x: calc(var(--spacing) * 0);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .-translate-y-1 {
     --tw-translate-y: calc(var(--spacing) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-y-1\/2 {
+    --tw-translate-y: calc(calc(1/2 * 100%) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .transform {
@@ -741,6 +758,9 @@ export const styles = String.raw`
   .gap-0\.5 {
     gap: calc(var(--spacing) * 0.5);
   }
+  .gap-0\.25 {
+    gap: calc(var(--spacing) * 0.25);
+  }
   .gap-1 {
     gap: calc(var(--spacing) * 1);
   }
@@ -761,6 +781,9 @@ export const styles = String.raw`
   }
   .gap-10 {
     gap: calc(var(--spacing) * 10);
+  }
+  .gap-\[6px\] {
+    gap: 6px;
   }
   .self-center {
     align-self: center;
@@ -1770,6 +1793,13 @@ export const styles = String.raw`
   .focus-within\:ring-inset {
     &:focus-within {
       --tw-ring-inset: inset;
+    }
+  }
+  .hover\:border-\[var\(--seq-color-border-normal\)\] {
+    &:hover {
+      @media (hover: hover) {
+        border-color: var(--seq-color-border-normal);
+      }
     }
   }
   .hover\:bg-button-glass {

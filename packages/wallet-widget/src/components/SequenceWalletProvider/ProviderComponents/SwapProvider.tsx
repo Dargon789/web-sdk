@@ -18,7 +18,15 @@ export const SwapProvider = ({ children }: { children: ReactNode }) => {
 
   const allNetworks = useMemo(
     () => [
-      ...new Set([...chains.map(chain => chain.id), ...(readOnlyNetworks || []), ...displayedAssets.map(asset => asset.chainId)])
+      ...new Set(
+        [
+          ...chains.map(chain => chain.id),
+          ...(readOnlyNetworks || []),
+          ...displayedAssets.map(asset => asset.chainId)
+        ].filter(
+          (id): id is number => typeof id === 'number' && Number.isFinite(id)
+        )
+      )
     ],
     [chains, readOnlyNetworks, displayedAssets]
   )

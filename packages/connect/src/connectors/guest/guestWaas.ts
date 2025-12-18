@@ -12,10 +12,10 @@ export const guestWaas = (options: GuestWaasOptions): Wallet => ({
   name: 'Guest',
   type: 'social',
   createConnector: () => {
-    const connector = sequenceWaasWallet({
-      ...options,
-      loginType: 'guest'
-    })
-    return connector
+    return sequenceWaasWallet({
+          ...options,
+          loginType: 'guest'
+        });
+
   }
 })

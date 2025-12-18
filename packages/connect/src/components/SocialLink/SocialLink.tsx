@@ -26,6 +26,10 @@ export function SocialLink() {
   const [showEmailWarning, setEmailWarning] = useState(false)
   const [code, setCode] = useState<string[]>([])
 
+  useEffect(() => {
+    setCode([])
+  }, [email])
+
   const sequenceWaaS = useSequenceWaaS()
   const { data: googleClientId } = useStorageItem(LocalStorageKey.WaasGoogleClientID)
   const { data: appleClientId } = useStorageItem(LocalStorageKey.WaasAppleClientID)
@@ -73,7 +77,10 @@ export function SocialLink() {
     }
   }
 
-  const appleRedirectUri = 'https://' + window.location.host
+  const appleRedirectUri =
+    typeof window !== 'undefined' && window.location && window.location.host
+      ? 'https://' + window.location.host
+      : '';
   const handleAppleLogin = async (response: { authorization: { id_token: string } }) => {
     const challenge = await sequenceWaaS.initAuth({ idToken: response.authorization.id_token })
 
@@ -262,32 +269,21 @@ const DEVICE_EMOJIS = [
   ...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷🕸🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐓🦃🦚🦜🦢🦩🕊🐇🦝🦨🦡🦦🦥🐁🐀🐿🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿🍀🎍🎋🍃👣🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🥭🍍🥥🥝🍅🥑🥦🥬🥒🌶🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🥪🥙🧆🌮🌯🥗🥘🥫🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜👀👂👃👄👅👆👇👈👉👊👋👌👍👎👏👐👑👒👓🎯🎰🎱🎲🎳👾👯👺👻👽🏂🏃🏄'
 ]
 
-// Helper for cryptographically secure random integers [0, max)
-function getSecureRandomInt(max: number): number {
-  if (typeof window === 'undefined' || !window.crypto || !window.crypto.getRandomValues) {
-    // fallback for test environment or SSR; should never be used in production browsers
-    return Math.floor(Math.random() * max)
-  }
-  // Calculate the min number of bytes needed
-  const array = new Uint32Array(1)
-  const range = Math.floor(0xFFFFFFFF / max) * max
-  let rand
-  do {
-    window.crypto.getRandomValues(array)
-    rand = array[0]
-  } while (rand >= range)
-  return rand % max
-}
-
 function randomName() {
   const wordlistSize = 2048
   const words = ethers.wordlists.en
 
-  const randomEmoji = DEVICE_EMOJIS[getSecureRandomInt(DEVICE_EMOJIS.length)]
-  const randomWord1 = words.getWord(getSecureRandomInt(wordlistSize))
-  const randomWord2 = words.getWord(getSecureRandomInt(wordlistSize))
+  const getRandomIndex = (max: number) => {
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return array[0] % max;
+  };
 
-  return `${randomEmoji} ${randomWord1} ${randomWord2}`
+  const randomEmoji = DEVICE_EMOJIS[getRandomIndex(DEVICE_EMOJIS.length)];
+  const randomWord1 = words.getWord(getRandomIndex(wordlistSize));
+  const randomWord2 = words.getWord(getRandomIndex(wordlistSize));
+
+  return `${randomEmoji} ${randomWord1} ${randomWord2}`;
 }
 
 function getMessageFromUnknownError(e: unknown) {

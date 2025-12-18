@@ -15,10 +15,10 @@ export const epicWaas = (options: EpicWaasOptions): Wallet => ({
   name: 'Epic',
   type: 'social',
   createConnector: () => {
-    const connector = sequenceWaasWallet({
-      ...options,
-      loginType: 'epic'
-    })
-    return connector
+    return sequenceWaasWallet({
+          ...options,
+          loginType: 'epic'
+        });
+
   }
 })

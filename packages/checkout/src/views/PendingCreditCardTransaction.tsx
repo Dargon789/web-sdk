@@ -8,14 +8,14 @@ import { formatUnits } from 'viem'
 import { EVENT_SOURCE } from '../constants/index.js'
 import { useFortePaymentController, type TransactionPendingNavigation } from '../contexts/index.js'
 import {
-  useCreditCardCheckoutModal,
+  useCheckoutModal,
   useFortePaymentIntent,
   useNavigation,
   useSkipOnCloseCallback,
   useTransactionStatusModal
 } from '../hooks/index.js'
 import { useTransakWidgetUrl } from '../hooks/useTransakWidgetUrl.js'
-import { getCurrencyCode, getTransakProxyAddress } from '../utils/transak.js'
+import { getCurrencyCode, TRANSAK_PROXY_ADDRESS } from '../utils/transak.js'
 
 interface PendingCreditTransactionProps {
   skipOnCloseCallback: () => void
@@ -45,7 +45,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
   const { analytics } = useAnalyticsContext()
   const { openTransactionStatusModal } = useTransactionStatusModal()
   const nav = useNavigation()
-  const { settings, closeCreditCardCheckout } = useCreditCardCheckoutModal()
+  const { settings, closeCheckout } = useCheckoutModal()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
 
   const {
@@ -76,20 +76,18 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
 
   const tokenMetadata = tokensMetadata ? tokensMetadata[0] : undefined
 
-  const transakConfig = settings?.transakConfig
+  const transakConfig = settings?.creditCardCheckout?.transakConfig
 
   // Transak requires the recipient address to be the proxy address
   // so we need to replace the recipient address with the proxy address in the calldata
   // this is a weird hack so that credit card integrations are as simple as possible and should work 99% of the time
   // If an issue arises, the user can override the calldata in the transak settings
 
-  const transakProxyAddress = getTransakProxyAddress(network?.chainId || 137) || ''
-
   const calldataWithProxy =
     transakConfig?.callDataOverride ??
     creditCardCheckout.calldata.replace(
       creditCardCheckout.recipientAddress.toLowerCase().substring(2),
-      transakProxyAddress.substring(2)
+      TRANSAK_PROXY_ADDRESS.toLowerCase().substring(2)
     )
 
   const price = Number(formatUnits(BigInt(creditCardCheckout.currencyQuantity), Number(creditCardCheckout.currencyDecimals)))
@@ -183,7 +181,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
           }
         })
 
-        closeCreditCardCheckout()
+        closeCheckout()
         openTransactionStatusModal({
           chainId: creditCardCheckout.chainId,
           currencyAddress: creditCardCheckout.currencyAddress,
@@ -279,7 +277,7 @@ export const PendingCreditCardTransactionForte = ({ skipOnCloseCallback }: Pendi
   const {
     params: { creditCardCheckout }
   } = nav.navigation as TransactionPendingNavigation
-  const { closeCreditCardCheckout } = useCreditCardCheckoutModal()
+  const { closeCheckout } = useCheckoutModal()
 
   const {
     data: tokenMetadatas,
@@ -351,7 +349,7 @@ export const PendingCreditCardTransactionForte = ({ skipOnCloseCallback }: Pendi
       creditCardCheckout
     })
     skipOnCloseCallback()
-    closeCreditCardCheckout()
+    closeCheckout()
   }, [paymentIntentData])
 
   const isError = isErrorTokenMetadata || isErrorPaymentIntent
