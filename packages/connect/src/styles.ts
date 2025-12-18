@@ -570,6 +570,9 @@ export const styles = String.raw`
   .w-\[80px\] {
     width: 80px;
   }
+  .w-\[80px\] {
+    width: 80px;
+  }
   .w-\[100px\] {
     width: 100px;
   }
