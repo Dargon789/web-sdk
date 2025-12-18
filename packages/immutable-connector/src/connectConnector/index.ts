@@ -1,1 +1,1 @@
-export { immutable, type ImmutableOptions } from './immutable.js'
+export * from './immutable'
