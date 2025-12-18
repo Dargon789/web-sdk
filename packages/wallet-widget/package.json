@@ -1,6 +1,6 @@
 {
   "name": "@0xsequence/wallet-widget",
-  "version": "5.3.10",
+  "version": "5.4.1",
   "description": "Wallet UI for Sequence Web SDK",
   "repository": "https://github.com/0xsequence/web-sdk/tree/master/packages/wallet-widget",
   "author": "Horizon Blockchain Games",
@@ -20,7 +20,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm build:clean && pnpm build:esm",
+    "build": "pnpm build:clean && pnpm build:esm && pnpm build:cjs",
+    "build:cjs": "tsc --module commonjs --moduleResolution node --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/cjs && echo '{ \"type\": \"commonjs\" }' > dist/cjs/package.json",
     "build:esm": "tsc --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/esm",
     "build:clean": "rimraf -g ./dist",
     "build:check": "attw --pack .",
@@ -41,7 +42,6 @@
   "peerDependencies": {
     "@0xsequence/api": ">=2.3.23",
     "@0xsequence/checkout": "workspace:*",
-    "@0xsequence/web-sdk-core": "workspace:*",
     "@0xsequence/connect": "workspace:*",
     "@0xsequence/hooks": "workspace:*",
     "@0xsequence/indexer": ">=2.3.23",
@@ -51,7 +51,7 @@
     "ethers": ">= 6.13.0",
     "react": ">= 17",
     "react-dom": ">= 17",
-    "viem": "^2.33.3",
+    "viem": ">= 2.28.0",
     "wagmi": ">= 2.15.0"
   },
   "devDependencies": {
@@ -62,7 +62,7 @@
     "ethers": "^6.13.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "viem": "^2.33.3",
+    "viem": "^2.28.1",
     "wagmi": "^2.15.1"
   }
 }
