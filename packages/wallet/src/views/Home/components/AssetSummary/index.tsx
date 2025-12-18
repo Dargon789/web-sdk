@@ -21,7 +21,7 @@ export const AssetSummary = () => {
   const { data: balances = [], isPending: isPendingBalances } = useBalancesAssetsSummary({
     accountAddress: address || '',
     chainIds: selectedNetworks,
-    displayAssets: displayedAssets,
+    displayAssets: [...displayedAssets],
     hideCollectibles,
     verifiedOnly: hideUnlistedTokens
   })

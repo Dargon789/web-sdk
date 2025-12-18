@@ -1,4 +1,4 @@
-import { useKitConfig } from '../contexts/KitConfig'
+import { useKitConfig } from '../hooks/useKitConfig'
 
 export const useProjectAccessKey = () => {
   const { projectAccessKey } = useKitConfig()

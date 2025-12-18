@@ -15,7 +15,7 @@ import {
 } from '@0xsequence/design-system'
 import {
   getNativeTokenInfoByChainId,
-  useAnalyticsContext,
+  useAnalytics,
   ExtendedConnector,
   useExchangeRate,
   useCoinPrices,
@@ -37,7 +37,7 @@ interface SendCoinProps {
 
 export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const { setNavigation } = useNavigation()
-  const { analytics } = useAnalyticsContext()
+  const { analytics } = useAnalytics()
   const { chains } = useConfig()
   const connectedChainId = useChainId()
   const { address: accountAddress = '', connector } = useAccount()
