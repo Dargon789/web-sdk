@@ -1,5 +1,5 @@
 // Constants
-export { QUERY_KEYS } from './constants.js'
+export { DEFAULT_SLIPPAGE_BPS, QUERY_KEYS } from './constants.js'
 
 // Contexts
 export {
@@ -15,6 +15,10 @@ export { useAPIClient } from './hooks/API/useAPIClient.js'
 export { useGetCoinPrices } from './hooks/API/useGetCoinPrices.js'
 export { useGetCollectiblePrices } from './hooks/API/useGetCollectiblePrices.js'
 export { useGetExchangeRate } from './hooks/API/useGetExchangeRate.js'
+export { useGetWaasStatus } from './hooks/API/useGetWaasStatus.js'
+
+// Builder
+export { useDetectContractVersion } from './hooks/Builder/useDetectContractVersion.js'
 
 // Indexer
 export { useIndexerClient, useIndexerClients } from './hooks/Indexer/useIndexerClient.js'
@@ -38,9 +42,9 @@ export { useGetContractInfo } from './hooks/Metadata/useGetContractInfo.js'
 export { useGetMultipleContractsInfo } from './hooks/Metadata/useGetMultipleContractsInfo.js'
 export { useGetTokenMetadata } from './hooks/Metadata/useGetTokenMetadata.js'
 
-export { useGetSwapQuote } from './hooks/Combination/useGetSwapQuote'
-export { useGetSwapRoutes } from './hooks/Combination/useGetSwapRoutes'
+export { useGetSwapQuote } from './hooks/Combination/useGetSwapQuote.js'
+export { useGetSwapRoutes } from './hooks/Combination/useGetSwapRoutes.js'
 
 // Etc
-export { useClearCachedBalances } from './hooks/useClearCachedBalances'
-export { useClipboard } from './hooks/useClipboard'
+export { useClearCachedBalances } from './hooks/useClearCachedBalances.js'
+export { useClipboard } from './hooks/useClipboard.js'
