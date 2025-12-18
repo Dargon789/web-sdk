@@ -31,7 +31,7 @@ export default defineConfig(() => {
     },
     server: {
       minify: false,
-      port: 4444,
+      port: 3000,
       fs: {
         // Allow serving files from one level up to the project root
         allow: ['..']
