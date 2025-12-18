@@ -1,9 +1,21 @@
 'use client'
 
-import { createGenericContext } from '@0xsequence/web-sdk-core'
+import { createContext, useContext } from 'react'
 
 import type { ConnectConfig } from '../types.js'
 
-const [useConnectConfigContext, ConnectConfigContextProvider] = createGenericContext<ConnectConfig>()
+const ConnectConfigContext = createContext<ConnectConfig | undefined>(undefined)
 
-export { ConnectConfigContextProvider, useConnectConfigContext }
+export const ConnectConfigContextProvider = ConnectConfigContext.Provider
+
+export const useConnectConfigContext = (): ConnectConfig => {
+  const ctx = useContext(ConnectConfigContext)
+  if (!ctx) {
+    throw new Error('useConnectConfigContext must be used within a Provider')
+  }
+  return ctx
+}
+
+export const useOptionalConnectConfigContext = (): ConnectConfig | undefined => {
+  return useContext(ConnectConfigContext)
+}

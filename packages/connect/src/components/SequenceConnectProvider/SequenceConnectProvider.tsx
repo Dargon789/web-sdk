@@ -1,10 +1,10 @@
 'use client'
 
-import { sequence } from '0xsequence'
-import { Button, Card, Collapsible, Modal, ModalPrimitive, Text, ToastProvider, type Theme } from '@0xsequence/design-system'
+import { Button, Card, Modal, ModalPrimitive, Spinner, Text, ToastProvider, type Theme } from '@0xsequence/design-system'
 import { SequenceHooksProvider } from '@0xsequence/hooks'
 import { ChainId } from '@0xsequence/network'
-import { SequenceClient } from '@0xsequence/provider'
+import { SequenceClient, setupAnalytics, type Analytics } from '@0xsequence/provider'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AnimatePresence } from 'motion/react'
 import React, { useEffect, useState } from 'react'
 import { hexToString, type Hex } from 'viem'
@@ -17,13 +17,22 @@ import { ConnectModalContextProvider } from '../../contexts/ConnectModal.js'
 import { SocialLinkContextProvider } from '../../contexts/SocialLink.js'
 import { ThemeContextProvider } from '../../contexts/Theme.js'
 import { WalletConfigContextProvider } from '../../contexts/WalletConfig.js'
+import { useResolvedConnectConfig } from '../../hooks/useResolvedConnectConfig.js'
 import { useStorage } from '../../hooks/useStorage.js'
+import { useSyncWagmiChains } from '../../hooks/useSyncWagmiChains.js'
 import { useWaasConfirmationHandler } from '../../hooks/useWaasConfirmationHandler.js'
 import { useEmailConflict } from '../../hooks/useWaasEmailConflict.js'
-import { type ConnectConfig, type DisplayedAsset, type EthAuthSettings, type ModalPosition } from '../../types.js'
+import {
+  type ConnectConfig,
+  type DisplayedAsset,
+  type EthAuthSettings,
+  type ExtendedConnector,
+  type ModalPosition
+} from '../../types.js'
 import { isJSON } from '../../utils/helpers.js'
 import { getModalPositionCss } from '../../utils/styling.js'
 import { Connect } from '../Connect/Connect.js'
+import { EpicAuthProvider } from '../EpicAuthProvider/index.js'
 import { JsonTreeViewer } from '../JsonTreeViewer.js'
 import { NetworkBadge } from '../NetworkBadge/index.js'
 import { PageHeading } from '../PageHeading/index.js'
@@ -38,7 +47,15 @@ export type SequenceConnectProviderProps = {
 }
 
 export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => {
-  const { config, children } = props
+  const { config: incomingConfig, children } = props
+  const {
+    resolvedConfig: config,
+    isLoading: isWalletConfigLoading,
+    enabledProviders,
+    isV3WalletSignedIn,
+    isAuthStatusLoading,
+    walletConfigurationSignIn
+  } = useResolvedConnectConfig(incomingConfig)
   const {
     defaultTheme = 'dark',
     signIn = {},
@@ -50,7 +67,8 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
     hideExternalConnectOptions = false,
     hideConnectedWallets = false,
     hideSocialConnectOptions = false,
-    customCSS
+    customCSS,
+    waasConfigKey = ''
   } = config
 
   const defaultAppName = signIn.projectName || 'app'
@@ -64,11 +82,12 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
   const [analytics, setAnalytics] = useState<SequenceClient['analytics']>()
   const { address, isConnected } = useAccount()
   const wagmiConfig = useConfig()
-  const storage = useStorage()
+  useSyncWagmiChains(config, wagmiConfig)
   const connections = useConnections()
   const waasConnector: Connector | undefined = connections.find(c => c.connector.id.includes('waas'))?.connector
-
   const [isWalletWidgetOpen, setIsWalletWidgetOpen] = useState<boolean>(false)
+
+  const storage = useStorage()
 
   useEffect(() => {
     const handleWalletModalStateChange = (event: Event) => {
@@ -88,25 +107,35 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
     !isWalletWidgetOpen
   )
 
-  const setupAnalytics = (projectAccessKey: string) => {
-    const s = sequence.initWallet(projectAccessKey)
-    const sequenceAnalytics = s.client.analytics
+  const googleWaasConnector = wagmiConfig.connectors.find(
+    c => c.id === 'sequence-waas' && (c as ExtendedConnector)._wallet.id === 'google-waas'
+  ) as ExtendedConnector | undefined
 
-    if (sequenceAnalytics) {
-      type TrackArgs = Parameters<typeof sequenceAnalytics.track>
-      const originalTrack = sequenceAnalytics.track.bind(sequenceAnalytics)
+  // Google OAuth is required for the WaaS Google connector. Prefer the connector's clientId,
+  // then fall back to the new config.google.clientId, and finally the deprecated googleClientId flag.
+  const googleClientId: string =
+    (googleWaasConnector as any)?.params?.googleClientId ||
+    (config as any)?.google?.clientId ||
+    (config as any)?.googleClientId ||
+    ''
 
-      sequenceAnalytics.track = (...args: TrackArgs) => {
-        const [event] = args
-        if (event && typeof event === 'object' && 'props' in event) {
-          event.props = {
-            ...event.props,
-            sdkType: 'sequence web sdk',
-            version: WEB_SDK_VERSION
-          }
+  const getAnalyticsClient = (projectAccessKey: string) => {
+    // @ts-ignore-next-line
+    const sequenceAnalytics = setupAnalytics(projectAccessKey) as Analytics
+
+    type TrackArgs = Parameters<Analytics['track']>
+    const originalTrack = sequenceAnalytics.track.bind(sequenceAnalytics)
+
+    sequenceAnalytics.track = (...args: TrackArgs) => {
+      const [event] = args
+      if (event && typeof event === 'object' && 'props' in event) {
+        event.props = {
+          ...event.props,
+          sdkType: 'sequence web sdk',
+          version: WEB_SDK_VERSION
         }
-        return originalTrack?.(...args)
       }
+      return originalTrack?.(...args)
     }
     setAnalytics(sequenceAnalytics)
   }
@@ -124,9 +153,9 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
 
   useEffect(() => {
     if (!disableAnalytics) {
-      setupAnalytics(config.projectAccessKey)
+      getAnalyticsClient(config.projectAccessKey)
     }
-  }, [])
+  }, [disableAnalytics, config.projectAccessKey])
 
   useEffect(() => {
     if (theme !== defaultTheme) {
@@ -161,7 +190,7 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
   }, [theme, ethAuth])
 
   useEffect(() => {
-    setDisplayedAssets(displayedAssets)
+    setDisplayedAssets(displayedAssetsSetting)
   }, [displayedAssetsSetting])
 
   const { isEmailConflictOpen, emailConflictInfo, toggleEmailConflictModal } = useEmailConflict()
@@ -187,200 +216,207 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
           <ConnectModalContextProvider
             value={{ isConnectModalOpen: openConnectModal, setOpenConnectModal, openConnectModalState: openConnectModal }}
           >
-            <WalletConfigContextProvider
-              value={{
-                setDisplayedAssets,
-                displayedAssets,
-                readOnlyNetworks,
-                hideExternalConnectOptions,
-                hideConnectedWallets,
-                hideSocialConnectOptions
-              }}
-            >
-              <AnalyticsContextProvider value={{ setAnalytics, analytics }}>
-                <ToastProvider>
-                  {/* TODO: either remove SocialLinkContextProvider or figure out what to do for waasConfigKey */}
-                  <SocialLinkContextProvider value={{ isSocialLinkOpen, waasConfigKey: '', setIsSocialLinkOpen }}>
-                    <ShadowRoot theme={theme} customCSS={customCSS}>
-                      <AnimatePresence>
-                        {openConnectModal && (
-                          <Modal
-                            scroll={false}
-                            size="sm"
-                            contentProps={{
-                              style: {
-                                maxWidth: '390px',
-                                overflow: 'visible',
-                                ...getModalPositionCss(position)
-                              }
-                            }}
-                            onClose={() => setOpenConnectModal(false)}
-                          >
-                            <Connect onClose={() => setOpenConnectModal(false)} {...props} />
-                          </Modal>
-                        )}
-
-                        {pendingRequestConfirmation && (
-                          <Modal
-                            scroll={false}
-                            size="sm"
-                            contentProps={{
-                              style: {
-                                maxWidth: '390px',
-                                ...getModalPositionCss(position)
-                              }
-                            }}
-                            isDismissible={false}
-                            onClose={() => {
-                              rejectPendingRequest('')
-                            }}
-                          >
-                            <div className="px-4 pt-4 pb-2">
-                              <div
-                                className="flex flex-col justify-center text-primary items-center font-medium"
-                                style={{
-                                  marginTop: '4px'
-                                }}
-                              >
-                                <ModalPrimitive.Title asChild>
-                                  <Text className="mb-5" variant="large" asChild>
-                                    <h1>
-                                      Confirm{' '}
-                                      {pendingRequestConfirmation.type === 'signMessage' ? 'signing message' : 'transaction'}
-                                    </h1>
-                                  </Text>
-                                </ModalPrimitive.Title>
-
-                                {pendingRequestConfirmation.type === 'signMessage' && pendingRequestConfirmation.message && (
-                                  <div className="flex flex-col w-full">
-                                    <Text variant="normal" color="muted" fontWeight="medium">
-                                      Message
+            <GoogleOAuthProvider clientId={googleClientId || ''}>
+              <WalletConfigContextProvider
+                value={{
+                  setDisplayedAssets,
+                  displayedAssets,
+                  readOnlyNetworks,
+                  hideExternalConnectOptions,
+                  hideConnectedWallets,
+                  hideSocialConnectOptions
+                }}
+              >
+                <AnalyticsContextProvider value={{ setAnalytics, analytics }}>
+                  <ToastProvider>
+                    <SocialLinkContextProvider value={{ isSocialLinkOpen, waasConfigKey, setIsSocialLinkOpen }}>
+                      <ShadowRoot theme={theme} customCSS={customCSS}>
+                        <AnimatePresence>
+                          {openConnectModal && (
+                            <Modal
+                              scroll={false}
+                              size="sm"
+                              contentProps={{
+                                style: {
+                                  maxWidth: '390px',
+                                  overflow: 'visible',
+                                  ...getModalPositionCss(position)
+                                }
+                              }}
+                              onClose={() => setOpenConnectModal(false)}
+                            >
+                              {isWalletConfigLoading || isAuthStatusLoading ? (
+                                <div className="flex py-16 justify-center items-center">
+                                  <Spinner size="lg" />
+                                </div>
+                              ) : (
+                                <EpicAuthProvider>
+                                  <Connect
+                                    onClose={() => setOpenConnectModal(false)}
+                                    emailConflictInfo={emailConflictInfo}
+                                    {...props}
+                                    config={incomingConfig}
+                                    resolvedConfig={config}
+                                    isV3WalletSignedIn={isV3WalletSignedIn}
+                                    isAuthStatusLoading={isAuthStatusLoading}
+                                    enabledProviders={enabledProviders}
+                                    walletConfigurationSignIn={walletConfigurationSignIn}
+                                  />
+                                </EpicAuthProvider>
+                              )}
+                            </Modal>
+                          )}
+                          {pendingRequestConfirmation && (
+                            <Modal
+                              scroll={false}
+                              size="sm"
+                              contentProps={{
+                                style: {
+                                  maxWidth: '390px',
+                                  ...getModalPositionCss(position)
+                                }
+                              }}
+                              isDismissible={false}
+                              onClose={() => {
+                                rejectPendingRequest('')
+                              }}
+                            >
+                              <div className="px-4 pt-4 pb-2">
+                                <div
+                                  className="flex flex-col justify-center text-primary items-center font-medium"
+                                  style={{
+                                    marginTop: '4px'
+                                  }}
+                                >
+                                  <ModalPrimitive.Title asChild>
+                                    <Text className="mb-5" variant="large" asChild>
+                                      <h1>
+                                        Confirm{' '}
+                                        {pendingRequestConfirmation.type === 'signMessage' ? 'signing message' : 'transaction'}
+                                      </h1>
                                     </Text>
-                                    <Card className="mt-2 py-2 overflow-scroll max-h-[200px]">
-                                      <Text className="mb-4" variant="normal">
-                                        {isJSON(pendingRequestConfirmation.message) ? (
-                                          <JsonTreeViewer data={JSON.parse(pendingRequestConfirmation.message)} />
-                                        ) : (
-                                          hexToString(pendingRequestConfirmation.message as unknown as Hex)
-                                        )}
-                                      </Text>
-                                    </Card>
-                                  </div>
-                                )}
+                                  </ModalPrimitive.Title>
 
-                                {pendingRequestConfirmation.type === 'signTransaction' && (
-                                  <div className="flex flex-col w-full">
+                                  {pendingRequestConfirmation.type === 'signMessage' && pendingRequestConfirmation.message && (
+                                    <div className="flex flex-col w-full">
+                                      <Text variant="normal" color="muted" fontWeight="medium">
+                                        Message
+                                      </Text>
+                                      <Card className="mt-2 py-2 overflow-scroll max-h-[200px]">
+                                        <Text className="mb-4" variant="normal">
+                                          {isJSON(pendingRequestConfirmation.message) ? (
+                                            <JsonTreeViewer data={JSON.parse(pendingRequestConfirmation.message)} />
+                                          ) : (
+                                            hexToString(pendingRequestConfirmation.message as unknown as Hex)
+                                          )}
+                                        </Text>
+                                      </Card>
+                                    </div>
+                                  )}
+
+                                  {pendingRequestConfirmation.type === 'signTransaction' && (
                                     <TxnDetails
                                       address={address ?? ''}
                                       txs={pendingRequestConfirmation.txs ?? []}
                                       chainId={pendingRequestConfirmation.chainId ?? ChainId.POLYGON}
                                     />
+                                  )}
 
-                                    <Collapsible className="mt-4" label="Transaction data">
-                                      <Card className="overflow-x-scroll my-3">
-                                        <Text className="mb-4" variant="code">
-                                          {JSON.stringify(pendingRequestConfirmation.txs, null, 2)}
+                                  {pendingRequestConfirmation.chainId && (
+                                    <div className="flex w-full mt-3 justify-end items-center">
+                                      <div className="flex w-1/2 justify-start">
+                                        <Text variant="small" color="muted">
+                                          Network
                                         </Text>
-                                      </Card>
-                                    </Collapsible>
-                                  </div>
-                                )}
-
-                                {pendingRequestConfirmation.chainId && (
-                                  <div className="flex w-full mt-3 justify-end items-center">
-                                    <div className="flex w-1/2 justify-start">
-                                      <Text variant="small" color="muted">
-                                        Network
-                                      </Text>
+                                      </div>
+                                      <div className="flex w-1/2 justify-end">
+                                        <NetworkBadge chainId={pendingRequestConfirmation.chainId} />
+                                      </div>
                                     </div>
-                                    <div className="flex w-1/2 justify-end">
-                                      <NetworkBadge chainId={pendingRequestConfirmation.chainId} />
-                                    </div>
-                                  </div>
-                                )}
+                                  )}
 
-                                <div className="flex flex-row gap-2 w-full mt-5">
-                                  <Button
-                                    className="w-full"
-                                    shape="square"
-                                    size="lg"
-                                    label="Reject"
-                                    onClick={() => {
-                                      rejectPendingRequest(pendingRequestConfirmation?.id)
-                                    }}
-                                  />
-                                  <Button
-                                    className="flex items-center text-center w-full"
-                                    shape="square"
-                                    size="lg"
-                                    label="Confirm"
-                                    variant="primary"
-                                    onClick={() => {
-                                      confirmPendingRequest(pendingRequestConfirmation?.id)
-                                    }}
-                                  />
+                                  <div className="flex flex-row gap-2 w-full mt-5">
+                                    <Button
+                                      className="w-full"
+                                      shape="square"
+                                      size="lg"
+                                      label="Reject"
+                                      onClick={() => {
+                                        rejectPendingRequest(pendingRequestConfirmation?.id)
+                                      }}
+                                    />
+                                    <Button
+                                      className="flex items-center text-center w-full"
+                                      shape="square"
+                                      size="lg"
+                                      label="Confirm"
+                                      variant="primary"
+                                      onClick={() => {
+                                        confirmPendingRequest(pendingRequestConfirmation?.id)
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="mt-4">
+                                  <PoweredBySequence />
                                 </div>
                               </div>
-
-                              <div className="mt-4">
-                                <PoweredBySequence />
+                            </Modal>
+                          )}
+                          {isEmailConflictOpen && emailConflictInfo && (
+                            <Modal
+                              size="sm"
+                              scroll={false}
+                              onClose={() => {
+                                setOpenConnectModal(false)
+                                toggleEmailConflictModal(false)
+                              }}
+                            >
+                              <div className="p-4">
+                                <ModalPrimitive.Title asChild>
+                                  <PageHeading>Email already in use</PageHeading>
+                                </ModalPrimitive.Title>
+                                <div>
+                                  <Text className="text-center" variant="normal" color="secondary">
+                                    Another account with this email address{' '}
+                                    <Text color="primary">({emailConflictInfo.email})</Text> already exists with account type{' '}
+                                    <Text color="primary">({emailConflictInfo.type})</Text>. Please sign in again with the correct
+                                    account.
+                                  </Text>
+                                  <div className="flex mt-4 gap-2 items-center justify-center">
+                                    <Button
+                                      label="OK"
+                                      onClick={() => {
+                                        setOpenConnectModal(false)
+                                        toggleEmailConflictModal(false)
+                                      }}
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </Modal>
-                        )}
-
-                        {isEmailConflictOpen && emailConflictInfo && (
-                          <Modal
-                            size="sm"
-                            scroll={false}
-                            onClose={() => {
-                              setOpenConnectModal(false)
-                              toggleEmailConflictModal(false)
-                            }}
-                          >
-                            <div className="p-4">
-                              <ModalPrimitive.Title asChild>
-                                <PageHeading>Email already in use</PageHeading>
-                              </ModalPrimitive.Title>
-                              <div>
-                                <Text className="text-center" variant="normal" color="secondary">
-                                  Another account with this email address <Text color="primary">({emailConflictInfo.email})</Text>{' '}
-                                  already exists with account type <Text color="primary">({emailConflictInfo.type})</Text>. Please
-                                  sign in again with the correct account.
+                            </Modal>
+                          )}
+                          {isSocialLinkOpen &&
+                            (waasConnector ? (
+                              <Modal size="sm" scroll={false} onClose={() => setIsSocialLinkOpen(false)}>
+                                <SocialLink />
+                              </Modal>
+                            ) : (
+                              <Modal size="sm" scroll={false} onClose={() => setIsSocialLinkOpen(false)}>
+                                <Text className="p-8" variant="medium" color="warning">
+                                  Social link is not supported for universal wallets (works only for embedded wallets)
                                 </Text>
-                                <div className="flex mt-4 gap-2 items-center justify-center">
-                                  <Button
-                                    label="OK"
-                                    onClick={() => {
-                                      setOpenConnectModal(false)
-                                      toggleEmailConflictModal(false)
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </Modal>
-                        )}
-
-                        {isSocialLinkOpen &&
-                          (waasConnector ? (
-                            <Modal size="sm" scroll={false} onClose={() => setIsSocialLinkOpen(false)}>
-                              <SocialLink />
-                            </Modal>
-                          ) : (
-                            <Modal size="sm" scroll={false} onClose={() => setIsSocialLinkOpen(false)}>
-                              <Text className="p-8" variant="medium" color="warning">
-                                Social link is not supported for universal wallets (works only for embedded wallets)
-                              </Text>
-                            </Modal>
-                          ))}
-                      </AnimatePresence>
-                    </ShadowRoot>
-                    {children}
-                  </SocialLinkContextProvider>
-                </ToastProvider>
-              </AnalyticsContextProvider>
-            </WalletConfigContextProvider>
+                              </Modal>
+                            ))}
+                        </AnimatePresence>
+                      </ShadowRoot>
+                      {children}
+                    </SocialLinkContextProvider>
+                  </ToastProvider>
+                </AnalyticsContextProvider>
+              </WalletConfigContextProvider>
+            </GoogleOAuthProvider>
           </ConnectModalContextProvider>
         </ThemeContextProvider>
       </ConnectConfigContextProvider>

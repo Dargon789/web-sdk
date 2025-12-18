@@ -1,5 +1,5 @@
 export const styles = String.raw`
-/*! tailwindcss v4.1.13 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */
 @layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
@@ -12,12 +12,15 @@ export const styles = String.raw`
     --color-black: #000;
     --color-white: #fff;
     --spacing: 0.25rem;
+    --container-md: 28rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
     --text-sm--line-height: calc(1.25 / 0.875);
     --text-base: 1rem;
     --text-base--line-height: calc(1.5 / 1);
+    --text-lg: 1.125rem;
+    --text-lg--line-height: calc(1.75 / 1.125);
     --text-xl: 1.25rem;
     --text-xl--line-height: calc(1.75 / 1.25);
     --text-2xl: 1.5rem;
@@ -41,6 +44,7 @@ export const styles = String.raw`
     --radius-2xl: 1rem;
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
     --animate-spin: spin 1s linear infinite;
+    --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     --blur-xs: 4px;
     --blur-md: 12px;
     --default-transition-duration: 150ms;
@@ -315,9 +319,6 @@ export const styles = String.raw`
   .my-4 {
     margin-block: calc(var(--spacing) * 4);
   }
-  .mt-0 {
-    margin-top: calc(var(--spacing) * 0);
-  }
   .mt-1 {
     margin-top: calc(var(--spacing) * 1);
   }
@@ -339,17 +340,20 @@ export const styles = String.raw`
   .mt-10 {
     margin-top: calc(var(--spacing) * 10);
   }
+  .-mr-\[1px\] {
+    margin-right: calc(1px * -1);
+  }
   .mr-4 {
     margin-right: calc(var(--spacing) * 4);
+  }
+  .-mb-\[1px\] {
+    margin-bottom: calc(1px * -1);
   }
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
   }
   .mb-2 {
     margin-bottom: calc(var(--spacing) * 2);
-  }
-  .mb-3 {
-    margin-bottom: calc(var(--spacing) * 3);
   }
   .mb-4 {
     margin-bottom: calc(var(--spacing) * 4);
@@ -438,14 +442,14 @@ export const styles = String.raw`
   .h-16 {
     height: calc(var(--spacing) * 16);
   }
-  .h-24 {
-    height: calc(var(--spacing) * 24);
-  }
   .h-\[1px\] {
     height: 1px;
   }
   .h-\[2px\] {
     height: 2px;
+  }
+  .h-\[17px\] {
+    height: 17px;
   }
   .h-\[52px\] {
     height: 52px;
@@ -459,14 +463,17 @@ export const styles = String.raw`
   .h-\[64px\] {
     height: 64px;
   }
-  .h-\[128px\] {
-    height: 128px;
+  .h-\[200px\] {
+    height: 200px;
   }
   .h-\[206px\] {
     height: 206px;
   }
   .h-\[calc\(100dvh-70px\)\] {
     height: calc(100dvh - 70px);
+  }
+  .h-auto {
+    height: auto;
   }
   .h-fit {
     height: fit-content;
@@ -497,6 +504,9 @@ export const styles = String.raw`
   }
   .min-h-\[100px\] {
     min-height: 100px;
+  }
+  .min-h-\[128px\] {
+    min-height: 128px;
   }
   .min-h-full {
     min-height: 100%;
@@ -555,6 +565,9 @@ export const styles = String.raw`
   .w-\[1px\] {
     width: 1px;
   }
+  .w-\[17px\] {
+    width: 17px;
+  }
   .w-\[44px\] {
     width: 44px;
   }
@@ -563,6 +576,9 @@ export const styles = String.raw`
   }
   .w-\[56px\] {
     width: 56px;
+  }
+  .w-\[80px\] {
+    width: 80px;
   }
   .w-\[100px\] {
     width: 100px;
@@ -609,8 +625,14 @@ export const styles = String.raw`
   .min-w-full {
     min-width: 100%;
   }
+  .flex-1 {
+    flex: 1;
+  }
   .flex-shrink {
     flex-shrink: 1;
+  }
+  .flex-shrink-0 {
+    flex-shrink: 0;
   }
   .shrink-0 {
     flex-shrink: 0;
@@ -649,6 +671,9 @@ export const styles = String.raw`
   }
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+  }
+  .animate-pulse {
+    animation: var(--animate-pulse);
   }
   .animate-skeleton {
     animation: skeleton 1s ease infinite;
@@ -691,6 +716,9 @@ export const styles = String.raw`
   }
   .flex-row {
     flex-direction: row;
+  }
+  .flex-wrap {
+    flex-wrap: wrap;
   }
   .place-items-center {
     place-items: center;
@@ -818,21 +846,9 @@ export const styles = String.raw`
     border-top-left-radius: var(--radius-2xl);
     border-top-right-radius: var(--radius-2xl);
   }
-  .rounded-t-none {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
-  .rounded-t-xl {
-    border-top-left-radius: var(--radius-xl);
-    border-top-right-radius: var(--radius-xl);
-  }
   .rounded-b-none {
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
-  }
-  .rounded-b-xl {
-    border-bottom-right-radius: var(--radius-xl);
-    border-bottom-left-radius: var(--radius-xl);
   }
   .border {
     border-style: var(--tw-border-style);
@@ -866,6 +882,9 @@ export const styles = String.raw`
     --tw-border-style: solid;
     border-style: solid;
   }
+  .border-background-primary {
+    border-color: var(--seq-color-background-primary);
+  }
   .border-border-error {
     border-color: var(--seq-color-border-error);
   }
@@ -874,12 +893,6 @@ export const styles = String.raw`
   }
   .border-border-normal {
     border-color: var(--seq-color-border-normal);
-  }
-  .border-primary {
-    border-color: var(--seq-color-primary);
-  }
-  .border-red-500 {
-    border-color: var(--color-red-500);
   }
   .border-transparent {
     border-color: transparent;
@@ -946,10 +959,6 @@ export const styles = String.raw`
   }
   .bg-white {
     background-color: var(--color-white);
-  }
-  .bg-gradient-to-r {
-    --tw-gradient-position: to right in oklab;
-    background-image: linear-gradient(var(--tw-gradient-stops));
   }
   .bg-gradient-primary {
     background-image: var(--seq-color-gradient-primary);
@@ -1035,11 +1044,14 @@ export const styles = String.raw`
   .py-4 {
     padding-block: calc(var(--spacing) * 4);
   }
-  .py-5 {
-    padding-block: calc(var(--spacing) * 5);
-  }
   .py-6 {
     padding-block: calc(var(--spacing) * 6);
+  }
+  .py-8 {
+    padding-block: calc(var(--spacing) * 8);
+  }
+  .py-16 {
+    padding-block: calc(var(--spacing) * 16);
   }
   .pt-0 {
     padding-top: calc(var(--spacing) * 0);
@@ -1070,9 +1082,6 @@ export const styles = String.raw`
   }
   .pr-4 {
     padding-right: calc(var(--spacing) * 4);
-  }
-  .pb-0 {
-    padding-bottom: calc(var(--spacing) * 0);
   }
   .pb-2 {
     padding-bottom: calc(var(--spacing) * 2);
@@ -1128,6 +1137,10 @@ export const styles = String.raw`
   .text-base {
     font-size: var(--text-base);
     line-height: var(--tw-leading, var(--text-base--line-height));
+  }
+  .text-lg {
+    font-size: var(--text-lg);
+    line-height: var(--tw-leading, var(--text-lg--line-height));
   }
   .text-sm {
     font-size: var(--text-sm);
@@ -1241,9 +1254,6 @@ export const styles = String.raw`
   }
   .text-black {
     color: var(--color-black);
-  }
-  .text-gray-500 {
-    color: var(--color-gray-500);
   }
   .text-info {
     color: var(--seq-color-info);
@@ -2390,6 +2400,11 @@ export const styles = String.raw`
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
   }
 }
 @keyframes skeleton {

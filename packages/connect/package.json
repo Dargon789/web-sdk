@@ -1,6 +1,6 @@
 {
   "name": "@0xsequence/connect",
-  "version": "5.4.1",
+  "version": "5.4.8",
   "description": "Connect package for Sequence Web SDK",
   "keywords": [
     "sequence",
@@ -28,7 +28,7 @@
     "build": "pnpm run writeVersion && pnpm build:clean && pnpm build:css && pnpm build:esm && pnpm build:cjs",
     "build:cjs": "tsc --module commonjs --moduleResolution node --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/cjs && echo '{ \"type\": \"commonjs\" }' > dist/cjs/package.json",
     "build:esm": "tsc --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/esm",
-    "build:css": "node scripts/build-css.js",
+    "build:css": "node scripts/build-css.js && prettier --write src/styles.ts",
     "build:clean": "rimraf -g ./dist",
     "build:check": "attw --pack .",
     "dev": "pnpm run writeVersion && concurrently \"pnpm dev:tsc\"  \"pnpm watch-css\"",
@@ -39,17 +39,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@0xsequence/api": ">=2.3.23",
-    "@0xsequence/auth": "^2.3.23",
-    "@0xsequence/core": "^2.3.23",
+    "@0xsequence/dapp-client": "3.0.0-beta.4",
+    "@0xsequence/api": ">=2.3.38",
+    "@0xsequence/auth": "^2.3.38",
+    "@0xsequence/core": "^2.3.38",
     "@0xsequence/design-system": "2.1.11",
     "@0xsequence/ethauth": "^1.0.0",
-    "@0xsequence/indexer": "^2.3.23",
-    "@0xsequence/metadata": "^2.3.23",
-    "@0xsequence/network": "^2.3.23",
-    "@0xsequence/provider": "^2.3.23",
-    "@0xsequence/utils": "^2.3.23",
-    "@0xsequence/waas": "^2.3.23",
+    "@0xsequence/indexer": "^2.3.38",
+    "@0xsequence/metadata": "^2.3.38",
+    "@0xsequence/network": "^2.3.38",
+    "@0xsequence/provider": "^2.3.38",
+    "@0xsequence/utils": "^2.3.38",
+    "@0xsequence/waas": "^2.3.38",
     "@tailwindcss/cli": "^4.1.11",
     "clsx": "^2.1.1",
     "fuse.js": "^7.1.0",
@@ -58,7 +59,7 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "0xsequence": ">= 2.3.23",
+    "0xsequence": ">= 2.3.38",
     "@0xsequence/hooks": "workspace:*",
     "@databeat/tracker": "^0.9.3",
     "@react-oauth/google": "^0.11.1",
@@ -71,7 +72,7 @@
     "wagmi": ">= 2.15.0"
   },
   "devDependencies": {
-    "0xsequence": "^2.3.23",
+    "0xsequence": "^2.3.38",
     "@0xsequence/hooks": "workspace:*",
     "@tanstack/react-query": "^5.74.11",
     "@types/uuid": "^9.0.8",

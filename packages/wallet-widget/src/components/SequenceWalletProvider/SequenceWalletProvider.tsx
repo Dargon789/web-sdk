@@ -127,6 +127,7 @@ export const WalletContent = ({ children }: SequenceWalletProviderProps) => {
                           }
                         }}
                         scroll={false}
+                        isDismissible={navigation.location !== 'search'}
                         onClose={() => setOpenWalletModal(false)}
                       >
                         <div

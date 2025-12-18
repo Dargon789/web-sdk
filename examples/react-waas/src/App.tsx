@@ -1,206 +1,29 @@
-import { sequence } from '0xsequence'
-import { useOpenConnectModal, useWaasFeeOptions, useWaasRevalidation } from '@0xsequence/kit'
-import { useEffect, useState } from 'react'
-import { formatUnits } from 'viem'
-import {
-  useAccount,
-  useChainId,
-  useDisconnect,
-  usePublicClient,
-  useSendTransaction,
-  useSwitchChain,
-  useWalletClient
-} from 'wagmi'
+import { SequenceCheckoutProvider } from '@0xsequence/checkout'
+import { SequenceConnect } from '@0xsequence/connect'
+import { SequenceWalletProvider } from '@0xsequence/wallet-widget'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
-import './App.css'
+import { Homepage } from './components/Homepage'
+import { ImmutableCallback } from './components/ImmutableCallback'
+import { InlineDemo } from './components/InlineDemo'
+import { XAuthCallback } from './components/XAuthCallback'
+import { checkoutConfig, config } from './config'
 
 export const App = () => {
-  const { setOpenConnectModal } = useOpenConnectModal()
-  const { disconnect } = useDisconnect()
-  const { data: walletClient } = useWalletClient()
-  const { address, isConnected } = useAccount()
-
-  // Switching chain
-  const { switchChain } = useSwitchChain()
-  const chainId = useChainId()
-  const networkForCurrentChainId = sequence.network.allNetworks.find(n => n.chainId === chainId)
-
-  useWaasRevalidation()
-
-  const switchNetwork = () => {
-    if (chainId === 421614) {
-      switchChain({ chainId: 42170 })
-    } else {
-      switchChain({ chainId: 421614 })
-    }
-
-    setLastTxnDataHash(undefined)
-    setMessageSig(undefined)
-    setIsMessageValid(undefined)
-  }
-
-  // Signing and verifying message
-  const messageToSign = 'Two roads diverged in a yellow wood'
-  const publicClient = usePublicClient({ chainId })
-
-  const [isSigningMessage, setIsSigningMessage] = useState(false)
-  const [messageSig, setMessageSig] = useState<string | undefined>()
-  const [isMessageValid, setIsMessageValid] = useState<boolean | undefined>()
-
-  const signMessage = async () => {
-    if (!walletClient) {
-      return
-    }
-
-    setMessageSig(undefined)
-    setIsMessageValid(undefined)
-
-    setIsSigningMessage(true)
-
-    try {
-      const message = messageToSign
-
-      // sign
-      const sig = await walletClient.signMessage({
-        account: address || ('' as `0x${string}`),
-        message
-      })
-      console.log('address', address)
-      console.log('signature:', sig)
-      console.log('chainId in homepage', chainId)
-
-      const [account] = await walletClient.getAddresses()
-
-      const isValid = await publicClient?.verifyMessage({
-        address: account,
-        message,
-        signature: sig
-      })
-
-      setIsSigningMessage(false)
-      setIsMessageValid(isValid)
-      setMessageSig(sig)
-
-      console.log('isValid?', isValid)
-    } catch (e) {
-      setIsSigningMessage(false)
-      console.error(e)
-    }
-  }
-
-  // Sending txn
-  const [lastTxnDataHash, setLastTxnDataHash] = useState<string | undefined>()
-
-  const { data: txnData, sendTransaction, isPending } = useSendTransaction()
-  const runSendTransaction = async () => {
-    if (!walletClient) {
-      return
-    }
-
-    const [account] = await walletClient.getAddresses()
-
-    sendTransaction({ to: account, value: BigInt('0'), gas: null })
-  }
-
-  useEffect(() => {
-    if (txnData) {
-      setLastTxnDataHash(txnData)
-    }
-  }, [txnData])
-
-  // Fee options are required when txn is not gas sponsored (not needed on testnets)
-  const [pendingFeeOptionConfirmation, confirmPendingFeeOption] = useWaasFeeOptions()
-
-  const [selectedFeeTokenAddress, setSelectedFeeTokenAddress] = useState<string | null | undefined>() // option is null for native token, string for erc20 token
-  useEffect(() => {
-    if (pendingFeeOptionConfirmation) {
-      setSelectedFeeTokenAddress(pendingFeeOptionConfirmation.options[0].token.contractAddress) // preselect first option
-    }
-  }, [pendingFeeOptionConfirmation])
-
-  const confirmFeeOption = () => {
-    if (pendingFeeOptionConfirmation && selectedFeeTokenAddress !== undefined) {
-      confirmPendingFeeOption(pendingFeeOptionConfirmation.id, selectedFeeTokenAddress)
-    }
-  }
-
   return (
-    <div>
-      <div className="container">
-        <h2 style={{ marginBottom: '10px' }}>Vite + React + Sequence Kit with WaaS</h2>
-        {!isConnected && (
-          <div className="card" style={{ background: 'transparent' }}>
-            <button onClick={() => setOpenConnectModal(true)}>Connect</button>
-          </div>
-        )}
-
-        {isConnected && (
-          <>
-            <div className="card">{isConnected && <p>Wallet address: ({address})</p>}</div>
-
-            <div className="card">
-              <p>Network: {networkForCurrentChainId?.name}</p>
-              <button onClick={() => switchNetwork()} disabled={isPending}>
-                Switch network
-              </button>
-            </div>
-            <div className="card">
-              <button onClick={() => runSendTransaction()} disabled={isPending}>
-                Send transaction
-              </button>
-
-              {isPending && <p>Transaction is pending...</p>}
-
-              {networkForCurrentChainId?.blockExplorer && lastTxnDataHash && (
-                <div>
-                  <p style={{ overflowWrap: 'anywhere' }}>Transaction hash: {lastTxnDataHash}</p>
-
-                  <a target="_blank" href={`${networkForCurrentChainId?.blockExplorer?.rootUrl}/tx/${lastTxnDataHash}`}>
-                    View on {networkForCurrentChainId?.name} explorer
-                  </a>
-                </div>
-              )}
-
-              {pendingFeeOptionConfirmation && (
-                <div className="card">
-                  <p>Select fee option</p>
-                  <select className="fee-option-select" onChange={e => setSelectedFeeTokenAddress(e.target.value)}>
-                    {pendingFeeOptionConfirmation.options.map(option => {
-                      return (
-                        <option key={option.token.contractAddress} value={option.token.contractAddress}>
-                          {option.token.name} - {formatUnits(BigInt(option.value), option.token!.decimals!)}
-                        </option>
-                      )
-                    })}
-                  </select>
-
-                  <button style={{ display: 'block' }} onClick={() => confirmFeeOption()}>
-                    Confirm fee option
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="card">
-              <p>Sign message</p>
-              <p>Message: {messageToSign}</p>
-              <button onClick={signMessage} disabled={isPending}>
-                Sign message
-              </button>
-
-              {isSigningMessage && <p>Signing message...</p>}
-
-              {messageSig && <p style={{ overflowWrap: 'anywhere' }}>Signature: {messageSig}</p>}
-
-              {isMessageValid && <p>isValid: {isMessageValid.toString()}</p>}
-            </div>
-
-            <div className="card" style={{ background: 'transparent' }}>
-              <button onClick={() => disconnect()}>Disconnect</button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+    <SequenceConnect config={config}>
+      <SequenceWalletProvider>
+        <SequenceCheckoutProvider config={checkoutConfig}>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Homepage />} />
+              <Route path="/inline" element={<InlineDemo />} />
+              <Route path="/auth-callback" element={<ImmutableCallback />} />
+              <Route path="/auth-callback-X" element={<XAuthCallback />} />
+            </Routes>
+          </BrowserRouter>
+        </SequenceCheckoutProvider>
+      </SequenceWalletProvider>
+    </SequenceConnect>
   )
 }
