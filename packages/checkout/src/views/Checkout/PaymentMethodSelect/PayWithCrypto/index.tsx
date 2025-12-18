@@ -1,5 +1,14 @@
+import {
+  compareAddress,
+  ContractVerificationStatus,
+  formatDisplay,
+  sendTransactions,
+  TRANSACTION_CONFIRMATIONS_DEFAULT,
+  useAnalyticsContext
+} from '@0xsequence/connect'
 import { AddIcon, Button, ChevronDownIcon, Spinner, Text, TokenImage, WarningIcon } from '@0xsequence/design-system'
 import {
+  DEFAULT_SLIPPAGE_BPS,
   useClearCachedBalances,
   useGetCoinPrices,
   useGetContractInfo,
@@ -9,30 +18,29 @@ import {
 } from '@0xsequence/hooks'
 import { TransactionOnRampProvider } from '@0xsequence/marketplace'
 import { findSupportedNetwork } from '@0xsequence/network'
-import {
-  compareAddress,
-  ContractVerificationStatus,
-  formatDisplay,
-  sendTransactions,
-  TRANSACTION_CONFIRMATIONS_DEFAULT,
-  useAnalyticsContext
-} from '@0xsequence/web-sdk-core'
-import { useState } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 import { encodeFunctionData, formatUnits, zeroAddress, type Hex } from 'viem'
-import { useAccount, usePublicClient, useReadContract, useWalletClient } from 'wagmi'
+import { useAccount, useChainId, usePublicClient, useReadContract, useSwitchChain, useWalletClient } from 'wagmi'
 
 import { ERC_20_CONTRACT_ABI } from '../../../../constants/abi.js'
 import { EVENT_SOURCE } from '../../../../constants/index.js'
+import { type PaymentMethodSelectionParams } from '../../../../contexts/NavigationCheckout.js'
 import type { SelectPaymentSettings } from '../../../../contexts/SelectPaymentModal.js'
 import { useAddFundsModal } from '../../../../hooks/index.js'
 import { useSelectPaymentModal, useTransactionStatusModal } from '../../../../hooks/index.js'
 import { useNavigationCheckout } from '../../../../hooks/useNavigationCheckout.js'
+import { TRANSAK_ONRAMP_URL } from '../../../../utils/transak.js'
+
+import { useInitialBalanceCheck } from './useInitialBalanceCheck.js'
 
 interface PayWithCryptoTabProps {
   skipOnCloseCallback: () => void
+  isSwitchingChainRef: RefObject<boolean>
 }
 
-export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps) => {
+export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: PayWithCryptoTabProps) => {
+  const connectedChainId = useChainId()
+  const { switchChain } = useSwitchChain()
   const { triggerAddFunds } = useAddFundsModal()
   const { clearCachedBalances } = useClearCachedBalances()
   const [isPurchasing, setIsPurchasing] = useState<boolean>(false)
@@ -57,7 +65,9 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
     onError = () => {},
     onClose = () => {},
     supplementaryAnalyticsInfo,
-    slippageBps
+    slippageBps,
+    successActionButtons,
+    onSuccessChecker
   } = selectPaymentSettings
 
   const isFree = Number(price) == 0
@@ -66,12 +76,13 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
   const chainId = network?.chainId || 137
 
   const { address: userAddress, connector } = useAccount()
-  const { data: walletClient } = useWalletClient({
-    chainId: chainId
-  })
-  const publicClient = usePublicClient({
-    chainId: chainId
-  })
+  const {
+    data: walletClient,
+    isLoading: isLoadingWalletClient,
+    isError: isErrorWalletClient,
+    error: errorWalletClient
+  } = useWalletClient()
+  const publicClient = usePublicClient()
   const indexerClient = useIndexerClient(chainId)
 
   const selectedCurrency = navigation.params?.selectedCurrency || {
@@ -79,7 +90,9 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
     chainId: chain
   }
 
+  // Check if the target currency (what the item is priced in) is native
   const isNativeToken = compareAddress(currencyAddress, zeroAddress)
+  // Check if the selected currency (what the user is paying with) is native
   const isNativeTokenSelectedCurrency = compareAddress(selectedCurrency.address, zeroAddress)
 
   const { data: tokenBalancesData, isLoading: tokenBalancesIsLoading } = useGetTokenBalancesSummary({
@@ -120,7 +133,12 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
 
   const buyCurrencyAddress = currencyAddress
 
-  const { data: swapQuote, isLoading: isLoadingSwapQuote } = useGetSwapQuote(
+  const {
+    data: swapQuote,
+    isLoading: isLoadingSwapQuote,
+    isError: isErrorSwapQuote,
+    error: swapQuoteError
+  } = useGetSwapQuote(
     {
       params: {
         walletAddress: userAddress ?? '',
@@ -129,7 +147,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
         toTokenAmount: price,
         chainId: chainId,
         includeApprove: true,
-        slippageBps: slippageBps || 100
+        slippageBps: slippageBps || DEFAULT_SLIPPAGE_BPS
       }
     },
     {
@@ -137,7 +155,18 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
     }
   )
 
-  const selectedCurrencyPrice = isSwapTransaction ? swapQuote?.maxPrice || 0 : price || 0
+  useEffect(() => {
+    if (isSwitchingChainRef.current && connectedChainId == Number(chainId) && !isLoadingWalletClient) {
+      isSwitchingChainRef.current = false
+      onClickPurchase()
+    }
+  }, [connectedChainId, chainId, isLoadingWalletClient, isSwitchingChainRef.current])
+
+  const isNotEnoughBalanceError =
+    typeof swapQuoteError?.cause === 'string' && swapQuoteError?.cause?.includes('not enough balance for swap')
+
+  const maxPrice = swapQuote?.maxPrice && swapQuote.maxPrice !== '' ? swapQuote.maxPrice : 0
+  const selectedCurrencyPrice = isSwapTransaction ? maxPrice : price || 0
 
   const { data: allowanceData, isLoading: allowanceIsLoading } = useReadContract({
     abi: ERC_20_CONTRACT_ABI,
@@ -146,23 +175,37 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
     address: currencyAddress as Hex,
     args: [userAddress, approvedSpenderAddress || targetContractAddress],
     query: {
-      enabled: !!userAddress && !isNativeTokenSelectedCurrency
+      enabled: !!userAddress && !isNativeToken
     }
   })
+
+  const isInitialBalanceChecked = (navigation.params as PaymentMethodSelectionParams).isInitialBalanceChecked
 
   const isLoading =
     isLoadingCoinPrice ||
     isLoadingCurrencyInfo ||
-    (allowanceIsLoading && !isNativeTokenSelectedCurrency) ||
+    (allowanceIsLoading && !isNativeToken) ||
     isLoadingSwapQuote ||
     tokenBalancesIsLoading ||
-    isLoadingSelectedCurrencyInfo
+    isLoadingSelectedCurrencyInfo ||
+    !isInitialBalanceChecked
 
   const tokenBalance = tokenBalancesData?.pages?.[0]?.balances?.find(balance =>
     compareAddress(balance.contractAddress, selectedCurrency.address)
   )
 
-  const isInsufficientBalance = tokenBalance?.balance && BigInt(tokenBalance.balance) < BigInt(selectedCurrencyPrice)
+  const isInsufficientBalance =
+    tokenBalance === undefined ||
+    (tokenBalance?.balance && tokenBalance.balance !== '' && BigInt(tokenBalance.balance) < BigInt(selectedCurrencyPrice))
+
+  useInitialBalanceCheck({
+    userAddress: userAddress || '',
+    buyCurrencyAddress,
+    price,
+    chainId,
+    isInsufficientBalance: isInsufficientBalance as boolean,
+    tokenBalancesIsLoading
+  })
 
   const isApproved: boolean = (allowanceData as bigint) >= BigInt(price) || isNativeToken
 
@@ -173,28 +216,36 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
     significantDigits: 6
   })
 
-  const formattedBalance = formatUnits(BigInt(tokenBalance?.balance || '0'), selectedCurrencyInfo?.decimals || 18)
-  const displayBalance = formatDisplay(formattedBalance, {
-    disableScientificNotation: true,
-    disableCompactNotation: true,
-    significantDigits: 6
-  })
-
   const fiatExchangeRate = coinPricesData?.[0].price?.value || 0
   const priceFiat = (fiatExchangeRate * Number(formattedPrice)).toFixed(2)
 
   const onPurchaseMainCurrency = async () => {
-    if (!walletClient || !userAddress || !publicClient || !indexerClient || !connector) {
-      return
+    if (!walletClient || isErrorWalletClient || errorWalletClient) {
+      throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
+        cause: errorWalletClient
+      })
+    }
+    if (!userAddress) {
+      throw new Error('User address is not available. Please ensure your wallet is connected.')
+    }
+    if (!publicClient) {
+      throw new Error('Public client is not available. Please check your network connection.')
+    }
+    if (!indexerClient) {
+      throw new Error('Indexer client is not available. Please check your network connection.')
+    }
+    if (!connector) {
+      throw new Error('Wallet connector is not available. Please ensure your wallet is properly connected.')
     }
 
     setIsPurchasing(true)
     setIsError(false)
 
     try {
-      const walletClientChainId = await walletClient.getChainId()
-      if (walletClientChainId !== chainId) {
-        await walletClient.switchChain({ id: chainId })
+      if (connectedChainId != chainId) {
+        await switchChain({ chainId })
+        isSwitchingChainRef.current = true
+        return
       }
 
       const approveTxData = encodeFunctionData({
@@ -280,7 +331,9 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
           clearCachedBalances()
           onSuccess(txHash)
         },
-        onClose
+        onClose,
+        successActionButtons,
+        onSuccessChecker
       })
     } catch (e) {
       console.error('Failed to purchase...', e)
@@ -292,17 +345,30 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
   }
 
   const onClickPurchaseSwap = async () => {
-    if (!walletClient || !userAddress || !publicClient || !userAddress || !connector || !swapQuote) {
-      return
+    if (!walletClient) {
+      throw new Error('Wallet client is not available. Please ensure your wallet is connected.')
+    }
+    if (!userAddress) {
+      throw new Error('User address is not available. Please ensure your wallet is connected.')
+    }
+    if (!publicClient) {
+      throw new Error('Public client is not available. Please check your network connection.')
+    }
+    if (!connector) {
+      throw new Error('Wallet connector is not available. Please ensure your wallet is properly connected.')
+    }
+    if (!swapQuote) {
+      throw new Error('Swap quote is not available. Please try selecting a different token or refresh the page.')
     }
 
     setIsPurchasing(true)
     setIsError(false)
 
     try {
-      const walletClientChainId = await walletClient.getChainId()
-      if (walletClientChainId !== chainId) {
-        await walletClient.switchChain({ id: chainId })
+      if (connectedChainId != chainId) {
+        await switchChain({ chainId })
+        isSwitchingChainRef.current = true
+        return
       }
 
       const approveTxData = encodeFunctionData({
@@ -336,7 +402,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
             : {})
         },
         // Actual transaction optional approve step
-        ...(isApproved || isNativeTokenSelectedCurrency
+        ...(isApproved || isNativeToken
           ? []
           : [
               {
@@ -413,7 +479,9 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
           clearCachedBalances()
           onSuccess(txHash)
         },
-        onClose
+        onClose,
+        successActionButtons,
+        onSuccessChecker
       })
     } catch (e) {
       console.error('Failed to purchase...', e)
@@ -433,6 +501,11 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
   }
 
   const onClickAddFunds = () => {
+    if (!onRampProvider || onRampProvider === TransactionOnRampProvider.unknown) {
+      window.open(TRANSAK_ONRAMP_URL, '_blank')
+      return
+    }
+
     const getNetworks = (): string | undefined => {
       const network = findSupportedNetwork(chainId)
       return network?.name?.toLowerCase()
@@ -442,7 +515,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
     closeSelectPaymentModal()
     triggerAddFunds({
       walletAddress: userAddress || '',
-      provider: onRampProvider || TransactionOnRampProvider.sardine,
+      provider: onRampProvider,
       networks: getNetworks(),
       defaultCryptoCurrency: dataCurrencyInfo?.symbol || '',
       onClose: selectPaymentSettings?.onClose
@@ -483,7 +556,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-3 justify-center items-center h-full">
+      <div className="flex flex-col gap-3 justify-center items-center h-full pt-5">
         <Spinner />
         <Text color="text50" fontWeight="medium" variant="xsmall">
           Fetching best crypto price for this purchase
@@ -493,6 +566,13 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
   }
 
   if (isInsufficientBalance) {
+    const formattedBalance = formatUnits(BigInt(tokenBalance?.balance || '0'), selectedCurrencyInfo?.decimals || 18)
+    const displayBalance = formatDisplay(formattedBalance, {
+      disableScientificNotation: true,
+      disableCompactNotation: true,
+      significantDigits: 6
+    })
+
     return (
       <div className="flex flex-col justify-center items-center h-full w-full gap-3">
         <div className="flex flex-row justify-between items-center w-full">
@@ -538,57 +618,89 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
   const PriceSection = () => {
     if (isFree) {
       return (
-        <div className="flex flex-col mb-2 w-full">
-          <Text
-            color="text100"
-            variant="xsmall"
-            fontWeight="bold"
-            style={{
-              fontSize: '24px'
-            }}
-          >
-            FREE ITEM
+        <div className="flex flex-col mt-2 mb-1 w-full">
+          <Text color="text100" variant="small" fontWeight="bold">
+            This item is free, click Confirm to mint to your wallet
           </Text>
         </div>
       )
     }
 
-    return (
-      <>
-        <div className="flex flex-row justify-between items-center w-full">
-          <div className="flex flex-col gap-0.5">
-            <Text
-              variant="xsmall"
-              color="negative"
-              fontWeight="bold"
-              style={{
-                fontSize: '24px'
-              }}
-            >
-              {displayPrice}
-            </Text>
-            <div className="flex flex-row gap-1 items-center">
-              <div className="text-negative">
-                <WarningIcon style={{ width: '14px', height: '14px' }} />
-              </div>
-              <Text color="negative" variant="xsmall" fontWeight="normal">
-                Insufficient funds
-              </Text>
-            </div>
-            <Text color="negative" variant="xsmall" fontWeight="normal">
-              Balance: {displayBalance} {selectedCurrencyInfo?.symbol}
-            </Text>
-          </div>
+    if (isNotEnoughBalanceError) {
+      return (
+        <div className="flex flex-row justify-between items-center w-full gap-2">
+          <Text color="negative" variant="small" fontWeight="bold">
+            Insufficient funds for this purchase
+          </Text>
           <div>
             <TokenSelector />
           </div>
         </div>
-      </>
+      )
+    }
+
+    if (isErrorSwapQuote) {
+      return (
+        <div className="flex flex-row justify-between items-center w-full gap-2">
+          <Text color="negative" variant="small" fontWeight="bold">
+            Couldn't get a valid quote for swap, please pick another token
+          </Text>
+          <div>
+            <TokenSelector />
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex flex-row flex-wrap justify-between items-center w-full gap-2">
+        <div className="flex flex-col gap-0 min-w-0">
+          <Text
+            variant="xsmall"
+            color="text100"
+            fontWeight="bold"
+            style={{
+              fontSize: '24px'
+            }}
+          >
+            {`${displayPrice} ${dataCurrencyInfo?.symbol}`}
+          </Text>
+          <div>
+            <Text color="text50" variant="xsmall" fontWeight="normal">
+              ~${priceFiat} USD
+            </Text>
+            <Text
+              color="text50"
+              fontWeight="bold"
+              style={{
+                fontSize: '10px'
+              }}
+            >
+              &nbsp;(fees included)
+            </Text>
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          <TokenSelector />
+        </div>
+      </div>
     )
   }
 
+  const getConfirmButtonText = () => {
+    if (isPurchasing || isSwitchingChainRef.current) {
+      return 'Confirmation in progress...'
+    }
+
+    if (isFree) {
+      return 'Confirm'
+    }
+
+    return 'Confirm payment'
+  }
+
   return (
-    <div className="flex flex-col justify-center items-center h-full w-full gap-3">
+    <div className="flex flex-col gap-4">
       <PriceSection />
 
       <div className="flex flex-col justify-start items-center w-full gap-1">
@@ -601,8 +713,8 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback }: PayWithCryptoTabProps)
         )}
 
         <Button
-          disabled={isPurchasing}
-          label={isFree ? 'Confirm' : 'Confirm payment'}
+          disabled={isPurchasing || isErrorSwapQuote || isSwitchingChainRef.current}
+          label={getConfirmButtonText()}
           className="w-full"
           shape="square"
           variant="primary"

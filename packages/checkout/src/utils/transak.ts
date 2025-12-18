@@ -1,22 +1,19 @@
-import { AddFundsSettings } from '../contexts'
+import type { AddFundsSettings } from '../contexts/AddFundsModal.js'
 
-export const TRANSAK_API_KEY = '5911d9ec-46b5-48fa-a755-d59a715ff0cf'
-export const TRANSAK_API_KEY_STAGING = 'c20f2a0e-fe6a-4133-8fa7-77e9f84edf98'
+export const TRANSAK_ONRAMP_URL = 'https://global.transak.com'
+
 export const TRANSAK_PROXY_ADDRESS = '0x4a598b7ec77b1562ad0df7dc64a162695ce4c78a'
 
-const TransakUrlProd = 'https://global.transak.com'
-const TransakUrlSandbox = 'https://global-stg.transak.com'
-
-export const getTransakLink = (addFundsSettings: AddFundsSettings, isDev?: boolean) => {
-  const defaultNetworks =
-    'ethereum,mainnet,arbitrum,optimism,polygon,polygonzkevm,zksync,base,bnb,oasys,astar,avaxcchain,immutablezkevm'
-
+export const getTransakLink = (
+  addFundsSettings: AddFundsSettings,
+  { transakApiUrl, transakApiKey }: { transakApiUrl: string; transakApiKey: string }
+) => {
   interface Options {
     [index: string]: string | undefined
   }
 
-  const url = new URL(isDev ? TransakUrlSandbox : TransakUrlProd)
-  const apiKey = isDev ? TRANSAK_API_KEY_STAGING : TRANSAK_API_KEY
+  const url = new URL(transakApiUrl)
+  const apiKey = transakApiKey
 
   const options: Options = {
     apiKey: apiKey,
@@ -28,7 +25,7 @@ export const getTransakLink = (addFundsSettings: AddFundsSettings, isDev?: boole
     defaultFiatAmount: addFundsSettings?.defaultFiatAmount || '50',
     defaultCryptoCurrency: addFundsSettings?.defaultCryptoCurrency || 'USDC',
     cryptoCurrencyList: addFundsSettings?.cryptoCurrencyList,
-    networks: addFundsSettings?.networks || defaultNetworks
+    networks: addFundsSettings?.networks
   }
 
   Object.keys(options).forEach(k => {
