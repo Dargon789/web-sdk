@@ -41,9 +41,10 @@ export const PendingTransaction = () => {
 
   const authToken = data?.token
 
-  const url = isDev
-    ? `https://sardine-checkout-sandbox.sequence.info/?client_token=${authToken}&show_features=true`
-    : `https://sardine-checkout.sequence.info/?client_token=${authToken}&show_features=true`
+  // using prod endpoints just for testing and debugging...
+  const url = !isDev
+  ? `https://sardine-checkout-sandbox.sequence.info?api_url=https://sardine-api-sandbox.sequence.info&client_token=${authToken}&show_features=true`
+  : `https://sardine-checkout.sequence.info?api_url=https://sardine-api.sequence.info&client_token=${authToken}&show_features=true`
 
   const pollForOrderStatus = async () => {
     try {
