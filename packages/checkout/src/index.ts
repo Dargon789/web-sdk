@@ -1,27 +1,24 @@
 // Provider
-export { SequenceCheckoutProvider, type SequenceCheckoutConfig } from './components/SequenceCheckoutProvider/index.js'
+export { SequenceCheckoutProvider, type SequenceCheckoutConfig } from './components/SequenceCheckoutProvider'
 
 // Hooks
-export { useCheckoutModal } from './hooks/useCheckoutModal.js'
-export { useAddFundsModal } from './hooks/useAddFundsModal.js'
-export { useSelectPaymentModal } from './hooks/useSelectPaymentModal.js'
-export { useTransferFundsModal } from './hooks/useTransferFundsModal.js'
-export { useSwapModal } from './hooks/useSwapModal.js'
-export { useERC1155SaleContractCheckout, useERC1155SaleContractPaymentModal } from './hooks/useERC1155SaleContractCheckout.js'
-export { useCheckoutUI } from './hooks/useCheckoutUI/index.js'
+export { useCheckoutModal } from './hooks/useCheckoutModal'
+export { useAddFundsModal } from './hooks/useAddFundsModal'
+export { useSelectPaymentModal } from './hooks/useSelectPaymentModal'
+export { useTransferFundsModal } from './hooks/useTransferFundsModal'
+export { useCheckoutWhitelistStatus } from './hooks/useCheckoutWhitelistStatus'
+export { useSwapModal } from './hooks/useSwapModal'
+export { useERC1155SaleContractCheckout, useERC1155SaleContractPaymentModal } from './hooks/useERC1155SaleContractCheckout'
+export { useCheckoutUI } from './hooks/useCheckoutUI'
+export { useEnvironmentContext } from './contexts/Environment'
 
-export { type ForteConfig } from './contexts/CheckoutModal.js'
-export { type AddFundsSettings } from './contexts/AddFundsModal.js'
-export { type CheckoutSettings } from './contexts/CheckoutModal.js'
-export { type ForteProtocolType } from './contexts/CheckoutModal.js'
-export { type SelectPaymentSettings } from './contexts/SelectPaymentModal.js'
-export { type SwapModalSettings } from './contexts/SwapModal.js'
-export { type CreditCardProviders } from './contexts/SelectPaymentModal.js'
-export { type TransactionStatusSettings } from './contexts/TransactionStatusModal.js'
-export { useTransactionStatusModal } from './hooks/useTransactionStatusModal.js'
-
+export { type CheckoutSettings } from './contexts/CheckoutModal'
+export { type AddFundsSettings } from './contexts/AddFundsModal'
+export { type SelectPaymentSettings } from './contexts/SelectPaymentModal'
+export { type SwapModalSettings } from './contexts/SwapModal'
+export { type CreditCardProviders } from './contexts/SelectPaymentModal'
 // utils
-export { fetchTransakSupportedCountries } from './utils/transak.js'
+export { fetchTransakSupportedCountries, getTransakLink } from './utils/transak'
 
 // OnRampProvider
 export { TransactionOnRampProvider } from '@0xsequence/marketplace'
