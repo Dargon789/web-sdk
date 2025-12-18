@@ -1,26 +1,27 @@
-import type { LifiToken } from '@0xsequence/api'
+import { Box, Button, Divider, Text } from '@0xsequence/design-system'
 import {
-  compareAddress,
-  sendTransactions,
-  TRANSACTION_CONFIRMATIONS_DEFAULT,
+  useBalancesSummary,
   useAnalyticsContext,
-  useClearCachedBalances,
-  useGetContractInfo,
-  useGetSwapQuote,
-  useGetSwapRoutes,
+  useBalances,
+  useContractInfo,
+  useSwapPrices,
+  useSwapQuote,
+  compareAddress,
+  TRANSACTION_CONFIRMATIONS_DEFAULT,
+  sendTransactions,
+  SwapPricesWithCurrencyInfo,
+  ContractVerificationStatus,
   useIndexerClient
-} from '@0xsequence/connect'
-import { Button, Divider, Spinner, Text } from '@0xsequence/design-system'
+} from '@0xsequence/kit'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { useEffect, useState } from 'react'
-import { encodeFunctionData, zeroAddress, type Hex } from 'viem'
-import { useAccount, usePublicClient, useReadContract, useWalletClient } from 'wagmi'
+import { useState, useEffect } from 'react'
+import { encodeFunctionData, Hex, zeroAddress } from 'viem'
+import { usePublicClient, useWalletClient, useReadContract, useAccount } from 'wagmi'
 
-import { NavigationHeader } from '../../components/NavigationHeader'
 import { HEADER_HEIGHT, NFT_CHECKOUT_SOURCE } from '../../constants'
 import { ERC_20_CONTRACT_ABI } from '../../constants/abi'
-import type { SelectPaymentSettings } from '../../contexts/SelectPaymentModal'
-import { useSelectPaymentModal, useSkipOnCloseCallback, useTransactionStatusModal } from '../../hooks'
+import { useClearCachedBalances, useSelectPaymentModal, useTransactionStatusModal, useSkipOnCloseCallback } from '../../hooks'
+import { NavigationHeader } from '../../shared/components/NavigationHeader'
 
 import { Footer } from './Footer'
 import { FundWithFiat } from './FundWithFiat'
@@ -44,19 +45,21 @@ export const PaymentSelectionHeader = () => {
 
 export const PaymentSelectionContent = () => {
   const { openTransactionStatusModal } = useTransactionStatusModal()
-  const { selectPaymentSettings = {} as SelectPaymentSettings } = useSelectPaymentModal()
+  const { selectPaymentSettings } = useSelectPaymentModal()
   const { analytics } = useAnalyticsContext()
 
   const [disableButtons, setDisableButtons] = useState(false)
   const [isError, setIsError] = useState<boolean>(false)
 
+  if (!selectPaymentSettings) {
+    return null
+  }
   const {
     chain,
     collectibles,
     collectionAddress,
     currencyAddress,
     targetContractAddress,
-    approvedSpenderAddress,
     price,
     txData,
     enableTransferFunds = true,
@@ -67,9 +70,7 @@ export const PaymentSelectionContent = () => {
     onRampProvider,
     onSuccess = () => {},
     onError = () => {},
-    onClose = () => {},
-    supplementaryAnalyticsInfo,
-    slippageBps
+    onClose = () => {}
   } = selectPaymentSettings
 
   const isNativeToken = compareAddress(currencyAddress, zeroAddress)
@@ -94,51 +95,64 @@ export const PaymentSelectionContent = () => {
     functionName: 'allowance',
     chainId: chainId,
     address: currencyAddress as Hex,
-    args: [userAddress, approvedSpenderAddress || targetContractAddress],
+    args: [userAddress, targetContractAddress],
     query: {
       enabled: !!userAddress && !isNativeToken
     }
   })
 
-  const { data: _currencyInfoData, isLoading: isLoadingCurrencyInfo } = useGetContractInfo({
-    chainID: String(chainId),
-    contractAddress: currencyAddress
+  const { data: _currencyBalanceData, isLoading: currencyBalanceIsLoading } = useBalancesSummary({
+    chainIds: [chainId],
+    filter: {
+      accountAddresses: userAddress ? [userAddress] : [],
+      contractStatus: ContractVerificationStatus.ALL,
+      contractWhitelist: [currencyAddress],
+      omitNativeBalances: true
+    },
+    // omitMetadata must be true to avoid a bug
+    omitMetadata: true
   })
 
-  const buyCurrencyAddress = currencyAddress
+  const { data: _currencyInfoData, isLoading: isLoadingCurrencyInfo } = useContractInfo(chainId, currencyAddress)
 
-  const { data: swapRoutes = [], isLoading: swapRoutesIsLoading } = useGetSwapRoutes(
+  const buyCurrencyAddress = currencyAddress
+  const sellCurrencyAddress = selectedCurrency || ''
+
+  const { data: swapPrices = [], isLoading: _swapPricesIsLoading } = useSwapPrices(
     {
-      walletAddress: userAddress ?? '',
-      chainId,
-      toTokenAmount: price,
-      toTokenAddress: currencyAddress
+      userAddress: userAddress ?? '',
+      buyCurrencyAddress,
+      chainId: chainId,
+      buyAmount: price,
+      withContractInfo: true
     },
     { disabled: !enableSwapPayments }
   )
 
   const disableSwapQuote = !selectedCurrency || compareAddress(selectedCurrency, buyCurrencyAddress)
 
-  const { data: swapQuote, isLoading: isLoadingSwapQuote } = useGetSwapQuote(
+  const { data: swapQuote, isLoading: isLoadingSwapQuote } = useSwapQuote(
     {
-      params: {
-        walletAddress: userAddress ?? '',
-        toTokenAddress: buyCurrencyAddress,
-        fromTokenAddress: selectedCurrency || '',
-        toTokenAmount: price,
-        chainId: chainId,
-        includeApprove: true,
-        slippageBps: slippageBps || 100
-      }
+      userAddress: userAddress ?? '',
+      buyCurrencyAddress: currencyAddress,
+      buyAmount: price,
+      chainId: chainId,
+      sellCurrencyAddress,
+      includeApprove: true
     },
     {
       disabled: disableSwapQuote
     }
   )
 
-  const isLoading = (allowanceIsLoading && !isNativeToken) || isLoadingCurrencyInfo
+  const isLoading = (allowanceIsLoading && !isNativeToken) || currencyBalanceIsLoading || isLoadingCurrencyInfo
 
   const isApproved: boolean = (allowanceData as bigint) >= BigInt(price) || isNativeToken
+
+  // const balanceInfo = currencyBalanceData?.find(balanceData => compareAddress(currencyAddress, balanceData.contractAddress))
+  // const balance: bigint = BigInt(balanceInfo?.balance || '0')
+  // let balanceFormatted = Number(formatUnits(balance, currencyInfoData?.decimals || 0))
+  // balanceFormatted = Math.trunc(Number(balanceFormatted) * 10000) / 10000
 
   useEffect(() => {
     clearCachedBalances()
@@ -161,7 +175,7 @@ export const PaymentSelectionContent = () => {
       const approveTxData = encodeFunctionData({
         abi: ERC_20_CONTRACT_ABI,
         functionName: 'approve',
-        args: [approvedSpenderAddress || targetContractAddress, price]
+        args: [targetContractAddress, price]
       })
 
       const transactions = [
@@ -201,7 +215,6 @@ export const PaymentSelectionContent = () => {
       analytics?.track({
         event: 'SEND_TRANSACTION_REQUEST',
         props: {
-          ...supplementaryAnalyticsInfo,
           type: 'crypto',
           source: NFT_CHECKOUT_SOURCE,
           chainId: String(chainId),
@@ -246,7 +259,7 @@ export const PaymentSelectionContent = () => {
     setDisableButtons(false)
   }
 
-  const onClickPurchaseSwap = async (swapTokenOption: LifiToken) => {
+  const onClickPurchaseSwap = async (swapPrice: SwapPricesWithCurrencyInfo) => {
     if (!walletClient || !userAddress || !publicClient || !userAddress || !connector || !swapQuote) {
       return
     }
@@ -263,17 +276,17 @@ export const PaymentSelectionContent = () => {
       const approveTxData = encodeFunctionData({
         abi: ERC_20_CONTRACT_ABI,
         functionName: 'approve',
-        args: [approvedSpenderAddress || targetContractAddress, price]
+        args: [targetContractAddress, price]
       })
 
-      const isSwapNativeToken = compareAddress(zeroAddress, swapTokenOption.address)
+      const isSwapNativeToken = compareAddress(zeroAddress, swapPrice.price.currencyAddress)
 
       const transactions = [
         // Swap quote optional approve step
         ...(swapQuote?.approveData && !isSwapNativeToken
           ? [
               {
-                to: swapTokenOption.address as Hex,
+                to: swapPrice.price.currencyAddress as Hex,
                 data: swapQuote.approveData as Hex,
                 chain: chainId
               }
@@ -328,11 +341,10 @@ export const PaymentSelectionContent = () => {
       analytics?.track({
         event: 'SEND_TRANSACTION_REQUEST',
         props: {
-          ...supplementaryAnalyticsInfo,
           type: 'crypto',
           source: NFT_CHECKOUT_SOURCE,
           chainId: String(chainId),
-          listedCurrency: swapTokenOption.address,
+          listedCurrency: swapPrice.price.currencyAddress,
           purchasedCurrency: currencyAddress,
           origin: window.location.origin,
           from: userAddress,
@@ -377,38 +389,33 @@ export const PaymentSelectionContent = () => {
     if (compareAddress(selectedCurrency || '', currencyAddress)) {
       onPurchaseMainCurrency()
     } else {
-      const foundSwap = swapRoutes
-        .flatMap(route => route.fromTokens)
-        .find(fromToken => fromToken.address.toLowerCase() === selectedCurrency?.toLowerCase())
+      const foundSwap = swapPrices?.find(price => price.info?.address === selectedCurrency)
       if (foundSwap) {
         onClickPurchaseSwap(foundSwap)
       }
     }
   }
 
-  const cryptoSymbol = isNativeToken ? network?.nativeToken.symbol : _currencyInfoData?.symbol
-
-  const validCreditCardProviders = creditCardProviders.filter(provider => {
-    if (provider === 'transak') {
-      return !!selectPaymentSettings?.transakConfig
-    }
-    return true
-  })
-
   return (
     <>
-      <div
-        className="flex flex-col gap-2 items-start w-full pb-0 px-6 h-full"
+      <Box
+        flexDirection="column"
+        gap="2"
+        alignItems="flex-start"
+        width="full"
+        paddingBottom="0"
+        paddingX="6"
+        height="full"
         style={{
           paddingTop: HEADER_HEIGHT
         }}
       >
-        <div className="flex flex-col w-full gap-2">
+        <Box flexDirection="column" width="full" gap="2">
           <OrderSummary />
-        </div>
+        </Box>
         {(enableMainCurrencyPayment || enableSwapPayments) && (
           <>
-            <Divider className="w-full my-3" />
+            <Divider width="full" marginY="3" />
             <PayWithCrypto
               settings={selectPaymentSettings}
               disableButtons={disableButtons}
@@ -418,9 +425,9 @@ export const PaymentSelectionContent = () => {
             />
           </>
         )}
-        {validCreditCardProviders.length > 0 && (
+        {creditCardProviders?.length > 0 && (
           <>
-            <Divider className="w-full my-3" />
+            <Divider width="full" marginY="3" />
             <PayWithCreditCard
               settings={selectPaymentSettings}
               disableButtons={disableButtons}
@@ -430,57 +437,38 @@ export const PaymentSelectionContent = () => {
         )}
         {onRampProvider && (
           <>
-            <Divider className="w-full my-3" />
-            {isLoadingCurrencyInfo && !isNativeToken ? (
-              <div className="w-full h-full flex justify-center items-center">
-                <Spinner />
-              </div>
-            ) : (
-              <FundWithFiat
-                cryptoSymbol={cryptoSymbol}
-                walletAddress={userAddress || ''}
-                provider={onRampProvider}
-                chainId={chainId}
-                onClick={() => {
-                  skipOnCloseCallback()
-                }}
-              />
-            )}
+            <Divider width="full" marginY="3" />
+            <FundWithFiat walletAddress={userAddress || ''} provider={onRampProvider} chainId={chainId} />
           </>
         )}
         {enableTransferFunds && (
           <>
-            <Divider className="w-full my-3" />
+            <Divider width="full" marginY="3" />
             <TransferFunds />
           </>
         )}
         {(enableMainCurrencyPayment || enableSwapPayments) && (
           <>
             {isError && (
-              <div className="w-full" style={{ marginBottom: '-18px' }}>
+              <Box width="full" style={{ marginBottom: '-18px' }}>
                 <Text color="negative" variant="small">
                   A problem occurred while executing the transaction.
                 </Text>
-              </div>
+              </Box>
             )}
-            <div className="w-full">
+            <Box width="full">
               <Button
-                className="mt-6 w-full"
                 onClick={onClickPurchase}
-                disabled={
-                  isLoading ||
-                  disableButtons ||
-                  !selectedCurrency ||
-                  swapRoutesIsLoading ||
-                  (!disableSwapQuote && isLoadingSwapQuote)
-                }
+                disabled={isLoading || disableButtons || !selectedCurrency || (!disableSwapQuote && isLoadingSwapQuote)}
+                marginTop="6"
                 shape="square"
                 variant="primary"
+                width="full"
                 label="Complete Purchase"
               />
-              <div className="flex w-full justify-center items-center gap-0.5 my-2">
+              <Box width="full" justifyContent="center" alignItems="center" gap="0.5" marginY="2">
                 {/* Replace by icon from design-system once new release is out */}
-                <svg width="13" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 13 12" fill="none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="12" viewBox="0 0 13 12" fill="none">
                   <path
                     fillRule="evenodd"
                     clipRule="evenodd"
@@ -488,15 +476,15 @@ export const PaymentSelectionContent = () => {
                     fill="#6D6D6D"
                   />
                 </svg>
-                <Text className="mt-0.5" variant="xsmall" color="muted">
+                <Text variant="xsmall" color="text50" marginTop="0.5">
                   Secure Checkout
                 </Text>
-              </div>
-            </div>
+              </Box>
+            </Box>
           </>
         )}
-      </div>
-      <Divider className="my-0" />
+      </Box>
+      <Divider marginY="0" />
       <Footer />
     </>
   )

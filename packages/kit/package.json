@@ -1,0 +1,76 @@
+{
+  "name": "@0xsequence/kit",
+  "version": "4.6.1",
+  "description": "Core package for Sequence Kit",
+  "keywords": [
+    "sequence",
+    "kit",
+    "wallet"
+  ],
+  "repository": "https://github.com/0xsequence/kit/tree/master/packages/kit",
+  "author": "Horizon Blockchain Games",
+  "license": "Apache-2.0",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm build:clean && pnpm build:esm && pnpm build:cjs && pnpm build:types && pnpm build:copy-styles",
+    "build:cjs": "tsc --module commonjs --outDir dist/cjs/",
+    "build:esm": "tsc --module es2022 --outDir dist/esm/",
+    "build:types": "tsc --declaration --declarationMap --emitDeclarationOnly --declarationDir dist/types/",
+    "build:copy-styles": "cp ./node_modules/@0xsequence/design-system/dist/style.css ./dist/styles.css",
+    "build:clean": "rimraf -g ./dist",
+    "dev": "pnpm build:types && pnpm build:copy-styles && tsc --watch --module es2022 --declaration --declarationMap --outDir dist/esm/ --declarationDir dist/types/",
+    "test": "echo",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@0xsequence/api": "^2.2.13",
+    "@0xsequence/auth": "^2.2.13",
+    "@0xsequence/core": "^2.2.13",
+    "@0xsequence/indexer": "^2.2.13",
+    "@0xsequence/metadata": "^2.2.13",
+    "@0xsequence/network": "^2.2.13",
+    "@0xsequence/provider": "^2.2.13",
+    "@0xsequence/utils": "^2.2.13",
+    "@0xsequence/waas": "^2.2.13",
+    "@0xsequence/marketplace": ">= 2.2.4",
+    "@0xsequence/ethauth": "^1.0.0",
+    "@0xsequence/design-system": "^1.9.0",
+    "framer-motion": "^8.5.2",
+    "fuse.js": "^6.6.2",
+    "uuid": "^10.0.0"
+  },
+  "peerDependencies": {
+    "0xsequence": "^2.2.13",
+    "@react-oauth/google": "^0.11.1",
+    "@tanstack/react-query": "^5.0.0",
+    "ethers": "^6.13.0",
+    "react": ">= 17 < 19",
+    "react-apple-signin-auth": "^1.1.0",
+    "react-dom": ">= 17 < 19",
+    "viem": "^2.0.0",
+    "wagmi": "^2.13.3"
+  },
+  "devDependencies": {
+    "0xsequence": "^2.2.13",
+    "@tanstack/react-query": "^5.37.1",
+    "@types/uuid": "^9.0.8",
+    "ethers": "6.13.0",
+    "viem": "^2.12.0",
+    "wagmi": "^2.13.3"
+  }
+}

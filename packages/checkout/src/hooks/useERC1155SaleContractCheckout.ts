@@ -1,134 +1,36 @@
-import { useDetectContractVersion } from '@0xsequence/hooks'
-import { type CheckoutOptionsSalesContractArgs } from '@0xsequence/marketplace'
+import { CheckoutOptionsSalesContractArgs, TransactionSwapProvider } from '@0xsequence/marketplace'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { encodeFunctionData, toHex, zeroAddress, type Hex } from 'viem'
+import { Abi, Hex } from 'viem'
 import { useReadContract, useReadContracts } from 'wagmi'
 
-import { ERC_1155_SALE_CONTRACT } from '../constants/abi.js'
-import type { SelectPaymentSettings } from '../contexts/SelectPaymentModal.js'
+import { ERC_1155_SALE_CONTRACT } from '../constants/abi'
+import { SelectPaymentSettings } from '../contexts/SelectPaymentModal'
 
-import { useCheckoutOptionsSalesContract } from './useCheckoutOptionsSalesContract.js'
-import { useSelectPaymentModal } from './useSelectPaymentModal.js'
+import { useCheckoutOptionsSalesContract } from './useCheckoutOptionsSalesContract'
+import { useERC1155SaleContractPaymentModal } from './useSelectPaymentModal'
 
-/**
- * Return type for the useERC1155SaleContractCheckout hook.
- *
- * @property Function to open the checkout modal `openCheckoutModal`
- * @property Function to close the checkout modal `closeCheckoutModal`
- * @property Current payment settings for the modal `selectPaymentSettings`
- * @property Whether the contract data is still loading `isLoading`
- * @property Whether there was an error loading the contract data `isError`
- */
-interface UseERC1155SaleContractCheckoutReturnType {
+type BasePaymentModalSettings = Pick<
+  SelectPaymentSettings,
+  | 'onSuccess'
+  | 'onError'
+  | 'copyrightText'
+  | 'transactionConfirmations'
+  | 'enableTransferFunds'
+  | 'creditCardProviders'
+  | 'enableMainCurrencyPayment'
+  | 'enableSwapPayments'
+>
+
+interface UseERC1155SaleContractCheckoutArgs extends CheckoutOptionsSalesContractArgs {
+  chain: number | string
+}
+
+interface UseERC1155SaleContractCheckoutReturn {
   openCheckoutModal: () => void
-  closeCheckoutModal: () => void
-  selectPaymentSettings?: SelectPaymentSettings
   isLoading: boolean
   isError: boolean
 }
 
-type SaleContractSettings = Omit<
-  SelectPaymentSettings,
-  'txData' | 'collectibles' | 'price' | 'currencyAddress' | 'recipientAddress' | 'targetContractAddress'
->
-
-export const getERC1155SaleContractConfig = ({
-  chain,
-  price,
-  currencyAddress = zeroAddress,
-  recipientAddress,
-  collectibles,
-  collectionAddress,
-  ...restProps
-}: Omit<SelectPaymentSettings, 'txData'>): SelectPaymentSettings => {
-  const purchaseTransactionData = encodeFunctionData({
-    abi: ERC_1155_SALE_CONTRACT,
-    functionName: 'mint',
-    // [to, tokenIds, amounts, data, expectedPaymentToken, maxTotal, proof]
-    args: [
-      recipientAddress,
-      collectibles.map(c => BigInt(c.tokenId || '')),
-      collectibles.map(c => BigInt(c.quantity)),
-      toHex(0),
-      currencyAddress,
-      price,
-      [toHex(0, { size: 32 })]
-    ]
-  })
-
-  return {
-    chain,
-    price,
-    currencyAddress,
-    recipientAddress,
-    collectibles,
-    collectionAddress,
-    txData: purchaseTransactionData,
-    ...restProps
-  }
-}
-
-/**
- * Hook for enabling ERC-1155 NFT purchases using a standard sale contract.
- *
- * This hook simplifies the process of purchasing ERC-1155 tokens by automatically:
- * - Fetching price information from the sale contract
- * - Determining payment options (crypto, credit card, etc.)
- * - Generating the proper transaction data
- * - Opening and managing the checkout modal
- *
- * @see {@link https://docs.sequence.xyz/sdk/web/checkout-sdk/hooks/useERC1155SaleContractCheckout} for more detailed documentation.
- *
- * @param {object} params - Configuration options for the ERC-1155 sale contract checkout
- * @param {number} params.chain - Chain ID where the sale contract is deployed
- * @param {string} params.contractAddress - Address of the ERC-1155 sale contract
- * @param {string} params.wallet - Address of the wallet that will receive the NFTs
- * @param {string} params.collectionAddress - Address of the ERC-1155 token contract
- * @param {Array<{tokenId: string, quantity: string}>} params.items - Array of token IDs and quantities to purchase
- * @param {function} [params.onSuccess] - Callback function when the transaction is successful
- * @param {function} [params.onError] - Callback function when an error occurs
- * @param {function} [params.onClose] - Callback function when the modal is closed
- *
- * @returns Object containing functions to control the checkout modal and state {@link UseERC1155SaleContractCheckoutReturnType}
- *
- * @example
- * ```tsx
- * import { useERC1155SaleContractCheckout } from "@0xsequence/checkout";
- * import { useAccount } from "wagmi";
- *
- * const MyComponent = () => {
- *   const { address: userAddress } = useAccount();
- *   const { openCheckoutModal } = useERC1155SaleContractCheckout({
- *     chain: 80001, // chainId of the chain the collectible is on
- *     contractAddress: "0x0327b2f274e04d292e74a06809bcd687c63a4ba4", // address of the contract handling the minting function
- *     wallet: userAddress!, // address of the recipient
- *     collectionAddress: "0x888a322db4b8033bac3ff84412738c096f87f9d0", // address of the collection contract
- *     items: [
- *       // array of collectibles to purchase
- *       {
- *         tokenId: "0",
- *         quantity: "1",
- *       },
- *     ],
- *     onSuccess: (txnHash: string) => {
- *       console.log("success!", txnHash);
- *     },
- *     onError: (error: Error) => {
- *       console.error(error);
- *     },
- *   });
- *
- *   const onClick = () => {
- *     if (!userAddress) {
- *       return;
- *     }
- *     openCheckoutModal();
- *   };
- *
- *   return <button onClick={onClick}>Buy ERC-1155 collectible!</button>;
- * };
- * ```
- */
 export const useERC1155SaleContractCheckout = ({
   chain,
   contractAddress,
@@ -136,14 +38,13 @@ export const useERC1155SaleContractCheckout = ({
   collectionAddress,
   items,
   ...restArgs
-}: Omit<CheckoutOptionsSalesContractArgs, 'chainId'> & SaleContractSettings): UseERC1155SaleContractCheckoutReturnType => {
-  const { openSelectPaymentModal, closeSelectPaymentModal, selectPaymentSettings } = useSelectPaymentModal()
+}: UseERC1155SaleContractCheckoutArgs & BasePaymentModalSettings): UseERC1155SaleContractCheckoutReturn => {
+  const { openERC1155SaleContractPaymentModal } = useERC1155SaleContractPaymentModal()
   const {
     data: checkoutOptions,
     isLoading: isLoadingCheckoutOptions,
     isError: isErrorCheckoutOptions
   } = useCheckoutOptionsSalesContract(chain, {
-    chainId: chain.toString(),
     contractAddress,
     wallet,
     collectionAddress,
@@ -162,47 +63,39 @@ export const useERC1155SaleContractCheckout = ({
   const error = isErrorCheckoutOptions || isErrorSaleConfig
 
   const openCheckoutModal = () => {
-    if (isLoading) {
-      throw new Error('Checkout options are still loading. Please wait and try again.')
-    }
-    if (error) {
-      throw new Error(
-        'Failed to load checkout options or sale configuration. Please check your network connection and try again.',
-        {
-          cause: error
-        }
-      )
+    if (isLoading || error) {
+      console.error('Error loading checkout options or sale config', { isLoading, error })
+      return
     }
 
-    openSelectPaymentModal(
-      getERC1155SaleContractConfig({
-        collectibles: items.map(item => ({
-          tokenId: item.tokenId,
-          quantity: item.quantity
-        })),
-        chain: chainId,
-        price: items
-          .reduce((acc, item) => {
-            const price = BigInt(saleConfigData?.saleConfigs.find(sale => sale.tokenId === item.tokenId)?.price || 0)
+    openERC1155SaleContractPaymentModal({
+      collectibles: items.map(item => ({
+        tokenId: item.tokenId,
+        quantity: item.quantity
+      })),
+      chain: chainId,
+      price: items
+        .reduce((acc, item) => {
+          const price = BigInt(saleConfigData?.saleConfigs.find(sale => sale.tokenId === item.tokenId)?.price || 0)
+          console.log('price...', price)
 
-            return acc + BigInt(item.quantity) * price
-          }, BigInt(0))
-          .toString(),
-        currencyAddress: saleConfigData?.currencyAddress || '',
-        recipientAddress: wallet,
-        collectionAddress,
-        targetContractAddress: contractAddress,
-        creditCardProviders: checkoutOptions?.options.nftCheckout || [],
-        onRampProvider: checkoutOptions?.options.onRamp?.[0],
-        ...restArgs
-      })
-    )
+          return acc + BigInt(item.quantity) * price
+        }, BigInt(0))
+        .toString(),
+      currencyAddress: saleConfigData?.currencyAddress || '',
+      recipientAddress: wallet,
+      collectionAddress,
+      targetContractAddress: contractAddress,
+      enableMainCurrencyPayment: true,
+      enableSwapPayments: checkoutOptions?.options?.swap?.includes(TransactionSwapProvider.zerox) || false,
+      creditCardProviders: checkoutOptions?.options.nftCheckout || [],
+      onRampProvider: checkoutOptions?.options.onRamp?.[0],
+      ...restArgs
+    })
   }
 
   return {
     openCheckoutModal,
-    closeCheckoutModal: closeSelectPaymentModal,
-    selectPaymentSettings,
     isLoading,
     isError: error
   }
@@ -236,46 +129,14 @@ export const useSaleContractConfig = ({
   tokenIds
 }: UseSaleContractConfigArgs): UseSaleContractConfigReturn => {
   const {
-    data: versionData,
-    isLoading: isLoadingVersion,
-    isError: isErrorVersion
-  } = useDetectContractVersion({ contractAddress, chainId })
-
-  const getAbi = () => {
-    if (isErrorVersion) {
-      return ERC_1155_SALE_CONTRACT
-    }
-
-    const versionAbi = versionData?.version?.sourceData?.abi
-    if (!versionAbi) {
-      return ERC_1155_SALE_CONTRACT
-    }
-
-    if (typeof versionAbi === 'string') {
-      try {
-        return JSON.parse(versionAbi)
-      } catch {
-        return ERC_1155_SALE_CONTRACT
-      }
-    }
-
-    return versionAbi
-  }
-
-  const abi = getAbi()
-
-  const {
     data: paymentTokenERC1155,
     isLoading: isLoadingPaymentTokenERC1155,
     isError: isErrorPaymentTokenERC1155
   } = useReadContract({
     chainId,
-    abi,
+    abi: ERC_1155_SALE_CONTRACT,
     address: contractAddress as Hex,
-    functionName: 'paymentToken',
-    query: {
-      enabled: !!versionData || isErrorVersion
-    }
+    functionName: 'paymentToken'
   })
 
   interface SaleDetailsERC1155 {
@@ -292,17 +153,14 @@ export const useSaleContractConfig = ({
     isError: isErrorGlobalSaleDetailsERC1155
   } = useReadContract({
     chainId,
-    abi,
+    abi: ERC_1155_SALE_CONTRACT,
     address: contractAddress as Hex,
-    functionName: 'globalSaleDetails',
-    query: {
-      enabled: !!versionData || isErrorVersion
-    }
+    functionName: 'globalSaleDetails'
   })
 
   const baseTokenSaleContract = {
     chainId,
-    abi,
+    abi: ERC_1155_SALE_CONTRACT as Abi,
     address: contractAddress as Hex,
     functionName: 'tokenSaleDetails'
   }
@@ -320,9 +178,7 @@ export const useSaleContractConfig = ({
     contracts: tokenSaleContracts
   })
 
-  const isLoadingERC1155 =
-    isLoadingPaymentTokenERC1155 || isLoadingGlobalSaleDetailsERC1155 || isLoadingTokenSaleDetailsERC1155 || isLoadingVersion
-
+  const isLoadingERC1155 = isLoadingPaymentTokenERC1155 || isLoadingGlobalSaleDetailsERC1155 || isLoadingTokenSaleDetailsERC1155
   const isErrorERC1155 = isErrorPaymentTokenERC1155 || isErrorGlobalSaleDetailsERC1155 || isErrorTokenSaleDetailsERC1155
 
   if (isLoadingERC1155 || isErrorERC1155) {
@@ -336,32 +192,21 @@ export const useSaleContractConfig = ({
   const getSaleConfigs = (): SaleConfig[] => {
     let saleInfos: SaleConfig[] = []
 
-    if (isLoadingERC1155 || isErrorERC1155 || isLoadingVersion) {
-      return saleInfos
-    }
+    if (isLoadingERC1155 || isErrorERC1155) return saleInfos
 
-    const { cost: globalCost } = globalSaleDetailsERC1155 as SaleDetailsERC1155
-
+    // In the sale contract, the global sale has priority over the token sale
+    // So we need to check if the global sale is set, and if it is, use that
+    // Otherwise, we use the token sale
+    const { cost: globalCost, startTime, endTime } = globalSaleDetailsERC1155 as SaleDetailsERC1155
+    const isGlobalSaleInvalid =
+      endTime === BigInt(0) ||
+      BigInt(Math.floor(Date.now() / 1000)) <= startTime ||
+      BigInt(Math.floor(Date.now() / 1000)) >= endTime
     saleInfos = tokenIds.map((tokenId, index) => {
-      const tokenSaleDetails = tokenSaleDetailsERC1155?.[index].result as SaleDetailsERC1155
-      const tokenPrice = tokenSaleDetails['cost'] || BigInt(0)
-      const startTime = tokenSaleDetails['startTime'] || BigInt(0)
-      const endTime = tokenSaleDetails['endTime'] || BigInt(0)
-
-      // In the sale contract, the token sale has priority over the global sale
-      // So we need to check if the token sale is set, and if it is, use that
-      // Otherwise, we use the global sale
-
-      const isTokenSaleInvalid =
-        endTime === BigInt(0) ||
-        BigInt(Math.floor(Date.now() / 1000)) <= startTime ||
-        BigInt(Math.floor(Date.now() / 1000)) >= endTime
-
-      const effectivePrice = isTokenSaleInvalid ? globalCost : tokenPrice
-
+      const tokenPrice = (tokenSaleDetailsERC1155?.[index].result as SaleDetailsERC1155)['cost'] || BigInt(0)
       return {
         tokenId,
-        price: effectivePrice.toString()
+        price: (!isGlobalSaleInvalid ? globalCost : tokenPrice).toString()
       }
     })
 
@@ -377,8 +222,3 @@ export const useSaleContractConfig = ({
     isError: isErrorERC1155
   }
 }
-
-/**
- * @deprecated use useERC1155SaleContractPaymentModal instead
- */
-export const useERC1155SaleContractPaymentModal = useERC1155SaleContractCheckout
