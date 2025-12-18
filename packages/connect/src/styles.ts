@@ -338,14 +338,8 @@ export const styles = String.raw`
   .mt-10 {
     margin-top: calc(var(--spacing) * 10);
   }
-  .-mr-\[1px\] {
-    margin-right: calc(1px * -1);
-  }
   .mr-4 {
     margin-right: calc(var(--spacing) * 4);
-  }
-  .-mb-\[1px\] {
-    margin-bottom: calc(1px * -1);
   }
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
@@ -451,9 +445,6 @@ export const styles = String.raw`
   }
   .h-\[2px\] {
     height: 2px;
-  }
-  .h-\[17px\] {
-    height: 17px;
   }
   .h-\[52px\] {
     height: 52px;
@@ -562,9 +553,6 @@ export const styles = String.raw`
   }
   .w-\[1px\] {
     width: 1px;
-  }
-  .w-\[17px\] {
-    width: 17px;
   }
   .w-\[44px\] {
     width: 44px;
@@ -876,9 +864,6 @@ export const styles = String.raw`
   .border-solid {
     --tw-border-style: solid;
     border-style: solid;
-  }
-  .border-background-primary {
-    border-color: var(--seq-color-background-primary);
   }
   .border-border-error {
     border-color: var(--seq-color-border-error);

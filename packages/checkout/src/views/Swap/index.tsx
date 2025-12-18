@@ -1,22 +1,19 @@
+import { Button, Spinner, Text } from '@0xsequence/design-system'
 import {
-  compareAddress,
-  CryptoOption,
-  formatDisplay,
-  sendTransactions,
   useGetContractInfo,
   useGetSwapQuote,
   useGetSwapRoutes,
   useGetTokenBalancesSummary,
   useIndexerClient
-} from '@0xsequence/connect'
-import { Button, Spinner, Text } from '@0xsequence/design-system'
+} from '@0xsequence/hooks'
 import { findSupportedNetwork } from '@0xsequence/network'
+import { compareAddress, CryptoOption, formatDisplay, sendTransactions } from '@0xsequence/web-sdk-core'
 import { useEffect, useMemo, useState } from 'react'
 import { formatUnits, zeroAddress, type Hex } from 'viem'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 
-import { HEADER_HEIGHT } from '../../constants'
-import { useSwapModal, useTransactionStatusModal } from '../../hooks'
+import { HEADER_HEIGHT } from '../../constants/index.js'
+import { useSwapModal, useTransactionStatusModal } from '../../hooks/index.js'
 
 export const Swap = () => {
   const { openTransactionStatusModal } = useTransactionStatusModal()

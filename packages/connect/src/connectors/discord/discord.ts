@@ -1,7 +1,8 @@
-import { getDiscordLogo } from './DiscordLogo'
+import type { Wallet } from '@0xsequence/web-sdk-core'
 
-import { sequenceWallet, BaseSequenceConnectorOptions } from '../wagmiConnectors'
-import { Wallet } from '@0xsequence/kit'
+import { sequenceWallet, type BaseSequenceConnectorOptions } from '../wagmiConnectors/index.js'
+
+import { getDiscordLogo } from './DiscordLogo.js'
 
 export interface DiscordOptions extends BaseSequenceConnectorOptions {}
 
@@ -14,6 +15,7 @@ export const discord = (options: DiscordOptions): Wallet => ({
   monochromeLogoLight: getDiscordLogo({ isDarkMode: false }),
   // iconBackground: '#fff',
   name: 'Discord',
+  type: 'social',
   createConnector: projectAccessKey => {
     const connector = sequenceWallet({
       ...options,

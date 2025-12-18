@@ -1,7 +1,8 @@
-import { GoogleLogo, getMonochromeGoogleLogo } from './GoogleLogo'
+import type { Wallet } from '@0xsequence/web-sdk-core'
 
-import { sequenceWallet, BaseSequenceConnectorOptions } from '../wagmiConnectors'
-import { Wallet } from '@0xsequence/kit'
+import { sequenceWallet, type BaseSequenceConnectorOptions } from '../wagmiConnectors/index.js'
+
+import { getMonochromeGoogleLogo, GoogleLogo } from './GoogleLogo.js'
 
 export type GoogleOptions = BaseSequenceConnectorOptions
 
@@ -13,6 +14,7 @@ export const google = (options: GoogleOptions): Wallet => ({
   monochromeLogoDark: getMonochromeGoogleLogo({ isDarkMode: true }),
   monochromeLogoLight: getMonochromeGoogleLogo({ isDarkMode: false }),
   name: 'Google',
+  type: 'social',
   createConnector: projectAccessKey => {
     const connector = sequenceWallet({
       ...options,

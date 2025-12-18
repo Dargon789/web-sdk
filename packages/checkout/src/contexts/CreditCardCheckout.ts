@@ -1,9 +1,9 @@
 'use client'
 
 import type { Theme } from '@0xsequence/design-system'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
 
-import { createGenericContext } from './genericContext.js'
-import type { SupplementaryAnalyticsInfo } from './SelectPaymentModal.js'
+import type { ActionButtons, SupplementaryAnalyticsInfo } from './SelectPaymentModal.js'
 
 interface CoinQuantity {
   contractAddress: string
@@ -23,33 +23,6 @@ export interface TransakConfig {
   callDataOverride?: string
 }
 
-export type ForteProtocolType = 'seaport' | 'mint' | 'custom_evm_call'
-
-export interface StructuredCalldata {
-  functionName: string
-  arguments: any[]
-}
-
-export interface ForteMintConfig {
-  protocol: 'mint'
-  calldata: string | StructuredCalldata
-}
-
-export interface ForteSeaportConfig {
-  protocol: 'seaport'
-  orderHash: string
-  seaportProtocolAddress: string
-  sellerAddress: string
-}
-
-export interface ForteCustomEvmCallConfig {
-  protocol: 'custom_evm_call'
-  calldata: string | StructuredCalldata
-  sellerAddress: string
-}
-
-export type ForteConfig = ForteMintConfig | ForteSeaportConfig | ForteCustomEvmCallConfig
-
 export interface CreditCardCheckout {
   chainId: number
   contractAddress: string
@@ -63,14 +36,14 @@ export interface CreditCardCheckout {
   nftQuantity: string
   nftDecimals?: string
   calldata: string
-  provider?: 'sardine' | 'transak' | 'forte'
+  provider?: 'sardine' | 'transak'
   transakConfig?: TransakConfig
-  forteConfig?: ForteConfig
-  onSuccess?: (transactionHash?: string, settings?: CreditCardCheckout) => void
+  onSuccess?: (transactionHash: string, settings: CreditCardCheckout) => void
   onError?: (error: Error, settings: CreditCardCheckout) => void
   onClose?: () => void
   approvedSpenderAddress?: string
   supplementaryAnalyticsInfo?: SupplementaryAnalyticsInfo
+  successActionButtons?: ActionButtons[]
 }
 
 export interface CheckoutSettings {

@@ -1,19 +1,25 @@
-import React from 'react'
-import { ethers } from 'ethers'
-import { Box, Button, ChevronRightIcon, Divider, Text, PaymentsIcon, vars } from '@0xsequence/design-system'
-
-import { getNativeTokenInfoByChainId, useBalances, useContractInfo } from '@0xsequence/kit'
-
+import {
+  Button,
+  ChevronRightIcon,
+  Divider,
+  HelpIcon,
+  PaymentsIcon,
+  Skeleton,
+  Text,
+  TokenImage,
+  Tooltip
+} from '@0xsequence/design-system'
+import { useGetContractInfo, useGetTokenBalancesSummary } from '@0xsequence/hooks'
+import { ContractVerificationStatus } from '@0xsequence/indexer'
+import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/web-sdk-core'
+import { useEffect } from 'react'
+import { formatUnits, zeroAddress } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 
-import { OrderSummaryItem } from './component/OrderSummaryItem'
+import { HEADER_HEIGHT } from '../../constants/index.js'
+import { useCheckoutModal, useNavigation } from '../../hooks/index.js'
 
-import { CoinIcon } from '../../shared/components/CoinIcon'
-import { Skeleton } from '../../shared/components/Skeleton'
-import { HEADER_HEIGHT } from '../../constants'
-import { useNavigation, useCheckoutModal } from '../../hooks'
-import { compareAddress, formatDisplay } from '../../utils'
-import * as styles from './styles.css'
+import { OrderSummaryItem } from './component/OrderSummaryItem.js'
 
 export const CheckoutSelection = () => {
   const { chains } = useConfig()
@@ -22,161 +28,195 @@ export const CheckoutSelection = () => {
   const { address: accountAddress } = useAccount()
 
   const cryptoCheckoutSettings = settings?.cryptoCheckout
-  // const creditCardCheckoutSettings = settings?.creditCardCheckout
+  const creditCardCheckoutSettings = settings?.creditCardCheckout
+  const displayCreditCardCheckout = !!creditCardCheckoutSettings
   const displayCryptoCheckout = !!cryptoCheckoutSettings
-  // const displayCreditCardCheckout = !!creditCardCheckoutSettings
 
-  const { data: contractInfoData, isPending: isPendingContractInfo } = useContractInfo(
-    cryptoCheckoutSettings?.chainId || 1,
-    cryptoCheckoutSettings?.coinQuantity?.contractAddress || ''
-  )
-
-  const { data: balancesData, isPending: isPendingBalances } = useBalances({
-    chainIds: [cryptoCheckoutSettings?.chainId || 1],
-    accountAddress: accountAddress || ''
+  const { data: contractInfoData, isLoading: isLoadingContractInfo } = useGetContractInfo({
+    chainID: String(cryptoCheckoutSettings?.chainId || 1),
+    contractAddress: cryptoCheckoutSettings?.coinQuantity?.contractAddress || ''
   })
 
-  const isPending = (isPendingContractInfo || isPendingBalances) && cryptoCheckoutSettings
+  const {
+    data: balancesData,
+    isLoading: isLoadingBalances,
+    fetchNextPage: fetchNextBalances,
+    hasNextPage: hasNextPageBalances,
+    isFetchingNextPage: isFetchingNextPageBalances
+  } = useGetTokenBalancesSummary({
+    chainIds: [cryptoCheckoutSettings?.chainId || 1],
+    filter: {
+      accountAddresses: accountAddress ? [accountAddress] : [],
+      contractStatus: ContractVerificationStatus.ALL,
+      omitNativeBalances: false
+    },
+    page: { pageSize: 40 }
+  })
 
-  const isNativeToken = compareAddress(cryptoCheckoutSettings?.coinQuantity?.contractAddress || '', ethers.constants.AddressZero)
+  useEffect(() => {
+    if (hasNextPageBalances && !isFetchingNextPageBalances) {
+      fetchNextBalances()
+    }
+  }, [hasNextPageBalances, isFetchingNextPageBalances])
+
+  const isLoading = (isLoadingContractInfo || isLoadingBalances || isFetchingNextPageBalances) && cryptoCheckoutSettings
+
+  const isNativeToken = compareAddress(cryptoCheckoutSettings?.coinQuantity?.contractAddress || '', zeroAddress)
   const nativeTokenInfo = getNativeTokenInfoByChainId(cryptoCheckoutSettings?.chainId || 1, chains)
 
   const coinDecimals = isNativeToken ? nativeTokenInfo.decimals : contractInfoData?.decimals || 0
   const coinSymbol = isNativeToken ? nativeTokenInfo.symbol : contractInfoData?.symbol || 'COIN'
   const coinImageUrl = isNativeToken ? nativeTokenInfo.logoURI : contractInfoData?.logoURI || ''
-  const coinBalance = balancesData?.find(balance =>
-    compareAddress(balance.contractAddress, cryptoCheckoutSettings?.coinQuantity?.contractAddress || '')
-  )
+  const coinBalance = balancesData?.pages
+    ?.flatMap(page => page.balances)
+    .find(balance => compareAddress(balance.contractAddress, cryptoCheckoutSettings?.coinQuantity?.contractAddress || ''))
   const userBalanceRaw = coinBalance ? coinBalance.balance : '0'
   const requestedAmountRaw = cryptoCheckoutSettings?.coinQuantity?.amountRequiredRaw || '0'
-  const userBalance = ethers.utils.formatUnits(userBalanceRaw, coinDecimals)
-  const requestAmount = ethers.utils.formatUnits(requestedAmountRaw, coinDecimals)
-  const isInsufficientBalance = ethers.BigNumber.from(userBalanceRaw).lt(ethers.BigNumber.from(requestedAmountRaw))
+  const userBalance = formatUnits(BigInt(userBalanceRaw), coinDecimals)
+  const requestAmount = formatUnits(BigInt(requestedAmountRaw), coinDecimals)
+  const isInsufficientBalance = BigInt(userBalanceRaw) < BigInt(requestedAmountRaw)
 
   const orderSummaryItems = settings?.orderSummaryItems || []
 
-  const chainId = settings?.cryptoCheckout?.chainId || 1
+  const chainId = settings?.cryptoCheckout?.chainId || settings?.creditCardCheckout?.chainId || 1
+
+  const triggerSardineTransaction = async () => {
+    console.log('trigger sardine transaction')
+
+    if (settings?.creditCardCheckout) {
+      setNavigation({
+        location: 'transaction-pending',
+        params: {
+          creditCardCheckout: settings.creditCardCheckout
+        }
+      })
+    }
+  }
 
   const onClickPayWithCard = () => {
-    setNavigation({
-      location: 'transaction-form'
-    })
+    if (settings?.creditCardCheckout) {
+      triggerSardineTransaction()
+    } else {
+      setNavigation({
+        location: 'transaction-form'
+      })
+    }
   }
 
   const onClickPayWithCrypto = () => {
     console.log('trigger transaction')
-    const transaction = settings?.cryptoCheckout?.triggerTransaction
-    transaction && transaction()
+    settings?.cryptoCheckout?.triggerTransaction?.()
     closeCheckout()
   }
 
   return (
-    <Box
-      paddingX="5"
-      paddingBottom="5"
+    <div
+      className="flex px-5 pb-5 flex-col gap-3"
       style={{
         marginTop: HEADER_HEIGHT
       }}
-      flexDirection="column"
-      gap="3"
     >
       {orderSummaryItems.length > 0 && (
         <>
-          <Text fontWeight="normal" fontSize="normal" color="text50">
-            Order summary
-          </Text>
-          <Box flexDirection="column" gap="2">
+          <div className="flex flex-row gap-2 items-center">
+            <Text variant="normal" color="muted">
+              Order summary
+            </Text>
+            <Tooltip
+              vOffset={-2}
+              side="bottom"
+              message={
+                <>
+                  Please note that NFTs are digital assets
+                  <br /> ,and as such, cannot be delivered physically.
+                </>
+              }
+            >
+              <div className="w-5 h-5">
+                <HelpIcon className="text-secondary" />
+              </div>
+            </Tooltip>
+          </div>
+          <div className="flex flex-col gap-2">
             {orderSummaryItems.map((orderSummaryItem, index) => {
               return <OrderSummaryItem key={index} {...orderSummaryItem} chainId={chainId} />
             })}
-          </Box>
-          <Box marginTop="2">
+          </div>
+          <div className="mt-2">
             <Divider
-              color="backgroundSecondary"
+              className="text-background-secondary"
               style={{
                 margin: '0px'
               }}
             />
-          </Box>
+          </div>
         </>
       )}
-
       {displayCryptoCheckout && (
-        <Box justifyContent="space-between" alignItems="center">
-          <Text fontWeight="normal" fontSize="normal" color="text50">
+        <div className="flex justify-between items-center">
+          <Text variant="normal" color="muted">
             Total
           </Text>
-          {isPending ? (
-            <Skeleton width="100px" height="17px" />
+          {isLoading ? (
+            <Skeleton style={{ width: '100px', height: '17px' }} />
           ) : (
-            <Box flexDirection="row" gap="1" alignItems="center">
-              <CoinIcon imageUrl={coinImageUrl} size={12} />
-              <Text fontWeight="normal" fontSize="normal" color="text100">
+            <div className="flex flex-row gap-1 items-center">
+              <TokenImage src={coinImageUrl} size="xs" />
+              <Text variant="normal" color="primary">
                 {`${formatDisplay(requestAmount)} ${coinSymbol}`}
               </Text>
-            </Box>
+            </div>
           )}
-        </Box>
+        </div>
       )}
-
-      <Box flexDirection="column" alignItems="center" justifyContent="center" gap="2">
-        {/* {displayCreditCardCheckout && (
+      <div className="flex flex-col items-center justify-center gap-2">
+        {displayCreditCardCheckout && (
           <Button
-            style={{
-              borderRadius: vars.radii.md,
-              height: '56px'
-            }}
-            width="full"
-            borderRadius="md"
+            className="w-full h-14 rounded-xl"
             leftIcon={PaymentsIcon}
             variant="primary"
             label="Pay with credit card"
             rightIcon={ChevronRightIcon}
             onClick={onClickPayWithCard}
           />
-        )} */}
-        {displayCryptoCheckout && !isInsufficientBalance && !isPending && (
+        )}
+        {displayCryptoCheckout && !isInsufficientBalance && !isLoading && (
           <Button
-            style={{
-              borderRadius: vars.radii.md,
-              height: '56px'
-            }}
-            width="full"
-            leftIcon={() => <CoinIcon size={20} imageUrl={coinImageUrl} />}
+            className="w-full h-14 rounded-xl"
+            leftIcon={() => <TokenImage src={coinImageUrl} size="sm" />}
             variant="primary"
             label={`Pay with ${coinSymbol}`}
             rightIcon={ChevronRightIcon}
             onClick={onClickPayWithCrypto}
           />
         )}
-        {displayCryptoCheckout && (isInsufficientBalance || isPending) && (
+        {displayCryptoCheckout && (isInsufficientBalance || isLoading) && (
           <Button
-            className={styles.insufficientBalanceButton}
-            style={{
-              borderRadius: vars.radii.md,
-              height: '56px',
-              justifyContent: 'center'
-            }}
-            width="full"
-            leftIcon={() => <CoinIcon size={20} imageUrl={coinImageUrl} />}
+            className="w-full"
+            shape="square"
             variant="glass"
-            label={`Insufficient ${coinSymbol}`}
+            label={
+              <div className="flex items-center justify-center gap-2">
+                <TokenImage src={coinImageUrl} size="sm" />
+                <Text>Insufficient ${coinSymbol}</Text>
+              </div>
+            }
             onClick={onClickPayWithCrypto}
             disabled
           />
         )}
-      </Box>
+      </div>
       {displayCryptoCheckout && (
-        <Box width="full" justifyContent="flex-end">
-          {isPending ? (
-            <Skeleton width="102px" height="14px" />
+        <div className="flex w-full justify-end">
+          {isLoading ? (
+            <Skeleton style={{ width: '102px', height: '14px' }} />
           ) : (
-            <Text fontWeight="bold" fontSize="small" color="text50">
+            <Text variant="small" fontWeight="bold" color="muted">
               Balance: {`${formatDisplay(userBalance)} ${coinSymbol}`}
             </Text>
           )}
-        </Box>
+        </div>
       )}
-    </Box>
+    </div>
   )
 }

@@ -1,8 +1,8 @@
 'use client'
 
-import type { CreditCardCheckoutSettings } from '../contexts/CreditCardCheckout.js'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
 
-import { createGenericContext } from './genericContext.js'
+import type { CreditCardCheckout } from '../contexts/CheckoutModal.js'
 
 export interface SelectCheckoutNavigation {
   location: 'select-method-checkout'
@@ -31,7 +31,7 @@ export interface TransactionErrorNavigation {
 }
 
 export interface TransactionPendingParams {
-  creditCardCheckout: CreditCardCheckoutSettings
+  creditCardCheckout: CreditCardCheckout
 }
 
 export interface TransactionPendingNavigation {

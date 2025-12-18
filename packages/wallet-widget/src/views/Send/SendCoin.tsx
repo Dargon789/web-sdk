@@ -1,15 +1,4 @@
-import {
-  compareAddress,
-  getNativeTokenInfoByChainId,
-  TRANSACTION_CONFIRMATIONS_DEFAULT,
-  truncateAtMiddle,
-  useAnalyticsContext,
-  useCheckWaasFeeOptions,
-  useWaasFeeOptions,
-  useWallets,
-  waitForTransactionReceipt,
-  type ExtendedConnector
-} from '@0xsequence/connect'
+import { useCheckWaasFeeOptions, useWaasConfirmationHandler, useWaasFeeOptions, useWallets } from '@0xsequence/connect'
 import {
   Button,
   Card,
@@ -20,8 +9,7 @@ import {
   NumericInput,
   Spinner,
   Text,
-  TextInput,
-  useToast
+  TextInput
 } from '@0xsequence/design-system'
 import {
   useClearCachedBalances,
@@ -31,17 +19,27 @@ import {
   useIndexerClient
 } from '@0xsequence/hooks'
 import type { TokenBalance } from '@0xsequence/indexer'
+import {
+  compareAddress,
+  getNativeTokenInfoByChainId,
+  TRANSACTION_CONFIRMATIONS_DEFAULT,
+  truncateAtMiddle,
+  useAnalyticsContext,
+  waitForTransactionReceipt,
+  type ExtendedConnector
+} from '@0xsequence/web-sdk-core'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { encodeFunctionData, formatUnits, parseUnits, toHex, zeroAddress, type Hex } from 'viem'
-import { useAccount, useChainId, useConfig, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+import { useAccount, useChainId, useConfig, useConnections, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
 
-import { WalletSelect } from '../../components/Select/WalletSelect'
-import { SendItemInfo } from '../../components/SendItemInfo'
-import { TransactionConfirmation } from '../../components/TransactionConfirmation'
-import { ERC_20_ABI, HEADER_HEIGHT_WITH_LABEL, EVENT_SOURCE, EVENT_TYPES } from '../../constants'
-import { useNavigationContext } from '../../contexts/Navigation'
-import { useNavigation, useSettings } from '../../hooks'
-import { computeBalanceFiat, isEthAddress, limitDecimals } from '../../utils'
+import { AllButActiveWalletSelect } from '../../components/Select/AllButActiveWalletSelect.js'
+import { SendItemInfo } from '../../components/SendItemInfo.js'
+import { TransactionConfirmation } from '../../components/TransactionConfirmation.js'
+import { EVENT_SOURCE, EVENT_TYPES } from '../../constants/analytics.js'
+import { ERC_20_ABI } from '../../constants/index.js'
+import { useNavigationContext } from '../../contexts/Navigation.js'
+import { useNavigation, useSettings } from '../../hooks/index.js'
+import { computeBalanceFiat, isEthAddress, limitDecimals } from '../../utils/index.js'
 
 interface SendCoinProps {
   chainId: number
@@ -52,7 +50,6 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const { clearCachedBalances } = useClearCachedBalances()
   const publicClient = usePublicClient({ chainId })
   const indexerClient = useIndexerClient(chainId)
-  const toast = useToast()
   const { wallets } = useWallets()
   const { setNavigation } = useNavigation()
   const { setIsBackButtonEnabled } = useNavigationContext()
@@ -71,6 +68,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const { data: walletClient } = useWalletClient()
   const [isSendTxnPending, setIsSendTxnPending] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [feeOptions, setFeeOptions] = useState<
     | {
         options: any[]
@@ -113,6 +111,17 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
     setIsBackButtonEnabled(!showConfirmation)
   }, [showConfirmation, setIsBackButtonEnabled])
 
+  const connections = useConnections()
+  const waasConnector = connections.find(c => c.connector.id.includes('waas'))?.connector
+
+  const [pendingRequestConfirmation, confirmPendingRequest] = useWaasConfirmationHandler(waasConnector)
+
+  useEffect(() => {
+    if (pendingRequestConfirmation) {
+      confirmPendingRequest(pendingRequestConfirmation.id)
+    }
+  }, [pendingRequestConfirmation])
+
   if (isLoading) {
     return null
   }
@@ -139,6 +148,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const isNonZeroAmount = amountRaw > 0n
 
   const handleChangeAmount = (ev: ChangeEvent<HTMLInputElement>) => {
+    setErrorMsg(null)
     const { value } = ev.target
 
     // Prevent value from having more decimals than the token supports
@@ -148,6 +158,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   }
 
   const handleMax = () => {
+    setErrorMsg(null)
     amountInputRef.current?.focus()
     const maxAmount = formatUnits(BigInt(tokenBalance?.balance || 0), decimals).toString()
 
@@ -155,15 +166,18 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   }
 
   const handlePaste = async () => {
+    setErrorMsg(null)
     const result = await navigator.clipboard.readText()
     setToAddress(result)
   }
 
   const handleToAddressClear = () => {
+    setErrorMsg(null)
     setToAddress('')
   }
 
   const handleSendClick = async (e: ChangeEvent<HTMLFormElement>) => {
+    setErrorMsg(null)
     e.preventDefault()
 
     if (!isCorrectChainId && !isConnectorSequenceBased) {
@@ -219,11 +233,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
 
     if (!walletClient) {
       console.error('Wallet client not found')
-      toast({
-        title: 'Error',
-        description: 'Wallet client not available. Please ensure your wallet is connected.',
-        variant: 'error'
-      })
+      setErrorMsg('Wallet client not available. Please ensure your wallet is connected.')
       setIsSendTxnPending(false)
       return
     }
@@ -235,7 +245,6 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
 
     try {
       if (isNativeCoin) {
-        console.log('Sending native coin via walletClient')
         txHash = await walletClient.sendTransaction({
           account: accountAddress as `0x${string}`,
           to: toAddress as `0x${string}`,
@@ -243,7 +252,6 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
           chain: chains.find(c => c.id === chainId)
         })
       } else {
-        console.log('Sending ERC20 coin via walletClient')
         txHash = await walletClient.sendTransaction({
           account: accountAddress as `0x${string}`,
           to: tokenBalance?.contractAddress as `0x${string}`,
@@ -259,30 +267,6 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
           location: 'home'
         })
         setIsSendTxnPending(false) // Set pending to false immediately after getting hash
-
-        toast({
-          title: 'Transaction sent',
-          description: `Successfully sent ${amountToSendFormatted} ${symbol} to ${toAddress}`,
-          variant: 'success'
-        })
-
-        // Wait for receipt in the background
-        if (publicClient) {
-          waitForTransactionReceipt({
-            indexerClient,
-            txnHash: txHash,
-            publicClient,
-            confirmations: TRANSACTION_CONFIRMATIONS_DEFAULT
-          })
-            .then(() => {
-              clearCachedBalances()
-              console.log('Transaction confirmed and balances cleared:', txHash)
-            })
-            .catch(error => {
-              console.error('Error waiting for transaction receipt:', error)
-              // Optionally show another toast for confirmation failure
-            })
-        }
 
         analytics?.track({
           event: 'SEND_TRANSACTION_REQUEST',
@@ -301,35 +285,37 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
             currencyValueDecimal: Number(amountToSendFormatted)
           }
         })
+
+        // Wait for receipt in the background
+        if (publicClient) {
+          waitForTransactionReceipt({
+            indexerClient,
+            txnHash: txHash,
+            publicClient,
+            confirmations: TRANSACTION_CONFIRMATIONS_DEFAULT
+          })
+            .then(() => {
+              clearCachedBalances()
+            })
+            .catch(error => {
+              console.error('Error waiting for transaction receipt:', error)
+            })
+        }
       } else {
         // Handle case where txHash is unexpectedly undefined
         setIsSendTxnPending(false)
-        toast({
-          title: 'Transaction Error',
-          description: 'Transaction submitted but no hash received.',
-          variant: 'error'
-        })
+        setErrorMsg('Transaction submitted but no hash received.')
       }
     } catch (error: any) {
       console.error('Transaction failed:', error)
       setIsSendTxnPending(false)
       setIsBackButtonEnabled(true)
-      toast({
-        title: 'Transaction Failed',
-        description: error?.shortMessage || error?.message || 'An unknown error occurred.',
-        variant: 'error'
-      })
+      setErrorMsg(error?.shortMessage || error?.message || 'An unknown error occurred.')
     }
   }
 
   return (
-    <form
-      className="flex px-4 pb-4 gap-2 flex-col"
-      style={{
-        marginTop: HEADER_HEIGHT_WITH_LABEL
-      }}
-      onSubmit={handleSendClick}
-    >
+    <form className="flex px-4 pb-4 gap-2 flex-col" onSubmit={handleSendClick}>
       {!showConfirmation && (
         <>
           <div className="flex bg-background-secondary rounded-xl p-4 gap-2 flex-col">
@@ -384,7 +370,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
                 <TextInput
                   value={toAddress}
                   onChange={ev => setToAddress(ev.target.value)}
-                  placeholder={`${nativeTokenInfo.name} Address (0x...)`}
+                  placeholder={`Wallet Address (0x...)`}
                   name="to-address"
                   data-1p-ignore
                   controls={
@@ -399,10 +385,15 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
                     />
                   }
                 />
-                {wallets.length > 1 && <WalletSelect selectedWallet={toAddress} onClick={setToAddress} />}
+                {wallets.length > 1 && <AllButActiveWalletSelect onClick={setToAddress} />}
               </>
             )}
           </div>
+          {errorMsg && (
+            <Text variant="normal" color="negative" fontWeight="bold">
+              {errorMsg}
+            </Text>
+          )}
 
           <div className="flex items-center justify-center mt-2" style={{ height: '52px' }}>
             {isCheckingFeeOptions ? (

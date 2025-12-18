@@ -1,15 +1,9 @@
 'use client'
 
-import { SequenceCheckoutProvider } from '@0xsequence/checkout'
-import {
-  getModalPositionCss,
-  ShadowRoot,
-  useConnectConfigContext,
-  useOpenConnectModal,
-  useSocialLink,
-  useTheme
-} from '@0xsequence/connect'
+import { SequenceCheckoutProvider, useAddFundsModal } from '@0xsequence/checkout'
+import { ShadowRoot, useConnectConfigContext, useOpenConnectModal, useSocialLink, useTheme } from '@0xsequence/connect'
 import { Modal, Scroll } from '@0xsequence/design-system'
+import { getModalPositionCss } from '@0xsequence/web-sdk-core'
 import { AnimatePresence } from 'motion/react'
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useAccount } from 'wagmi'
@@ -50,6 +44,7 @@ export const SequenceWalletProvider = (props: SequenceWalletProviderProps) => {
 
 export const WalletContent = ({ children }: SequenceWalletProviderProps) => {
   const { theme, position } = useTheme()
+  const { isAddFundsModalOpen } = useAddFundsModal()
   const { isConnectModalOpen } = useOpenConnectModal()
   const { isSocialLinkOpen } = useSocialLink()
   const { address } = useAccount()
@@ -119,7 +114,7 @@ export const WalletContent = ({ children }: SequenceWalletProviderProps) => {
               <SwapProvider>
                 <ShadowRoot theme={theme} customCSS={customCSS}>
                   <AnimatePresence>
-                    {openWalletModal && !isConnectModalOpen && !isSocialLinkOpen && (
+                    {openWalletModal && !isAddFundsModalOpen && !isConnectModalOpen && !isSocialLinkOpen && (
                       <Modal
                         contentProps={{
                           className: 'border border-border-normal',

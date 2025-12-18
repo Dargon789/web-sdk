@@ -1,108 +1,81 @@
-export { SequenceConnect } from './components/SequenceConnect'
+export { SequenceConnect } from './components/SequenceConnect/index.js'
 
 // Provider
-export { SequenceConnectProvider } from './components/SequenceConnectProvider'
-export { SequenceConnectPreviewProvider } from './components/SequenceConnectPreviewProvider'
+export { SequenceConnectProvider } from './components/SequenceConnectProvider/index.js'
+export { SequenceConnectPreviewProvider } from './components/SequenceConnectPreviewProvider/index.js'
 
 // Types
-export type {
-  Wallet,
-  WalletField,
-  WalletProperties,
-  WalletType,
-  DisplayedAsset,
-  ExtendedConnector,
-  EthAuthSettings,
-  ModalPosition,
-  ConnectConfig,
-  StorageItem
-} from './types'
+export type { ConnectConfig, DisplayedAsset, EthAuthSettings, StorageItem } from './types.js'
 
 // Config
-export { createConfig, type CreateConfigOptions } from './config/createConfig'
+export { createConfig, type CreateConfigOptions } from './config/createConfig.js'
 export {
   getDefaultConnectors,
-  getDefaultWaasConnectors,
   getDefaultUniversalConnectors,
+  getDefaultWaasConnectors,
   type DefaultConnectorOptions,
-  type DefaultWaasConnectorOptions,
-  type DefaultUniversalConnectorOptions
-} from './config/defaultConnectors'
-export { getDefaultChains } from './config/defaultChains'
-export { getDefaultTransports } from './config/defaultTransports'
+  type DefaultUniversalConnectorOptions,
+  type DefaultWaasConnectorOptions
+} from './config/defaultConnectors.js'
+export { getDefaultChains } from './config/defaultChains.js'
+export { getDefaultTransports } from './config/defaultTransports.js'
 
 // Constants
-export {
-  LocalStorageKey,
-  DEFAULT_SESSION_EXPIRATION,
-  TRANSACTION_CONFIRMATIONS_DEFAULT,
-  NATIVE_TOKEN_ADDRESS_0X,
-  QUERY_KEYS,
-  WEB_SDK_VERSION
-} from './constants'
+export { DEFAULT_SESSION_EXPIRATION, LocalStorageKey, QUERY_KEYS, WEB_SDK_VERSION } from './constants/index.js'
 
 // Utils
-export { getConnectWallets } from './utils/getConnectWallets'
-export { isEmailValid, compareAddress, formatDisplay, capitalize, truncateAtMiddle, formatAddress } from './utils/helpers'
-export { getNativeTokenInfoByChainId, createNativeTokenBalance } from './utils/tokens'
-export { getModalPositionCss } from './utils/styling'
-export { getNetwork, getNetworkColor, getNetworkBackgroundColor } from './utils/networks'
-export { walletClientToSigner, publicClientToProvider } from './utils/adapters'
-export { signEthAuthProof, validateEthProof } from './utils/ethAuth'
-export { sendTransactions, waitForTransactionReceipt } from './utils/transactions'
+export { getConnectWallets } from './utils/getConnectWallets.js'
+export { signEthAuthProof, validateEthProof } from './utils/ethAuth.js'
 
 // Contexts
-export { useConnectConfigContext, ConnectConfigContextProvider } from './contexts/ConnectConfig'
-export { useAnalyticsContext, AnalyticsContextProvider } from './contexts/Analytics'
-export { useConnectModalContext, ConnectModalContextProvider } from './contexts/ConnectModal'
-export { useThemeContext, ThemeContextProvider } from './contexts/Theme'
-export { useWalletConfigContext, WalletConfigContextProvider } from './contexts/WalletConfig'
+export { ConnectConfigContextProvider, useConnectConfigContext } from './contexts/ConnectConfig.js'
+export { ConnectModalContextProvider, useConnectModalContext } from './contexts/ConnectModal.js'
+export { ThemeContextProvider, useThemeContext } from './contexts/Theme.js'
+export { useWalletConfigContext, WalletConfigContextProvider } from './contexts/WalletConfig.js'
 
 // Connectors
-export { apple, type AppleOptions } from './connectors/apple'
-export { appleWaas, type AppleWaasOptions } from './connectors/apple/appleWaas'
-export { coinbaseWallet } from './connectors/coinbaseWallet'
-export { discord, type DiscordOptions } from './connectors/discord'
-export { email, type EmailOptions } from './connectors/email'
-export { emailWaas, type EmailWaasOptions } from './connectors/email/emailWaas'
-export { facebook, type FacebookOptions } from './connectors/facebook'
-export { google, type GoogleOptions } from './connectors/google'
-export { googleWaas, type GoogleWaasOptions } from './connectors/google/googleWaas'
-export { mock } from './connectors/mock'
-export { sequence, type SequenceOptions } from './connectors/sequence'
-export { twitch, type TwitchOptions } from './connectors/twitch'
-export { walletConnect } from './connectors/walletConnect'
+export { apple, type AppleOptions } from './connectors/apple/apple.js'
+export { appleWaas, type AppleWaasOptions } from './connectors/apple/appleWaas.js'
+export { XWaas, type XWaasOptions } from './connectors/X/XWaas.js'
+export { epicWaas, type EpicWaasOptions } from './connectors/epic/epicWaas.js'
+export { coinbaseWallet } from './connectors/coinbaseWallet/coinbaseWallet.js'
+export { discord, type DiscordOptions } from './connectors/discord/discord.js'
+export { email, type EmailOptions } from './connectors/email/email.js'
+export { emailWaas, type EmailWaasOptions } from './connectors/email/emailWaas.js'
+export { facebook, type FacebookOptions } from './connectors/facebook/facebook.js'
+export { google, type GoogleOptions } from './connectors/google/google.js'
+export { googleWaas, type GoogleWaasOptions } from './connectors/google/googleWaas.js'
+export { mock } from './connectors/mock/mock.js'
+export { sequence, type SequenceOptions } from './connectors/sequence/sequence.js'
+export { twitch, type TwitchOptions } from './connectors/twitch/twitch.js'
+export { walletConnect } from './connectors/walletConnect/walletConnect.js'
+export { ecosystemWallet, type EcosystemWalletOptions } from './connectors/ecosystem/index.js'
 export {
-  sequenceWallet,
   sequenceWaasWallet,
+  sequenceWallet,
   type BaseSequenceConnectorOptions,
   type BaseSequenceWaasConnectorOptions
-} from './connectors/wagmiConnectors'
+} from './connectors/wagmiConnectors/index.js'
 
 // Hooks
-export { useOpenConnectModal } from './hooks/useOpenConnectModal'
-export { useTheme } from './hooks/useTheme'
-export { useWalletSettings } from './hooks/useWalletSettings'
-export { useWaasFeeOptions } from './hooks/useWaasFeeOptions'
-export { useCheckWaasFeeOptions } from './hooks/useCheckWaasFeeOptions'
-export { useWaasSignInEmail } from './hooks/useWaasSignInEmail'
-export { useSignInEmail } from './hooks/useSignInEmail'
-export { useProjectAccessKey } from './hooks/useProjectAccessKey'
-export { useStorage, useStorageItem } from './hooks/useStorage'
-export { useChain } from './hooks/useChain'
-export { useWallets } from './hooks/useWallets'
-export type { ConnectedWallet } from './hooks/useWallets'
+export { useOpenConnectModal } from './hooks/useOpenConnectModal.js'
+export { useTheme } from './hooks/useTheme.js'
+export { useWalletSettings } from './hooks/useWalletSettings.js'
+export { useWaasFeeOptions } from './hooks/useWaasFeeOptions.js'
+export { useWaasConfirmationHandler } from './hooks/useWaasConfirmationHandler.js'
+export { useCheckWaasFeeOptions } from './hooks/useCheckWaasFeeOptions.js'
+export { useWaasSignInEmail } from './hooks/useWaasSignInEmail.js'
+export { useSignInEmail } from './hooks/useSignInEmail.js'
+export { useProjectAccessKey } from './hooks/useProjectAccessKey.js'
+export { useStorage, useStorageItem } from './hooks/useStorage.js'
+export { useChain } from './hooks/useChain.js'
+export { useWallets } from './hooks/useWallets.js'
+export { useListAccounts } from './hooks/useListAccounts.js'
+export type { ConnectedWallet } from './hooks/useWallets.js'
 export type { LinkedWallet } from '@0xsequence/api'
+export { useSocialLink } from './hooks/useSocialLink.js'
+
+export { useDirectEcosystemConnect } from './hooks/useDirectEcosystemConnect.js'
 
 // Components
-export { NetworkBadge } from './components/NetworkBadge'
-export { CollectibleTileImage } from './components/CollectibleTileImage'
-export { CryptoOption } from './components/CryptoOption'
-export { SelectedIndicator } from './components/SelectedIndicator'
-export { ShadowRoot } from './components/ShadowRoot'
-
-// Indexer
-export { ContractVerificationStatus } from '@0xsequence/indexer'
-
-// Environment
-export { isDev, isDevSardine, isDevTransak, isDevSequenceApis, getDevSardineProjectAccessKey } from './env'
+export { ShadowRoot } from './components/ShadowRoot/index.js'

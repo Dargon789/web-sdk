@@ -1,12 +1,7 @@
 'use client'
 
-<<<<<<<< HEAD:packages/wallet-widget/src/contexts/Navigation.ts
 import type { Transaction } from '@0xsequence/indexer'
-========
-import { proxy } from 'valtio'
->>>>>>>> upstream/1816-state-management:packages/wallet/src/states/Navigation.ts
-
-import { createGenericContext } from './genericContext.js'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
 
 export interface CoinDetailsParams {
   contractAddress: string
@@ -123,22 +118,13 @@ export type Navigation =
 
 export type History = Navigation[]
 
-type NavigationState = {
+type NavigationContext = {
+  setHistory: (history: History) => void
   history: History
   isBackButtonEnabled: boolean
   setIsBackButtonEnabled: (enabled: boolean) => void
 }
 
-<<<<<<<< HEAD:packages/wallet-widget/src/contexts/Navigation.ts
 const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
 
 export { NavigationContextProvider, useNavigationContext }
-========
-export const navigationState = proxy<NavigationState>({
-  history: []
-})
-
-export const setHistory = (history: History) => {
-  navigationState.history = history
-}
->>>>>>>> upstream/1816-state-management:packages/wallet/src/states/Navigation.ts

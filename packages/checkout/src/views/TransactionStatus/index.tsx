@@ -1,14 +1,6 @@
 import {
-  CollectibleTileImage,
-  formatDisplay,
-  TRANSACTION_CONFIRMATIONS_DEFAULT,
-  useGetContractInfo,
-  useGetTokenMetadata,
-  useIndexerClient,
-  waitForTransactionReceipt
-} from '@0xsequence/connect'
-import {
   ArrowDownIcon,
+  Button,
   Card,
   CheckmarkIcon,
   CloseIcon,
@@ -18,15 +10,22 @@ import {
   TokenImage,
   truncateAddress
 } from '@0xsequence/design-system'
+import { useGetContractInfo, useGetTokenMetadata, useIndexerClient } from '@0xsequence/hooks'
 import { TransactionStatus as TransactionStatusSequence } from '@0xsequence/indexer'
 import { findSupportedNetwork } from '@0xsequence/network'
+import {
+  CollectibleTileImage,
+  formatDisplay,
+  TRANSACTION_CONFIRMATIONS_DEFAULT,
+  waitForTransactionReceipt
+} from '@0xsequence/web-sdk-core'
+import { formatDistanceToNow } from 'date-fns'
 import { useEffect, useState } from 'react'
-import TimeAgo from 'timeago-react'
 import { formatUnits, type Hex, type PublicClient } from 'viem'
 import { usePublicClient } from 'wagmi'
 
-import { HEADER_HEIGHT } from '../../constants'
-import { useTransactionStatusModal } from '../../hooks'
+import { HEADER_HEIGHT } from '../../constants/index.js'
+import { useTransactionStatusModal } from '../../hooks/index.js'
 
 export type TxStatus = 'pending' | 'success' | 'error'
 
@@ -72,7 +71,7 @@ export const TransactionStatusHeader = ({ status, noItemsToDisplay }: Transactio
 }
 
 export const TransactionStatus = () => {
-  const { transactionStatusSettings } = useTransactionStatusModal()
+  const { transactionStatusSettings, closeTransactionStatusModal } = useTransactionStatusModal()
   const {
     collectionAddress,
     chainId,
@@ -82,19 +81,20 @@ export const TransactionStatus = () => {
     blockConfirmations = TRANSACTION_CONFIRMATIONS_DEFAULT,
     onSuccess,
     onError,
-    onClose = () => {}
+    onClose = () => {},
+    successActionButtons = []
   } = transactionStatusSettings!
   const networkConfig = findSupportedNetwork(chainId)
   const blockExplorerUrl = `${networkConfig?.blockExplorer?.rootUrl}tx/${txHash}`
 
   const [startTime] = useState(new Date())
   const [status, setStatus] = useState<TxStatus>('pending')
-  const noItemsToDisplay = !items || !collectionAddress
+  const noItemsToDisplay = !items || !collectionAddress || items.some(i => i.tokenId === undefined)
   const { data: tokenMetadatas, isLoading: isLoadingTokenMetadatas } = useGetTokenMetadata(
     {
       chainID: String(chainId),
       contractAddress: collectionAddress || '',
-      tokenIDs: items?.map(i => i.tokenId) || []
+      tokenIDs: noItemsToDisplay ? [] : items?.map(i => i.tokenId || '')
     },
     {
       disabled: noItemsToDisplay
@@ -295,9 +295,23 @@ export const TransactionStatus = () => {
         </div>
         <div>
           <Text color="muted" variant="small" fontWeight="medium">
-            <TimeAgo datetime={startTime} />
+            {formatDistanceToNow(startTime)}
           </Text>
         </div>
+      </div>
+    )
+  }
+
+  const SuccessActionButtons = () => {
+    return (
+      <div className="flex flex-row gap-2">
+        {successActionButtons.map(button => {
+          const action = () => {
+            closeTransactionStatusModal()
+            button.action()
+          }
+          return <Button key={button.label} label={button.label} onClick={action} />
+        })}
       </div>
     )
   }
@@ -331,6 +345,7 @@ export const TransactionStatus = () => {
                 </a>
               </Text>
             </div>
+            {status === 'success' && successActionButtons.length > 0 && <SuccessActionButtons />}
           </>
         )}
       </div>

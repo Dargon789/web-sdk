@@ -1,12 +1,7 @@
-import React from 'react'
-import { ethers } from 'ethers'
-import { useConfig } from 'wagmi'
-import { Box, Card, Image, Text } from '@0xsequence/design-system'
-import { getNativeTokenInfoByChainId, useContractInfo, useTokenMetadata } from '@0xsequence/kit'
-import { CoinIcon } from '../../../shared/components/CoinIcon'
-import { Skeleton } from '../../../shared/components/Skeleton'
-
-import { formatDisplay } from '../../../utils'
+import { Card, Image, NetworkImage, Skeleton, Text, TokenImage } from '@0xsequence/design-system'
+import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
+import { formatDisplay } from '@0xsequence/web-sdk-core'
+import { formatUnits } from 'viem'
 
 interface OrderSummaryItem {
   contractAddress: string
@@ -16,69 +11,72 @@ interface OrderSummaryItem {
 }
 
 export const OrderSummaryItem = ({ contractAddress, tokenId, quantityRaw, chainId }: OrderSummaryItem) => {
-  const { chains } = useConfig()
-  const { data: tokenMetadata, isPending: isPendingTokenMetadata } = useTokenMetadata(chainId, contractAddress, [tokenId])
-  const { data: contractInfo, isPending: isPendingContractInfo } = useContractInfo(chainId, contractAddress)
-  const isPending = isPendingTokenMetadata || isPendingContractInfo
+  const { data: tokenMetadata, isLoading: isLoadingTokenMetadata } = useGetTokenMetadata({
+    chainID: String(chainId),
+    contractAddress,
+    tokenIDs: [tokenId]
+  })
+  const { data: contractInfo, isLoading: isLoadingContractInfo } = useGetContractInfo({
+    chainID: String(chainId),
+    contractAddress
+  })
+  const isLoading = isLoadingTokenMetadata || isLoadingContractInfo
 
-  if (isPending) {
+  if (isLoading) {
     return <OrderSummarySkeleton />
   }
 
-  const nativeTokenInfo = getNativeTokenInfoByChainId(chainId, [...chains])
   const { name = 'unknown', image, decimals = 0 } = tokenMetadata?.[0] ?? {}
 
   const { logoURI: collectionLogoURI, name: collectionName = 'Unknown Collection' } = contractInfo || {}
 
-  const balanceFormatted = ethers.utils.formatUnits(quantityRaw, decimals)
+  const balanceFormatted = formatUnits(BigInt(quantityRaw), decimals)
 
   return (
-    <Card flexDirection="row" alignItems="flex-start" justifyContent="space-between">
-      <Box flexDirection="row" alignItems="center" justifyContent="center" gap="2">
-        <Box aspectRatio="1/1" height="full" justifyContent="center" alignItems="center" style={{ width: '80px' }}>
-          <Image src={image} borderRadius="md" style={{ height: '80px' }} />
-        </Box>
-        <Box flexDirection="column" alignItems="flex-start" justifyContent="center" gap="2">
-          <Box gap="1" alignItems="center">
-            <CoinIcon size={12} imageUrl={collectionLogoURI} />
-            <Text marginLeft="1" fontSize="small" color="text80" fontWeight="bold">
+    <Card className="flex flex-row items-start justify-between">
+      <div className="flex flex-row items-center justify-center gap-2">
+        <div className="flex aspect-square h-full justify-center items-center" style={{ width: '80px' }}>
+          <Image className="rounded-xl" src={image} style={{ maxWidth: '80px', height: '80px', objectFit: 'cover' }} />
+        </div>
+        <div className="flex flex-col items-start justify-center gap-2">
+          <div className="flex gap-1 items-center">
+            <TokenImage src={collectionLogoURI} size="xs" />
+            <Text className="ml-1" variant="small" color="secondary" fontWeight="bold">
               {collectionName}
             </Text>
-            <CoinIcon size={12} imageUrl={nativeTokenInfo.logoURI} />
-          </Box>
-          <Box
-            flexDirection="column"
-            alignItems="flex-start"
-            justifyContent="center"
+            <NetworkImage chainId={chainId} size="xs" />
+          </div>
+          <div
+            className="flex flex-col items-start justify-center"
             style={{
               width: '180px'
             }}
           >
-            <Text color="text100" fontSize="normal" fontWeight="normal">
+            <Text variant="normal" color="primary">
               {name}
             </Text>
-            <Text color="text50" fontSize="normal" fontWeight="normal">{`#${tokenId}`}</Text>
-          </Box>
-        </Box>
-      </Box>
-      <Box height="full" fontSize="small" color="text50" fontWeight="bold">
-        {`x${formatDisplay(balanceFormatted)}`}
-      </Box>
+            <Text variant="normal" color="muted">{`#${tokenId}`}</Text>
+          </div>
+        </div>
+      </div>
+      <div className="h-full">
+        <Text variant="small" color="muted" fontWeight="bold">{`x${formatDisplay(balanceFormatted)}`}</Text>
+      </div>
     </Card>
   )
 }
 
 export const OrderSummarySkeleton = () => {
   return (
-    <Card flexDirection="row" alignItems="flex-start" justifyContent="space-between">
-      <Box flexDirection="row" alignItems="center" justifyContent="center" gap="2">
-        <Skeleton height="80px" width="80px" />
-        <Box flexDirection="column" alignItems="flex-start" justifyContent="center" gap="2">
-          <Skeleton width="100px" height="14px" />
-          <Skeleton width="180px" height="34px" />
-        </Box>
-      </Box>
-      <Skeleton height="14px" width="14px" />
+    <Card className="flex flex-row items-start justify-between">
+      <div className="flex flex-row items-center justify-center gap-2">
+        <Skeleton style={{ width: '80px', height: '80px' }} />
+        <div className="flex flex-col items-start justify-center gap-2">
+          <Skeleton style={{ width: '100px', height: '14px' }} />
+          <Skeleton style={{ width: '180px', height: '34px' }} />
+        </div>
+      </div>
+      <Skeleton style={{ width: '14px', height: '14px' }} />
     </Card>
   )
 }
