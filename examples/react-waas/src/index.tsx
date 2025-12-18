@@ -1,22 +1,26 @@
+import { sequence } from '0xsequence'
+import { KitConfig, KitProvider } from '@0xsequence/kit'
+import { getDefaultWaasConnectors } from '@0xsequence/kit-connectors'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { WagmiProvider, createConfig, http } from 'wagmi'
+import { Chain, arbitrumNova, arbitrumSepolia, mainnet, polygon } from 'wagmi/chains'
+
 import { App } from './App.tsx'
 import './index.css'
 
-import { WagmiProvider, createConfig, http } from 'wagmi'
-import { Chain, arbitrumNova, arbitrumSepolia, mainnet, polygon } from 'wagmi/chains'
-import { sequence } from '0xsequence'
-import { getDefaultWaasConnectors } from '@0xsequence/kit-connectors'
-import { KitConfig, KitProvider } from '@0xsequence/kit'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import '@0xsequence/design-system/styles.css'
 
 const queryClient = new QueryClient()
 
 const chains: readonly [Chain, ...Chain[]] = [arbitrumNova as Chain, arbitrumSepolia as Chain, mainnet as Chain, polygon as Chain]
 
 // replace with your keys, and better to use env vars
-const projectAccessKey = 'T3czhtWsTONJpbjFgAdLAuEAAAAAAAAA'
-const waasConfigKey = 'eyJwcm9qZWN0SWQiOjc1LCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0='
+// const projectAccessKey = 'T3czhtWsTONJpbjFgAdLAuEAAAAAAAAA'
+const projectAccessKey = 'AQAAAAAAAAK2JvvZhWqZ51riasWBftkrVXE'
+// const waasConfigKey = 'eyJwcm9qZWN0SWQiOjc1LCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0='
+const waasConfigKey = 'eyJwcm9qZWN0SWQiOjY5NCwicnBjU2VydmVyIjoiaHR0cHM6Ly9kZXYtd2Fhcy5zZXF1ZW5jZS5hcHAiLCJlbWFpbFJlZ2lvbiI6ImNhLWNlbnRyYWwtMSIsImVtYWlsQ2xpZW50SWQiOiI1NGF0bjV1cGk2M3FjNTlhMWVtM3ZiaHJzbiJ9'
 const googleClientId = '603294233249-6h5saeg2uiu8akpcbar3r2aqjp6j7oem.apps.googleusercontent.com'
 // const appleClientId =
 // const appleRedirectURI = 'https://' + window.location.host

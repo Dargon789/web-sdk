@@ -31,6 +31,7 @@ import { KitConnectProviderProps } from '../index'
 import { Banner } from './Banner'
 import { ExtendedWalletList } from './ExtendedWalletList'
 import { GoogleLogo } from './GoogleLogo'
+import { WaasCodeInputContent } from './WaasCodeInputContent'
 
 export const ConnectWalletContent = (props: KitConnectProviderProps) => {
   useScript(appleAuthHelpers.APPLE_SCRIPT_SRC)
@@ -54,7 +55,6 @@ export const ConnectWalletContent = (props: KitConnectProviderProps) => {
 
   const [email, setEmail] = useState('')
   const [showEmailWaasPinInput, setShowEmailWaasPinInput] = useState(false)
-  const [waasEmailPinCode, setWaasEmailPinCode] = useState<string[]>([])
   const { connectors: baseConnectors, connect } = useConnect()
   const [enableGoogleTooltip, setEnableGoogleTooltip] = useState(false)
 
@@ -196,28 +196,10 @@ export const ConnectWalletContent = (props: KitConnectProviderProps) => {
 
   if (showEmailWaasPinInput) {
     return (
-      <>
-        <Box paddingY="6" alignItems="center" justifyContent="center" flexDirection="column">
-          <Text marginTop="5" marginBottom="4" variant="normal" color="text80">
-            Enter code received in email.
-          </Text>
-          <PINCodeInput value={waasEmailPinCode} digits={6} onChange={setWaasEmailPinCode} />
-
-          <Box gap="2" marginY="4" alignItems="center" justifyContent="center" style={{ height: '44px' }}>
-            {emailAuthLoading ? (
-              <Spinner />
-            ) : (
-              <Button
-                variant="primary"
-                disabled={waasEmailPinCode.includes('')}
-                label="Verify"
-                onClick={() => sendChallengeAnswer?.(waasEmailPinCode.join(''))}
-                data-id="verifyButton"
-              />
-            )}
-          </Box>
-        </Box>
-      </>
+      <WaasCodeInputContent
+        isLoading={emailAuthLoading}
+        onVerify={(code) => { sendChallengeAnswer?.(code) }}
+      />
     )
   }
 
@@ -238,8 +220,16 @@ export const ConnectWalletContent = (props: KitConnectProviderProps) => {
 
       <Box marginTop="6">
         {emailConnector && showEmailInput && (
-          <form onSubmit={onConnectInlineEmail}>
-            <TextInput onChange={onChangeEmail} value={email} name="email" placeholder="Enter email" data-1p-ignore />
+          <Box as="form" onSubmit={onConnectInlineEmail}>
+            <Box width="full">
+              <TextInput
+                onChange={onChangeEmail}
+                value={email}
+                name="email"
+                placeholder="Enter email"
+                data-1p-ignore
+              />
+            </Box>
             <Box alignItems="center" justifyContent="center" marginTop="4">
               {!emailAuthInProgress && (
                 <Button
@@ -252,7 +242,7 @@ export const ConnectWalletContent = (props: KitConnectProviderProps) => {
               )}
               {emailAuthInProgress && <Spinner />}
             </Box>
-          </form>
+          </Box>
         )}
 
         {socialAuthConnectors.length > 0 && !isPendingStorage && (

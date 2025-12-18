@@ -1,8 +1,10 @@
-import type { Wallet } from '@0xsequence/web-sdk-core'
+import { Wallet } from '@0xsequence/kit'
+import { CreateConnectorFn } from 'wagmi'
 
-import { sequenceWaasWallet, type BaseSequenceWaasConnectorOptions } from '../wagmiConnectors/sequenceWaasConnector.js'
+import { sequenceWaasWallet, BaseSequenceWaasConnectorOptions } from '../wagmiConnectors/sequenceWaasConnector'
 
-import { getEmailLogo } from './EmailLogo.js'
+import { getEmailLogo } from './EmailLogo'
+
 
 export type EmailWaasOptions = Omit<BaseSequenceWaasConnectorOptions, 'loginType'>
 
@@ -11,12 +13,11 @@ export const emailWaas = (options: EmailWaasOptions): Wallet => ({
   logoDark: getEmailLogo({ isDarkMode: true }),
   logoLight: getEmailLogo({ isDarkMode: false }),
   name: 'Email',
-  type: 'social',
   createConnector: () => {
     const connector = sequenceWaasWallet({
       ...options,
       loginType: 'email'
     })
     return connector
-  }
+  } 
 })

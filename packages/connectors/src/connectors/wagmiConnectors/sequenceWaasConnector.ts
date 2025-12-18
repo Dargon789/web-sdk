@@ -1,10 +1,10 @@
-import { SequenceWaaS, SequenceConfig, ExtendedSequenceConfig, Transaction, FeeOption } from '@0xsequence/waas'
+import { sequence } from '0xsequence'
 import { LocalStorageKey } from '@0xsequence/kit'
-import { TransactionRejectedRpcError, UserRejectedRequestError, getAddress } from 'viem'
-import { createConnector } from 'wagmi'
+import { SequenceWaaS, SequenceConfig, ExtendedSequenceConfig, Transaction, FeeOption } from '@0xsequence/waas'
 import { ethers } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
-import { sequence } from '0xsequence'
+import { TransactionRejectedRpcError, UserRejectedRequestError, getAddress } from 'viem'
+import { createConnector, CreateConnectorFn } from 'wagmi'
 
 export interface SequenceWaasConnectConfig {
   googleClientId?: string
@@ -100,7 +100,7 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       })
     },
 
-    async connect(connectInfo) {
+    async connect(_connectInfo) {
       const provider = await this.getProvider()
       const isSignedIn = await provider.sequenceWaas.isSignedIn()
 
@@ -216,13 +216,14 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
     },
 
     async onChainChanged(chain) {
-      const provider = await this.getProvider()
+      // const provider = await this.getProvider()
 
       config.emitter.emit('change', { chainId: normalizeChainId(chain) })
+
       // provider.setDefaultChainId(normalizeChainId(chain))
     },
 
-    async onConnect(connectInfo) {},
+    async onConnect(_connectInfo) {},
 
     async onDisconnect() {
       await this.disconnect()
@@ -240,6 +241,7 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
     super(network)
   }
 
+  triggerSessionValidation: (() => void ) | undefined
   requestConfirmationHandler: WaasRequestConfirmationHandler | undefined
   feeConfirmationHandler: WaasFeeOptionConfirmationHandler | undefined
 
@@ -252,7 +254,25 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
   updateNetwork(network: ethers.providers.Network) {
     this.currentNetwork = network
   }
+  async checkAndValidateSession() {
+    let isSessionValid = false
+    try {
+      isSessionValid = await this.sequenceWaas.isSessionValid()
+    } catch(e) {
+      console.error('session valid error', e)
+      isSessionValid = false
+    } 
 
+    console.log('is session valid.....', isSessionValid)
+    if (!isSessionValid) {
+      this.triggerSessionValidation && this.triggerSessionValidation()
+      console.log('validate sessions s....')
+      await this.sequenceWaas.validateSession()
+      console.log('validate sessions e....')
+      await this.sequenceWaas.waitForSessionValid()
+      console.log('finished waiting for validation')
+    }
+  }
   async request({ method, params }: { method: string; params?: any[] }) {
     if (method === 'eth_accounts') {
       const address = await this.sequenceWaas.getAddress()
@@ -303,6 +323,8 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
         }
       }
 
+      // await this.checkAndValidateSession()
+
       const response = await this.sequenceWaas.sendTransaction({
         transactions: [await ethers.utils.resolveProperties(params?.[0])],
         network: chainId,
@@ -346,6 +368,10 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
           throw new UserRejectedRequestError(new Error('User confirmation ids do not match'))
         }
       }
+
+      console.log('b4 check and validate')
+      // await this.checkAndValidateSession()
+      console.log('b4 signing')
       const sig = await this.sequenceWaas.signMessage({ message: params?.[0], network: this.currentNetwork.chainId })
 
       return sig.data.signature
