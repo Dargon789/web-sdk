@@ -1,9 +1,9 @@
 import {
+  getNativeTokenInfoByChainId,
   TRANSACTION_CONFIRMATIONS_DEFAULT,
   truncateAtMiddle,
   useAnalyticsContext,
   useCheckWaasFeeOptions,
-  useWaasConfirmationHandler,
   useWaasFeeOptions,
   useWallets,
   waitForTransactionReceipt,
@@ -21,22 +21,23 @@ import {
   Spinner,
   SubtractIcon,
   Text,
-  TextInput
+  TextInput,
+  useToast
 } from '@0xsequence/design-system'
 import { useClearCachedBalances, useGetSingleTokenBalance, useIndexerClient } from '@0xsequence/hooks'
 import type { ContractType, TokenBalance } from '@0xsequence/indexer'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { encodeFunctionData, formatUnits, parseUnits, toHex, type Hex } from 'viem'
-import { useAccount, useChainId, useConfig, useConnections, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+import { useAccount, useChainId, useConfig, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
 
-import { AllButActiveWalletSelect } from '../../components/Select/AllButActiveWalletSelect.js'
-import { SendItemInfo } from '../../components/SendItemInfo.js'
-import { TransactionConfirmation } from '../../components/TransactionConfirmation.js'
-import { EVENT_SOURCE, EVENT_TYPES } from '../../constants/analytics.js'
-import { ERC_1155_ABI, ERC_721_ABI } from '../../constants/index.js'
-import { useNavigationContext } from '../../contexts/Navigation.js'
-import { useNavigation } from '../../hooks/index.js'
-import { isEthAddress, limitDecimals } from '../../utils/index.js'
+import { WalletSelect } from '../../components/Select/WalletSelect'
+import { SendItemInfo } from '../../components/SendItemInfo'
+import { TransactionConfirmation } from '../../components/TransactionConfirmation'
+import { ERC_1155_ABI, ERC_721_ABI, HEADER_HEIGHT_WITH_LABEL, EVENT_SOURCE, EVENT_TYPES } from '../../constants'
+import { useNavigationContext } from '../../contexts/Navigation'
+import { useNavigation } from '../../hooks'
+import { isEthAddress, limitDecimals } from '../../utils'
+import { m } from 'motion/dist/react'
 
 interface SendCollectibleProps {
   chainId: number
@@ -45,7 +46,7 @@ interface SendCollectibleProps {
 }
 
 export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendCollectibleProps) => {
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const toast = useToast()
   const { wallets } = useWallets()
   const { setNavigation } = useNavigation()
   const { setIsBackButtonEnabled } = useNavigationContext()
@@ -115,16 +116,7 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
     setIsBackButtonEnabled(!showConfirmation)
   }, [showConfirmation, setIsBackButtonEnabled])
 
-  const connections = useConnections()
-  const waasConnector = connections.find(c => c.connector.id.includes('waas'))?.connector
-
-  const [pendingRequestConfirmation, confirmPendingRequest] = useWaasConfirmationHandler(waasConnector)
-
-  useEffect(() => {
-    if (pendingRequestConfirmation) {
-      confirmPendingRequest(pendingRequestConfirmation.id)
-    }
-  }, [pendingRequestConfirmation])
+  const nativeTokenInfo = getNativeTokenInfoByChainId(chainId, chains)
 
   const isLoading = isLoadingBalances
 
@@ -151,7 +143,6 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   }
 
   const handleSubtractOne = () => {
-    setErrorMsg(null)
     amountInputRef.current?.focus()
     const decrementedAmount = Number(amount) - 1
 
@@ -160,7 +151,6 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   }
 
   const handleAddOne = () => {
-    setErrorMsg(null)
     amountInputRef.current?.focus()
     const incrementedAmount = Number(amount) + 1
     const maxAmount = Number(formatUnits(BigInt(tokenBalance?.balance || 0), decimals))
@@ -171,7 +161,6 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   }
 
   const handleMax = () => {
-    setErrorMsg(null)
     amountInputRef.current?.focus()
     const maxAmount = formatUnits(BigInt(tokenBalance?.balance || 0), decimals).toString()
 
@@ -179,18 +168,15 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   }
 
   const handlePaste = async () => {
-    setErrorMsg(null)
     const result = await navigator.clipboard.readText()
     setToAddress(result)
   }
 
   const handleToAddressClear = () => {
-    setErrorMsg(null)
     setToAddress('')
   }
 
   const handleSendClick = async (e: ChangeEvent<HTMLFormElement>) => {
-    setErrorMsg(null)
     e.preventDefault()
 
     if (!isCorrectChainId && !isConnectorSequenceBased) {
@@ -251,13 +237,17 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   }
 
   const executeTransaction = async () => {
-    if (!isCorrectChainId && isConnectorSequenceBased) {
+    if (!isCorrectChainId && !isConnectorSequenceBased) {
       await switchChainAsync({ chainId })
     }
 
     if (!walletClient) {
       console.error('Wallet client not found')
-      setErrorMsg('Wallet client not available. Please ensure your wallet is connected.')
+      toast({
+        title: 'Error',
+        description: 'Wallet client not available. Please ensure your wallet is connected.',
+        variant: 'error'
+      })
       setIsSendTxnPending(false)
       return
     }
@@ -308,22 +298,10 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
         })
         setIsSendTxnPending(false) // Set pending to false immediately after getting hash
 
-        analytics?.track({
-          event: 'SEND_TRANSACTION_REQUEST',
-          props: {
-            walletClient: (connector as ExtendedConnector | undefined)?._wallet?.id || 'unknown',
-            source: EVENT_SOURCE,
-            type: EVENT_TYPES.SEND_NFT,
-            chainId: String(chainId),
-            origin: window.location.origin,
-            collectibleAddress: contractAddress,
-            collectibleId: tokenId,
-            txHash: txHash
-          },
-          nums: {
-            collectibleAmount: Number(amountRaw),
-            collectibleAmountDecimal: Number(amountToSendFormatted)
-          }
+        toast({
+          title: 'Transaction sent',
+          description: `Successfully sent ${amountToSendFormatted} ${name} to ${toAddress}`,
+          variant: 'success'
         })
 
         // Wait for receipt in the background
@@ -342,16 +320,42 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
               console.error('Error waiting for transaction receipt:', error)
             })
         }
+
+        analytics?.track({
+          event: 'SEND_TRANSACTION_REQUEST',
+          props: {
+            walletClient: (connector as ExtendedConnector | undefined)?._wallet?.id || 'unknown',
+            source: EVENT_SOURCE,
+            type: EVENT_TYPES.SEND_NFT,
+            chainId: String(chainId),
+            origin: window.location.origin,
+            collectibleAddress: contractAddress,
+            collectibleId: tokenId,
+            txHash: txHash
+          },
+          nums: {
+            collectibleAmount: Number(amountRaw),
+            collectibleAmountDecimal: Number(amountToSendFormatted)
+          }
+        })
       } else {
         // Handle case where txHash is unexpectedly undefined
         setIsSendTxnPending(false)
-        setErrorMsg('Transaction submitted but no hash received.')
+        toast({
+          title: 'Transaction Error',
+          description: 'Transaction submitted but no hash received.',
+          variant: 'error'
+        })
       }
     } catch (error: any) {
       console.error('Transaction failed:', error)
       setIsSendTxnPending(false)
       setIsBackButtonEnabled(true)
-      setErrorMsg(error?.shortMessage || error?.message || 'An unknown error occurred.')
+      toast({
+        title: 'Transaction Failed',
+        description: error?.shortMessage || error?.message || 'An unknown error occurred.',
+        variant: 'error'
+      })
     }
   }
 
@@ -361,7 +365,13 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   const isMaximum = Number(amount) >= Number(maxAmount)
 
   return (
-    <form className="flex px-4 pb-4 gap-2 flex-col" onSubmit={handleSendClick}>
+    <form
+      className="flex px-4 pb-4 gap-2 flex-col"
+      style={{
+        marginTop: HEADER_HEIGHT_WITH_LABEL
+      }}
+      onSubmit={handleSendClick}
+    >
       {!showConfirmation && (
         <>
           <div className="flex bg-background-secondary rounded-xl p-4 gap-2 flex-col">
@@ -420,7 +430,7 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
                 <TextInput
                   value={toAddress}
                   onChange={ev => setToAddress(ev.target.value)}
-                  placeholder={`Wallet Address (0x...)`}
+                  placeholder={`${nativeTokenInfo.name} Address (0x...)`}
                   name="to-address"
                   data-1p-ignore
                   controls={
@@ -435,15 +445,11 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
                     />
                   }
                 />
-                {wallets.length > 1 && <AllButActiveWalletSelect onClick={setToAddress} />}
+                {wallets.length > 1 && <WalletSelect selectedWallet={toAddress} onClick={setToAddress} />}
               </>
             )}
           </div>
-          {errorMsg && (
-            <Text variant="normal" color="negative" fontWeight="bold">
-              {errorMsg}
-            </Text>
-          )}
+
           <div className="flex items-center justify-center mt-2" style={{ height: '52px' }}>
             {isCheckingFeeOptions ? (
               <Spinner />

@@ -9,7 +9,6 @@ import {
 } from '@0xsequence/connect'
 import { Button, Spinner, Text } from '@0xsequence/design-system'
 import {
-  DEFAULT_SLIPPAGE_BPS,
   useClearCachedBalances,
   useGetContractInfo,
   useGetSwapQuote,
@@ -21,8 +20,8 @@ import { useMemo, useState } from 'react'
 import { formatUnits, zeroAddress, type Hex } from 'viem'
 import { useAccount, useChainId, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
 
-import { EVENT_SOURCE, EVENT_TYPES } from '../../constants/analytics.js'
-import { useNavigation } from '../../hooks/index.js'
+import { HEADER_HEIGHT, EVENT_SOURCE, EVENT_TYPES } from '../../constants'
+import { useNavigation } from '../../hooks'
 
 interface SwapListProps {
   chainId: number
@@ -42,9 +41,7 @@ export const SwapList = ({ chainId, contractAddress, amount, slippageBps }: Swap
   const { data: walletClient } = useWalletClient({ chainId })
   const { switchChainAsync } = useSwitchChain()
 
-  const isConnectorSequenceBased = (connector as ExtendedConnector).type?.includes('sequence')
-  // the isSequenceBased flag is not set on the connector. We need to fix this
-  // const isConnectorSequenceBased = !!(connector as ExtendedConnector)?._wallet?.isSequenceBased
+  const isConnectorSequenceBased = !!(connector as ExtendedConnector)?._wallet?.isSequenceBased
   const { analytics } = useAnalyticsContext()
   const connectedChainId = useChainId()
   const isCorrectChainId = connectedChainId === chainId
@@ -84,7 +81,7 @@ export const SwapList = ({ chainId, contractAddress, amount, slippageBps }: Swap
         fromTokenAddress: sellCurrencyAddress,
         chainId: chainId,
         includeApprove: true,
-        slippageBps: slippageBps || DEFAULT_SLIPPAGE_BPS
+        slippageBps: slippageBps || 100
       }
     },
     {
@@ -168,7 +165,7 @@ export const SwapList = ({ chainId, contractAddress, amount, slippageBps }: Swap
         await walletClient.switchChain({ id: chainId })
       }
 
-      const txs = await sendTransactions({
+      const txHash = await sendTransactions({
         connector,
         walletClient,
         publicClient,
@@ -177,26 +174,6 @@ export const SwapList = ({ chainId, contractAddress, amount, slippageBps }: Swap
         senderAddress: userAddress,
         transactions: [...getSwapTransactions()]
       })
-
-      if (txs.length === 0) {
-        throw new Error('No transactions to send')
-      }
-
-      let txHash: string | undefined
-
-      for (const [index, tx] of txs.entries()) {
-        const currentTxHash = await tx()
-
-        const isLastTransaction = index === txs.length - 1
-
-        if (isLastTransaction) {
-          txHash = currentTxHash
-        }
-      }
-
-      if (!txHash) {
-        throw new Error('Transaction hash is not available')
-      }
 
       analytics?.track({
         event: 'SEND_TRANSACTION_REQUEST',
@@ -359,7 +336,6 @@ export const SwapList = ({ chainId, contractAddress, amount, slippageBps }: Swap
               noOptionsFound ||
               !selectedCurrency ||
               quoteFetchInProgress ||
-              isErrorSwapQuote ||
               isTxsPending ||
               (!isCorrectChainId && !isConnectorSequenceBased) ||
               showSwitchNetwork
@@ -375,7 +351,7 @@ export const SwapList = ({ chainId, contractAddress, amount, slippageBps }: Swap
   }
 
   return (
-    <div className="flex p-5 gap-2 flex-col">
+    <div className="flex p-5 gap-2 flex-col" style={{ marginTop: HEADER_HEIGHT }}>
       <SwapContent />
     </div>
   )
