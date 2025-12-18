@@ -1,7 +1,7 @@
-import type { Wallet } from '../../types.js'
-import { sequenceWaasWallet, type BaseSequenceWaasConnectorOptions } from '../wagmiConnectors/sequenceWaasConnector.js'
+import { GoogleLogo, getMonochromeGoogleLogo } from './GoogleLogo'
 
-import { getMonochromeGoogleLogo, GoogleLogo } from './GoogleLogo.js'
+import { sequenceWaasWallet, BaseSequenceWaasConnectorOptions } from '../wagmiConnectors/sequenceWaasConnector'
+import { Wallet } from '@0xsequence/kit'
 
 export type GoogleWaasOptions = Omit<BaseSequenceWaasConnectorOptions, 'loginType'>
 
@@ -12,7 +12,6 @@ export const googleWaas = (options: GoogleWaasOptions): Wallet => ({
   monochromeLogoDark: getMonochromeGoogleLogo({ isDarkMode: true }),
   monochromeLogoLight: getMonochromeGoogleLogo({ isDarkMode: false }),
   name: 'Google',
-  type: 'social',
   createConnector: () => {
     const connector = sequenceWaasWallet({
       ...options,

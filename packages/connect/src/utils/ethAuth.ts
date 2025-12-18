@@ -1,19 +1,18 @@
-import type { ETHAuthProof } from '@0xsequence/auth'
+import { ETHAuthProof } from '@0xsequence/auth'
 import { ETHAuth, Proof } from '@0xsequence/ethauth'
-import { isValidTypedDataSignature } from '@0xsequence/provider'
-import type { Storage, UsePublicClientReturnType } from 'wagmi'
-import type { GetWalletClientData } from 'wagmi/query'
+import { sequence } from '0xsequence'
+import { Storage, UsePublicClientReturnType, useConfig } from 'wagmi'
+import { GetWalletClientData } from 'wagmi/query'
 
-import { DEFAULT_SESSION_EXPIRATION, LocalStorageKey } from '../constants/index.js'
-import type { StorageItem } from '../types.js'
+import { publicClientToProvider, walletClientToSigner } from './adapters'
 
-import { publicClientToProvider, walletClientToSigner } from './adapters.js'
+import { LocalStorageKey, DEFAULT_SESSION_EXPIRATION } from '../constants'
+import { EthAuthSettings } from '../components/KitProvider'
+import { getStorageItem } from './storage'
 
-export const signEthAuthProof = async (
-  walletClient: GetWalletClientData<any, any>,
-  storage: Storage<StorageItem>
-): Promise<ETHAuthProof> => {
-  const proofInformation = await storage.getItem(LocalStorageKey.EthAuthProof)
+export const signEthAuthProof = async (walletClient: GetWalletClientData<any, any>): Promise<ETHAuthProof> => {
+  const wagmiConfig = useConfig()
+  const proofInformation = getStorageItem(LocalStorageKey.EthAuthProof) as ETHAuthProof | undefined
 
   // if proof information was generated and saved upon wallet connection, use that
   if (proofInformation) {
@@ -21,7 +20,7 @@ export const signEthAuthProof = async (
   }
 
   // generate a new proof
-  const proofSettings = await storage.getItem(LocalStorageKey.EthAuthSettings)
+  const proofSettings = getStorageItem(LocalStorageKey.EthAuthSettings) as EthAuthSettings | undefined
 
   if (!proofSettings) {
     throw new Error('No ETHAuth settings found')
@@ -39,8 +38,11 @@ export const signEthAuthProof = async (
   proof.setExpiryIn(proofSettings.expiry ? Math.max(proofSettings.expiry, 200) : DEFAULT_SESSION_EXPIRATION)
 
   const typedData = proof.messageTypedData()
-  const signer = await walletClientToSigner(walletClient)
-  const signature = await signer.signTypedData(typedData.domain, typedData.types, typedData.message)
+
+  typedData.domain.verifyingContract
+
+  const signer = walletClientToSigner(walletClient)
+  const signature = await signer._signTypedData(typedData.domain, typedData.types, typedData.message)
 
   proof.signature = signature
 
@@ -64,7 +66,7 @@ export const validateEthProof = async (
   const decodedProof = await ethAuth.decodeProof(proof.proofString, true)
   const provider = publicClientToProvider(publicClient)
 
-  const isValid = await isValidTypedDataSignature(walletAddress, proof.typedData, decodedProof.signature, provider as any)
+  const isValid = await sequence.utils.isValidTypedDataSignature(walletAddress, proof.typedData, decodedProof.signature, provider)
 
   return isValid
 }

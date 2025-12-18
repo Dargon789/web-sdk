@@ -1,4 +1,4 @@
-import { ChainId, networks } from '@0xsequence/network'
+import { networks, ChainId } from '@0xsequence/network'
 
 export const getNetworkColor = (chainId: number, mode: 'dark' | 'light' = 'light') => {
   switch (chainId) {

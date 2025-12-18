@@ -1,7 +1,7 @@
-import type { Wallet } from '../../types.js'
-import { sequenceWallet, type BaseSequenceConnectorOptions } from '../wagmiConnectors/index.js'
+import { getTwitchLogo } from './TwitchLogo'
 
-import { getTwitchLogo } from './TwitchLogo.js'
+import { sequenceWallet, BaseSequenceConnectorOptions } from '../wagmiConnectors'
+import { Wallet } from '@0xsequence/kit'
 
 export interface TwitchOptions extends BaseSequenceConnectorOptions {}
 
@@ -14,7 +14,6 @@ export const twitch = (options: TwitchOptions): Wallet => ({
   monochromeLogoLight: getTwitchLogo({ isDarkMode: false }),
   // iconBackground: '#fff',
   name: 'Twitch',
-  type: 'social',
   createConnector: projectAccessKey => {
     const connector = sequenceWallet({
       ...options,

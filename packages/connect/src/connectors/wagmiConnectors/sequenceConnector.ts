@@ -1,59 +1,52 @@
 import { sequence } from '0xsequence'
-import type { ETHAuthProof } from '@0xsequence/auth'
-import type { ChainIdLike } from '@0xsequence/network'
-import type { ConnectOptions, SequenceProvider } from '@0xsequence/provider'
-import { getAddress, UserRejectedRequestError } from 'viem'
-import { createConnector } from 'wagmi'
+import { ETHAuthProof } from '@0xsequence/auth'
+import { LocalStorageKey, EthAuthSettings } from '@0xsequence/kit'
 
-import { LocalStorageKey } from '../../constants/localStorage.js'
-import type { EthAuthSettings } from '../../types.js'
-import { normalizeChainId } from '../../utils/helpers.js'
+import { UserRejectedRequestError, getAddress } from 'viem'
+
+import { createConnector } from 'wagmi'
 
 export interface BaseSequenceConnectorOptions {
   walletAppURL?: string
-  defaultNetwork?: ChainIdLike
-  connect: ConnectOptions
+  defaultNetwork?: sequence.network.ChainIdLike
+  connect: sequence.provider.ConnectOptions
 }
 
 sequenceWallet.type = 'sequence' as const
 
 export function sequenceWallet(params: BaseSequenceConnectorOptions) {
   const { defaultNetwork, connect, walletAppURL } = params
+
+  let id = 'sequence'
+  let name = 'Sequence'
+
   const { projectAccessKey } = connect
 
-  // XXX id and name are not being used anywhere, should they override the connector id and name?
-  // let id = 'sequence'
-  // let name = 'Sequence'
-
-  // const signInOptions = params?.connect?.settings?.signInOptions || []
-  // const signInWith = params?.connect?.settings?.signInWith
-  // const signInWithEmail = params?.connect?.settings?.signInWithEmail
+  const signInOptions = params?.connect?.settings?.signInOptions || []
+  const signInWith = params?.connect?.settings?.signInWith
+  const signInWithEmail = params?.connect?.settings?.signInWithEmail
 
   // If there are no sign in options
   // Then it must mean we are connecting with email
-  // if (signInWithEmail) {
-  //   id = 'email'
-  //   name = 'Email'
-  // } else if (signInWith) {
-  //   id = signInWith
-  //   name = `${signInWith[0].toUpperCase()}${signInWith.slice(1)}`
-  // } else if (signInOptions.length > 0) {
-  //   const newId = signInOptions[0]
-  //   const newName = `${id[0].toUpperCase()}${id.slice(1)}`
-  //   id = newId
-  //   name = newName
-  // }
-
-  type Provider = SequenceProvider
-  type Properties = {
-    params: BaseSequenceConnectorOptions
-    setEmail: (email: string) => void
+  if (signInWithEmail) {
+    id = 'email'
+    name = 'Email'
+  } else if (signInWith) {
+    id = signInWith
+    name = `${signInWith[0].toUpperCase()}${signInWith.slice(1)}`
+  } else if (signInOptions.length > 0) {
+    const newId = signInOptions[0]
+    const newName = `${id[0].toUpperCase()}${id.slice(1)}`
+    id = newId
+    name = newName
   }
+
+  type Provider = sequence.provider.SequenceProvider
+  type Properties = { params: BaseSequenceConnectorOptions }
   type StorageItem = {
     [LocalStorageKey.EthAuthProof]: ETHAuthProof
     [LocalStorageKey.Theme]: string
     [LocalStorageKey.EthAuthSettings]: EthAuthSettings
-    [LocalStorageKey.WaasSignInEmail]: string | null
   }
 
   return createConnector<Provider, Properties, StorageItem>(config => ({
@@ -61,12 +54,6 @@ export function sequenceWallet(params: BaseSequenceConnectorOptions) {
     name: 'Sequence',
     type: sequenceWallet.type,
     params,
-
-    setEmail(email: string) {
-      if (params.connect.settings) {
-        params.connect.settings.signInWithEmail = email
-      }
-    },
 
     async setup() {
       const provider = await this.getProvider()
@@ -88,7 +75,6 @@ export function sequenceWallet(params: BaseSequenceConnectorOptions) {
 
         const connectOptionsWithTheme = {
           authorize: true,
-          askForEmail: true,
           ...ethAuthSettings,
           ...connect,
           settings: {
@@ -115,9 +101,6 @@ export function sequenceWallet(params: BaseSequenceConnectorOptions) {
 
           await config.storage?.setItem(LocalStorageKey.EthAuthProof, jsonEthAuthProof)
         }
-
-        // Save the email used to sign in
-        await config.storage?.setItem(LocalStorageKey.WaasSignInEmail, e.email || null)
       }
 
       const accounts = await this.getAccounts()
@@ -132,8 +115,6 @@ export function sequenceWallet(params: BaseSequenceConnectorOptions) {
       const provider = await this.getProvider()
 
       provider.disconnect()
-
-      await config.storage?.removeItem(LocalStorageKey.WaasSignInEmail)
     },
 
     async getAccounts() {
@@ -208,11 +189,18 @@ export function sequenceWallet(params: BaseSequenceConnectorOptions) {
       provider.setDefaultChainId(normalizeChainId(chain))
     },
 
-    async onConnect(_connectinfo) {},
+    async onConnect(connectinfo) {},
 
     async onDisconnect() {
       await config.storage?.removeItem(LocalStorageKey.EthAuthProof)
       config.emitter.emit('disconnect')
     }
   }))
+}
+
+function normalizeChainId(chainId: string | number | bigint | { chainId: string }) {
+  if (typeof chainId === 'object') return normalizeChainId(chainId.chainId)
+  if (typeof chainId === 'string') return Number.parseInt(chainId, chainId.trim().substring(0, 2) === '0x' ? 16 : 10)
+  if (typeof chainId === 'bigint') return Number(chainId)
+  return chainId
 }

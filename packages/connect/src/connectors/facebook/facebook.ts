@@ -1,7 +1,8 @@
-import type { Wallet } from '../../types.js'
-import { sequenceWallet, type BaseSequenceConnectorOptions } from '../wagmiConnectors/index.js'
+import type { Wallet } from '@0xsequence/kit'
 
-import { FacebookLogo, getFacebookMonochromeLogo } from './FacebookLogo.js'
+import { FacebookLogo, getFacebookMonochromeLogo } from './FacebookLogo'
+
+import { sequenceWallet, BaseSequenceConnectorOptions } from '../wagmiConnectors'
 
 export interface FacebookOptions extends BaseSequenceConnectorOptions {}
 
@@ -14,7 +15,6 @@ export const facebook = (options: FacebookOptions): Wallet => ({
   monochromeLogoLight: getFacebookMonochromeLogo({ isDarkMode: false }),
   // iconBackground: '#fff',
   name: 'Facebook',
-  type: 'social',
   createConnector: projectAccessKey => {
     const connector = sequenceWallet({
       ...options,

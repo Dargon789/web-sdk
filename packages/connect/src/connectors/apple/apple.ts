@@ -1,7 +1,7 @@
-import type { Wallet } from '../../types.js'
-import { sequenceWallet, type BaseSequenceConnectorOptions } from '../wagmiConnectors/index.js'
+import type { Wallet } from '@0xsequence/kit'
+import { getAppleLogo, getAppleMonochromeLogo } from './AppleLogo'
 
-import { getAppleLogo, getAppleMonochromeLogo } from './AppleLogo.js'
+import { sequenceWallet, BaseSequenceConnectorOptions } from '../wagmiConnectors'
 
 export type AppleOptions = BaseSequenceConnectorOptions
 
@@ -14,7 +14,6 @@ export const apple = (options: AppleOptions): Wallet => ({
   monochromeLogoLight: getAppleMonochromeLogo({ isDarkMode: false }),
   // iconBackground: '#fff',
   name: 'Apple',
-  type: 'social',
   createConnector: projectAccessKey => {
     const connector = sequenceWallet({
       ...options,

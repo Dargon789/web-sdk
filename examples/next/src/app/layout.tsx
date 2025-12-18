@@ -1,15 +1,10 @@
-import { ThemeProvider } from '@0xsequence/design-system'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { headers } from 'next/headers'
-import { cookieToInitialState } from 'wagmi'
-
 import './globals.css'
+import '@0xsequence/design-system/styles.css'
 
-import { config } from '../config'
-
-import { Providers } from './Providers'
-import { EnvironmentSetter } from './components/EnvironmentSetter'
+import { Web3Provider } from './Web3Provider'
+import { ThemeProvider } from '@0xsequence/design-system'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,14 +18,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const initialState = cookieToInitialState(config.wagmiConfig, headers().get('cookie'))
-
   return (
     <html lang="en">
       <body className={inter.className}>
-        <EnvironmentSetter />
         <ThemeProvider theme="dark">
-          <Providers initialState={initialState}>{children}</Providers>
+          <Web3Provider>{children}</Web3Provider>
         </ThemeProvider>
       </body>
     </html>

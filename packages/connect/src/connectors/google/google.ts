@@ -1,7 +1,7 @@
-import type { Wallet } from '../../types.js'
-import { sequenceWallet, type BaseSequenceConnectorOptions } from '../wagmiConnectors/index.js'
+import { GoogleLogo, getMonochromeGoogleLogo } from './GoogleLogo'
 
-import { getMonochromeGoogleLogo, GoogleLogo } from './GoogleLogo.js'
+import { sequenceWallet, BaseSequenceConnectorOptions } from '../wagmiConnectors'
+import { Wallet } from '@0xsequence/kit'
 
 export type GoogleOptions = BaseSequenceConnectorOptions
 
@@ -13,7 +13,6 @@ export const google = (options: GoogleOptions): Wallet => ({
   monochromeLogoDark: getMonochromeGoogleLogo({ isDarkMode: true }),
   monochromeLogoLight: getMonochromeGoogleLogo({ isDarkMode: false }),
   name: 'Google',
-  type: 'social',
   createConnector: projectAccessKey => {
     const connector = sequenceWallet({
       ...options,

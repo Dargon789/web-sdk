@@ -1,39 +1,36 @@
 {
-  "name": "example-next",
-  "version": "1.0.4",
+  "name": "@0xsequence/kit-example-next",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 4444",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@0xsequence/design-system": "2.1.8",
-    "@0xsequence/network": ">= 2.3.7",
-    "@0xsequence/checkout": "workspace:*",
-    "@0xsequence/connect": "workspace:*",
-    "@0xsequence/hooks": "workspace:*",
-    "@0xsequence/wallet-widget": "workspace:*",
-    "@0xsequence/waas": ">= 2.3.7",
-    "@tailwindcss/postcss": "^4.0.6",
-    "@tanstack/react-query": "^5.62.0",
-    "example-shared-components": "workspace:*",
+    "@0xsequence/design-system": "^1.4.7",
+    "@0xsequence/kit": "workspace:*",
+    "@0xsequence/kit-checkout": "workspace:*",
+    "@0xsequence/kit-connectors": "workspace:*",
+    "@0xsequence/kit-wallet": "workspace:*",
+    "@0xsequence/network": "^1.9.26",
+    "@tanstack/react-query": "^5.29.2",
     "next": "14.2.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.6",
-    "viem": "^2.28.0",
-    "wagmi": "^2.15.0"
+    "react": "^18",
+    "react-dom": "^18",
+    "viem": "^2.5.7",
+    "wagmi": "^2.5.7"
   },
   "devDependencies": {
-    "@types/node": "^20.12.12",
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vanilla-extract/next-plugin": "^2.4.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
-    "postcss": "^8.5.1",
-    "typescript": "^5.8.2"
+    "postcss": "^8",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5"
   }
 }
