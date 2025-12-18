@@ -126,3 +126,7 @@ export { ShadowRoot } from './components/ShadowRoot/index.js'
 
 // Indexer
 export { ContractVerificationStatus } from '@0xsequence/indexer'
+
+// Hooks
+// We are exporting the hooks from this package to avoid react context issues
+export * from '@0xsequence/hooks'

@@ -1,24 +1,30 @@
-import { compareAddress, ContractVerificationStatus, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/connect'
+import {
+  ContractVerificationStatus,
+  getNativeTokenInfoByChainId,
+  compareAddress,
+  formatDisplay,
+  useGetTokenBalancesSummary,
+  useGetContractInfo
+} from '@0xsequence/connect'
 import {
   Button,
   ChevronRightIcon,
   Divider,
   HelpIcon,
+  Text,
+  Tooltip,
   PaymentsIcon,
   Skeleton,
-  Text,
-  TokenImage,
-  Tooltip
+  TokenImage
 } from '@0xsequence/design-system'
-import { useGetContractInfo, useGetTokenBalancesSummary } from '@0xsequence/hooks'
 import { useEffect } from 'react'
-import { formatUnits, zeroAddress } from 'viem'
+import { zeroAddress, formatUnits } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 
-import { HEADER_HEIGHT } from '../../constants/index.js'
-import { useCheckoutModal, useNavigation } from '../../hooks/index.js'
+import { HEADER_HEIGHT } from '../../constants'
+import { useNavigation, useCheckoutModal } from '../../hooks'
 
-import { OrderSummaryItem } from './component/OrderSummaryItem.js'
+import { OrderSummaryItem } from './component/OrderSummaryItem'
 
 export const CheckoutSelection = () => {
   const { chains } = useConfig()
@@ -79,10 +85,27 @@ export const CheckoutSelection = () => {
 
   const chainId = settings?.cryptoCheckout?.chainId || settings?.creditCardCheckout?.chainId || 1
 
+  const triggerSardineTransaction = async () => {
+    console.log('trigger sardine transaction')
+
+    if (settings?.creditCardCheckout) {
+      setNavigation({
+        location: 'transaction-pending',
+        params: {
+          creditCardCheckout: settings.creditCardCheckout
+        }
+      })
+    }
+  }
+
   const onClickPayWithCard = () => {
-    setNavigation({
-      location: 'transaction-form'
-    })
+    if (settings?.creditCardCheckout) {
+      triggerSardineTransaction()
+    } else {
+      setNavigation({
+        location: 'transaction-form'
+      })
+    }
   }
 
   const onClickPayWithCrypto = () => {

@@ -1,18 +1,16 @@
 export const styles = String.raw`
-/*! tailwindcss v4.1.11 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.1.5 | MIT License | https://tailwindcss.com */
 @layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --color-red-500: oklch(63.7% 0.237 25.331);
     --color-violet-600: oklch(54.1% 0.281 293.009);
     --color-gray-500: oklch(55.1% 0.027 264.364);
     --color-black: #000;
     --color-white: #fff;
     --spacing: 0.25rem;
-    --container-md: 28rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
@@ -213,9 +211,6 @@ export const styles = String.raw`
   .relative {
     position: relative;
   }
-  .sticky {
-    position: sticky;
-  }
   .inset-0 {
     inset: calc(var(--spacing) * 0);
   }
@@ -227,12 +222,6 @@ export const styles = String.raw`
   }
   .top-4 {
     top: calc(var(--spacing) * 4);
-  }
-  .top-\[-2px\] {
-    top: -2px;
-  }
-  .top-\[50\%\] {
-    top: 50%;
   }
   .right-0 {
     right: calc(var(--spacing) * 0);
@@ -251,9 +240,6 @@ export const styles = String.raw`
   }
   .left-4 {
     left: calc(var(--spacing) * 4);
-  }
-  .left-\[50\%\] {
-    left: 50%;
   }
   .z-1 {
     z-index: 1;
@@ -294,6 +280,9 @@ export const styles = String.raw`
   .-m-\[1px\] {
     margin: calc(1px * -1);
   }
+  .m-0 {
+    margin: calc(var(--spacing) * 0);
+  }
   .m-4 {
     margin: calc(var(--spacing) * 4);
   }
@@ -318,6 +307,9 @@ export const styles = String.raw`
   .mt-0 {
     margin-top: calc(var(--spacing) * 0);
   }
+  .mt-0\.5 {
+    margin-top: calc(var(--spacing) * 0.5);
+  }
   .mt-1 {
     margin-top: calc(var(--spacing) * 1);
   }
@@ -339,14 +331,8 @@ export const styles = String.raw`
   .mt-10 {
     margin-top: calc(var(--spacing) * 10);
   }
-  .-mr-\[1px\] {
-    margin-right: calc(1px * -1);
-  }
   .mr-4 {
     margin-right: calc(var(--spacing) * 4);
-  }
-  .-mb-\[1px\] {
-    margin-bottom: calc(1px * -1);
   }
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
@@ -374,9 +360,6 @@ export const styles = String.raw`
   }
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
-  }
-  .ml-\[40px\] {
-    margin-left: 40px;
   }
   .block {
     display: block;
@@ -447,38 +430,17 @@ export const styles = String.raw`
   .h-24 {
     height: calc(var(--spacing) * 24);
   }
-  .h-200 {
-    height: calc(var(--spacing) * 200);
-  }
-  .h-400 {
-    height: calc(var(--spacing) * 400);
-  }
   .h-\[1px\] {
     height: 1px;
   }
-  .h-\[2px\] {
-    height: 2px;
-  }
-  .h-\[17px\] {
-    height: 17px;
-  }
   .h-\[52px\] {
     height: 52px;
-  }
-  .h-\[56px\] {
-    height: 56px;
   }
   .h-\[60px\] {
     height: 60px;
   }
   .h-\[64px\] {
     height: 64px;
-  }
-  .h-\[200px\] {
-    height: 200px;
-  }
-  .h-\[206px\] {
-    height: 206px;
   }
   .h-\[calc\(100dvh-70px\)\] {
     height: calc(100dvh - 70px);
@@ -512,9 +474,6 @@ export const styles = String.raw`
   }
   .min-h-\[100px\] {
     min-height: 100px;
-  }
-  .min-h-\[128px\] {
-    min-height: 128px;
   }
   .min-h-full {
     min-height: 100%;
@@ -567,23 +526,11 @@ export const styles = String.raw`
   .w-40 {
     width: calc(var(--spacing) * 40);
   }
-  .w-\[0px\] {
-    width: 0px;
-  }
   .w-\[1px\] {
     width: 1px;
   }
-  .w-\[17px\] {
-    width: 17px;
-  }
-  .w-\[44px\] {
-    width: 44px;
-  }
   .w-\[52px\] {
     width: 52px;
-  }
-  .w-\[56px\] {
-    width: 56px;
   }
   .w-\[100px\] {
     width: 100px;
@@ -612,9 +559,6 @@ export const styles = String.raw`
   .max-w-full {
     max-width: 100%;
   }
-  .max-w-md {
-    max-width: var(--container-md);
-  }
   .min-w-0 {
     min-width: calc(var(--spacing) * 0);
   }
@@ -633,14 +577,8 @@ export const styles = String.raw`
   .min-w-full {
     min-width: 100%;
   }
-  .flex-1 {
-    flex: 1;
-  }
   .flex-shrink {
     flex-shrink: 1;
-  }
-  .flex-shrink-0 {
-    flex-shrink: 0;
   }
   .shrink-0 {
     flex-shrink: 0;
@@ -657,24 +595,8 @@ export const styles = String.raw`
   .origin-top {
     transform-origin: top;
   }
-  .-translate-x-1 {
-    --tw-translate-x: calc(var(--spacing) * -1);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-  .-translate-x-1\/2 {
-    --tw-translate-x: calc(calc(1/2 * 100%) * -1);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
   .translate-x-0 {
     --tw-translate-x: calc(var(--spacing) * 0);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-  .-translate-y-1 {
-    --tw-translate-y: calc(var(--spacing) * -1);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-  .-translate-y-1\/2 {
-    --tw-translate-y: calc(calc(1/2 * 100%) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .transform {
@@ -722,9 +644,6 @@ export const styles = String.raw`
   .flex-row {
     flex-direction: row;
   }
-  .flex-wrap {
-    flex-wrap: wrap;
-  }
   .place-items-center {
     place-items: center;
   }
@@ -758,9 +677,6 @@ export const styles = String.raw`
   .gap-0\.5 {
     gap: calc(var(--spacing) * 0.5);
   }
-  .gap-0\.25 {
-    gap: calc(var(--spacing) * 0.25);
-  }
   .gap-1 {
     gap: calc(var(--spacing) * 1);
   }
@@ -782,22 +698,11 @@ export const styles = String.raw`
   .gap-10 {
     gap: calc(var(--spacing) * 10);
   }
-  .gap-\[6px\] {
-    gap: 6px;
-  }
   .self-center {
     align-self: center;
   }
   .justify-self-center {
     justify-self: center;
-  }
-  .truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .overflow-auto {
-    overflow: auto;
   }
   .overflow-hidden {
     overflow: hidden;
@@ -825,9 +730,6 @@ export const styles = String.raw`
   }
   .rounded {
     border-radius: 0.25rem;
-  }
-  .rounded-2xl {
-    border-radius: var(--radius-2xl);
   }
   .rounded-full {
     border-radius: calc(infinity * 1px);
@@ -902,9 +804,6 @@ export const styles = String.raw`
     --tw-border-style: solid;
     border-style: solid;
   }
-  .border-background-primary {
-    border-color: var(--seq-color-background-primary);
-  }
   .border-border-error {
     border-color: var(--seq-color-border-error);
   }
@@ -913,12 +812,6 @@ export const styles = String.raw`
   }
   .border-border-normal {
     border-color: var(--seq-color-border-normal);
-  }
-  .border-primary {
-    border-color: var(--seq-color-primary);
-  }
-  .border-red-500 {
-    border-color: var(--color-red-500);
   }
   .border-transparent {
     border-color: transparent;
@@ -986,10 +879,6 @@ export const styles = String.raw`
   .bg-white {
     background-color: var(--color-white);
   }
-  .bg-gradient-to-r {
-    --tw-gradient-position: to right in oklab;
-    background-image: linear-gradient(var(--tw-gradient-stops));
-  }
   .bg-gradient-primary {
     background-image: var(--seq-color-gradient-primary);
   }
@@ -1034,9 +923,6 @@ export const styles = String.raw`
   }
   .p-6 {
     padding: calc(var(--spacing) * 6);
-  }
-  .p-8 {
-    padding: calc(var(--spacing) * 8);
   }
   .p-\[10px\] {
     padding: 10px;
@@ -1101,6 +987,9 @@ export const styles = String.raw`
   .pt-5 {
     padding-top: calc(var(--spacing) * 5);
   }
+  .pt-6 {
+    padding-top: calc(var(--spacing) * 6);
+  }
   .pt-\[60px\] {
     padding-top: 60px;
   }
@@ -1109,6 +998,9 @@ export const styles = String.raw`
   }
   .pr-4 {
     padding-right: calc(var(--spacing) * 4);
+  }
+  .pb-0 {
+    padding-bottom: calc(var(--spacing) * 0);
   }
   .pb-2 {
     padding-bottom: calc(var(--spacing) * 2);
@@ -1202,10 +1094,6 @@ export const styles = String.raw`
   .leading-0 {
     --tw-leading: calc(var(--spacing) * 0);
     line-height: calc(var(--spacing) * 0);
-  }
-  .leading-1 {
-    --tw-leading: calc(var(--spacing) * 1);
-    line-height: calc(var(--spacing) * 1);
   }
   .leading-4 {
     --tw-leading: calc(var(--spacing) * 4);
@@ -1310,9 +1198,6 @@ export const styles = String.raw`
   .text-primary {
     color: var(--seq-color-primary);
   }
-  .text-red-500 {
-    color: var(--color-red-500);
-  }
   .text-secondary {
     color: var(--seq-color-secondary);
   }
@@ -1351,9 +1236,6 @@ export const styles = String.raw`
   .opacity-50 {
     opacity: 50%;
   }
-  .opacity-75 {
-    opacity: 75%;
-  }
   .opacity-100 {
     opacity: 100%;
   }
@@ -1363,10 +1245,6 @@ export const styles = String.raw`
   }
   .shadow-\[0_0_10px_0_rgba\(0\,0\,0\,0\.5\)\] {
     --tw-shadow: 0 0 10px 0 var(--tw-shadow-color, rgba(0,0,0,0.5));
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
-  .shadow-sm {
-    --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .ring-1 {
@@ -1433,11 +1311,6 @@ export const styles = String.raw`
   }
   .transition {
     transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, visibility, content-visibility, overlay, pointer-events;
-    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
-    transition-duration: var(--tw-duration, var(--default-transition-duration));
-  }
-  .transition-opacity {
-    transition-property: opacity;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
   }
@@ -1793,13 +1666,6 @@ export const styles = String.raw`
   .focus-within\:ring-inset {
     &:focus-within {
       --tw-ring-inset: inset;
-    }
-  }
-  .hover\:border-\[var\(--seq-color-border-normal\)\] {
-    &:hover {
-      @media (hover: hover) {
-        border-color: var(--seq-color-border-normal);
-      }
     }
   }
   .hover\:bg-button-glass {

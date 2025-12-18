@@ -1,24 +1,24 @@
-import { compareAddress, CryptoOption, formatDisplay, sendTransactions } from '@0xsequence/connect'
-import { Button, Spinner, Text } from '@0xsequence/design-system'
 import {
-  DEFAULT_SLIPPAGE_BPS,
+  CryptoOption,
+  compareAddress,
+  formatDisplay,
+  sendTransactions,
   useGetContractInfo,
-  useGetSwapQuote,
   useGetSwapRoutes,
+  useGetSwapQuote,
   useGetTokenBalancesSummary,
   useIndexerClient
-} from '@0xsequence/hooks'
+} from '@0xsequence/connect'
+import { Button, Spinner, Text } from '@0xsequence/design-system'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { useEffect, useMemo, useState } from 'react'
-import { formatUnits, zeroAddress, type Hex } from 'viem'
-import { useAccount, useChainId, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+import { useState, useEffect, useMemo } from 'react'
+import { zeroAddress, formatUnits, Hex } from 'viem'
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 
-import { HEADER_HEIGHT } from '../../constants/index.js'
-import { useSwapModal, useTransactionStatusModal } from '../../hooks/index.js'
+import { HEADER_HEIGHT } from '../../constants'
+import { useSwapModal, useTransactionStatusModal } from '../../hooks'
 
 export const Swap = () => {
-  const connectedChainId = useChainId()
-  const [isSwitchingChain, setIsSwitchingChain] = useState(false)
   const { openTransactionStatusModal } = useTransactionStatusModal()
   const { swapModalSettings, closeSwapModal } = useSwapModal()
   const {
@@ -37,14 +37,8 @@ export const Swap = () => {
   const [isTxsPending, setIsTxsPending] = useState(false)
   const [isError, setIsError] = useState(false)
   const [selectedCurrency, setSelectedCurrency] = useState<string>()
-  const publicClient = usePublicClient()
-  const {
-    data: walletClient,
-    isLoading: isLoadingWalletClient,
-    isError: isErrorWalletClient,
-    error: errorWalletClient
-  } = useWalletClient()
-  const { switchChain } = useSwitchChain()
+  const publicClient = usePublicClient({ chainId })
+  const { data: walletClient } = useWalletClient({ chainId })
 
   const {
     data: currencyInfoData,
@@ -83,13 +77,6 @@ export const Swap = () => {
     })
     return map
   }, [tokenBalances])
-
-  useEffect(() => {
-    if (isSwitchingChain && connectedChainId == Number(chainId) && !isLoadingWalletClient) {
-      setIsSwitchingChain(false)
-      onClickProceed()
-    }
-  }, [connectedChainId, chainId, isLoadingWalletClient, isSwitchingChain])
 
   useEffect(() => {
     // Only attempt to select a currency if none is currently selected
@@ -159,7 +146,7 @@ export const Swap = () => {
         fromTokenAddress: selectedCurrency || '',
         chainId: chainId,
         includeApprove: true,
-        slippageBps: slippageBps || DEFAULT_SLIPPAGE_BPS
+        slippageBps: slippageBps || 100
       }
     },
     {
@@ -173,24 +160,7 @@ export const Swap = () => {
   const isLoading = isLoadingCurrencyInfo || swapRoutesIsLoading
 
   const onClickProceed = async () => {
-    if (!userAddress) {
-      throw new Error('User address is not available. Please ensure your wallet is connected.')
-    }
-    if (!publicClient) {
-      throw new Error('Public client is not available. Please check your network connection.')
-    }
-    if (!walletClient || isErrorWalletClient || errorWalletClient) {
-      throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
-        cause: errorWalletClient
-      })
-    }
-    if (!connector) {
-      throw new Error('Wallet connector is not available. Please ensure your wallet is properly connected.')
-    }
-
-    if (connectedChainId != chainId) {
-      await switchChain({ chainId })
-      setIsSwitchingChain(true)
+    if (!userAddress || !publicClient || !walletClient || !connector) {
       return
     }
 
@@ -237,7 +207,7 @@ export const Swap = () => {
         await walletClient.switchChain({ id: chainId })
       }
 
-      const txs = await sendTransactions({
+      const txHash = await sendTransactions({
         connector,
         walletClient,
         publicClient,
@@ -247,26 +217,6 @@ export const Swap = () => {
         transactionConfirmations: blockConfirmations,
         transactions: [...getSwapTransactions(), ...(postSwapTransactions ?? [])]
       })
-
-      if (txs.length === 0) {
-        throw new Error('No transactions to send')
-      }
-
-      let txHash: string | undefined
-
-      for (const [index, tx] of txs.entries()) {
-        const currentTxHash = await tx()
-
-        const isLastTransaction = index === txs.length - 1
-        if (isLastTransaction) {
-          onSuccess?.(currentTxHash)
-          txHash = currentTxHash
-        }
-      }
-
-      if (!txHash) {
-        throw new Error('Transaction hash is not available')
-      }
 
       closeSwapModal()
       openTransactionStatusModal({
