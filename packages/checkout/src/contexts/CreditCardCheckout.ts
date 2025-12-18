@@ -1,8 +1,8 @@
 'use client'
 
 import type { Theme } from '@0xsequence/design-system'
-import { createGenericContext } from '@0xsequence/web-sdk-core'
 
+import { createGenericContext } from './genericContext.js'
 import type { ActionButtons, SupplementaryAnalyticsInfo } from './SelectPaymentModal.js'
 
 interface CoinQuantity {

@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@0xsequence/web-sdk-core": "workspace:*",
+    "@0xsequence/dapp-client": "github:0xsequence/sequence.js#dists/wallet/dapp-client",
     "@0xsequence/checkout": "workspace:*",
     "@0xsequence/connect": "workspace:*",
     "@0xsequence/design-system": "2.1.11",
@@ -32,6 +32,7 @@
     "react-router-dom": "^7.5.3",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3",
+    "ox": "^0.7.2",
     "viem": "^2.28.1",
     "wagmi": "^2.15.1"
   },

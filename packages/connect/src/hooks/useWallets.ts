@@ -1,12 +1,11 @@
 'use client'
 
-import { SequenceAPIClient, type GetLinkedWalletsRequest, type LinkedWallet } from '@0xsequence/api'
+import { SequenceAPIClient, type GetLinkedWalletsArgs, type LinkedWallet } from '@0xsequence/api'
 import { useAPIClient } from '@0xsequence/hooks'
-import type { ExtendedConnector } from '@0xsequence/web-sdk-core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAccount, useConnect, useConnections, useDisconnect, type Connector, type UseConnectionsReturnType } from 'wagmi'
 
-import { SEQUENCE_UNIVERSAL_CONNECTOR_NAME } from '../components/Connect/Connect.js'
+import type { ExtendedConnector } from '../types.js'
 
 import { useWaasGetLinkedWalletsSignature } from './useWaasGetLinkedWalletsSignature.js'
 
@@ -15,12 +14,12 @@ interface UseLinkedWalletsOptions {
 }
 
 // Create a stable storage key from args
-const createStorageKey = (args: GetLinkedWalletsRequest): string =>
+const createStorageKey = (args: GetLinkedWalletsArgs): string =>
   `@0xsequence.linked_wallets-${args.parentWalletAddress}-${args.signatureChainId}`
 
 const getLinkedWallets = async (
   apiClient: SequenceAPIClient,
-  args: GetLinkedWalletsRequest,
+  args: GetLinkedWalletsArgs,
   headers?: object,
   signal?: AbortSignal
 ): Promise<Array<LinkedWallet>> => {
@@ -75,10 +74,7 @@ const notifyLinkedWalletsListeners = () => {
   }, 0)
 }
 
-export const useLinkedWallets = (
-  args: GetLinkedWalletsRequest,
-  options: UseLinkedWalletsOptions = {}
-): UseLinkedWalletsResult => {
+export const useLinkedWallets = (args: GetLinkedWalletsArgs, options: UseLinkedWalletsOptions = {}): UseLinkedWalletsResult => {
   const apiClient = useAPIClient()
   const [data, setData] = useState<LinkedWallet[] | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
@@ -193,7 +189,7 @@ export interface UseWalletsReturnType {
  * For embedded wallets, it also provides access to linked wallets - additional
  * wallets that have been linked to the primary embedded wallet.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/wallet-sdk/ecosystem/hooks/useWallets} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useWallets} for more detailed documentation.
  *
  * @returns An object containing wallet information and management functions {@link UseWalletsReturnType}
  *
@@ -324,10 +320,6 @@ export const useWallets = (): UseWalletsReturnType => {
 const getConnectorName = (connector: Connector) => {
   const connectorName = connector.name
   const connectorWalletName = (connector._wallet as any)?.name
-
-  if (connectorName === SEQUENCE_UNIVERSAL_CONNECTOR_NAME) {
-    return 'Sequence Universal'
-  }
 
   return connectorWalletName ?? connectorName
 }

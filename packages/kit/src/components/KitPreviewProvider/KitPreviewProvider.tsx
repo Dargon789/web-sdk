@@ -1,37 +1,48 @@
 'use client'
 
 import { sequence } from '0xsequence'
-import { SequenceClient } from '0xsequence/dist/declarations/src/provider'
-import { ThemeProvider } from '@0xsequence/design-system'
+import { ThemeProvider, type Theme } from '@0xsequence/design-system'
+import { SequenceClient } from '@0xsequence/provider'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import React, { useState, useEffect } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useAccount, useConfig } from 'wagmi'
 
-import { DEFAULT_SESSION_EXPIRATION, LocalStorageKey } from '../../constants'
-import { AnalyticsContextProvider } from '../../contexts/Analytics'
-import { ConnectModalContextProvider } from '../../contexts/ConnectModal'
-import { KitConfigContextProvider } from '../../contexts/KitConfig'
-import { ThemeContextProvider } from '../../contexts/Theme'
-import { WalletConfigContextProvider } from '../../contexts/WalletSettings'
-import { useStorage } from '../../hooks/useStorage'
-import { useEmailConflict } from '../../hooks/useWaasEmailConflict'
-import { ExtendedConnector, DisplayedAsset, EthAuthSettings, KitConfig, Theme, ModalPosition } from '../../types'
-import { ConnectWalletContent } from '../Connect'
+import { DEFAULT_SESSION_EXPIRATION } from '../../constants/ethAuth.js'
+import { LocalStorageKey } from '../../constants/localStorage.js'
+import { AnalyticsContextProvider } from '../../contexts/Analytics.js'
+import { ConnectConfigContextProvider } from '../../contexts/ConnectConfig.js'
+import { ConnectModalContextProvider } from '../../contexts/ConnectModal.js'
+import { ThemeContextProvider } from '../../contexts/Theme.js'
+import { WalletConfigContextProvider } from '../../contexts/WalletConfig.js'
+import { useStorage } from '../../hooks/useStorage.js'
+import { useEmailConflict } from '../../hooks/useWaasEmailConflict.js'
+import {
+  type ConnectConfig,
+  type DisplayedAsset,
+  type EthAuthSettings,
+  type ExtendedConnector,
+  type ModalPosition
+} from '../../types.js'
+import { Connect } from '../Connect/Connect.js'
 
-export type KitConnectProviderProps = {
-  children: React.ReactNode
-  config: KitConfig
+export type SequenceConnectProviderProps = {
+  children: ReactNode
+  config: ConnectConfig
 }
 
-export const KitPreviewProvider = (props: KitConnectProviderProps) => {
+export const SequenceConnectPreviewProvider = (props: SequenceConnectProviderProps) => {
   const { config, children } = props
   const {
     defaultTheme = 'dark',
     signIn = {},
     position = 'center',
     displayedAssets: displayedAssetsSetting = [],
+    readOnlyNetworks,
     ethAuth = {} as EthAuthSettings,
-    disableAnalytics = false
+    disableAnalytics = false,
+    hideExternalConnectOptions = false,
+    hideConnectedWallets = false,
+    hideSocialConnectOptions = false
   } = config
 
   const defaultAppName = signIn.projectName || 'app'
@@ -108,7 +119,7 @@ export const KitPreviewProvider = (props: KitConnectProviderProps) => {
   const { emailConflictInfo } = useEmailConflict()
 
   return (
-    <KitConfigContextProvider value={config}>
+    <ConnectConfigContextProvider value={config}>
       <ThemeContextProvider
         value={{
           theme,
@@ -118,19 +129,23 @@ export const KitPreviewProvider = (props: KitConnectProviderProps) => {
         }}
       >
         <GoogleOAuthProvider clientId={googleClientId}>
-          <ConnectModalContextProvider value={{ setOpenConnectModal, openConnectModalState: openConnectModal }}>
-            <WalletConfigContextProvider value={{ setDisplayedAssets, displayedAssets }}>
+          <ConnectModalContextProvider
+            value={{ isConnectModalOpen: openConnectModal, setOpenConnectModal, openConnectModalState: openConnectModal }}
+          >
+            <WalletConfigContextProvider
+              value={{
+                setDisplayedAssets,
+                displayedAssets,
+                readOnlyNetworks,
+                hideExternalConnectOptions,
+                hideConnectedWallets,
+                hideSocialConnectOptions
+              }}
+            >
               <AnalyticsContextProvider value={{ setAnalytics, analytics }}>
                 <div id="kit-provider">
                   <ThemeProvider root="#kit-provider" scope="kit" theme={theme}>
-                    <ConnectWalletContent
-                      onClose={() => setOpenConnectModal(false)}
-                      emailConflictInfo={emailConflictInfo}
-                      isPreview
-                      googleUseRedirectMode={props.config.googleUseRedirectMode}
-                      googleRedirectModeLoginUri={props.config.googleRedirectModeLoginUri}
-                      {...props}
-                    />
+                    <Connect onClose={() => setOpenConnectModal(false)} isPreview {...props} />
                   </ThemeProvider>
                 </div>
                 {children}
@@ -139,6 +154,6 @@ export const KitPreviewProvider = (props: KitConnectProviderProps) => {
           </ConnectModalContextProvider>
         </GoogleOAuthProvider>
       </ThemeContextProvider>
-    </KitConfigContextProvider>
+    </ConnectConfigContextProvider>
   )
 }
