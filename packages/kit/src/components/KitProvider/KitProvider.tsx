@@ -1,32 +1,30 @@
 'use client'
 
 import { sequence } from '0xsequence'
-import { Button, Card, Collapsible, Modal, ModalPrimitive, Text, Theme } from '@0xsequence/design-system'
+import { Box, Button, Card, Collapsible, Modal, ModalPrimitive, Text, ThemeProvider } from '@0xsequence/design-system'
 import { ChainId } from '@0xsequence/network'
 import { SequenceClient } from '@0xsequence/provider'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { ethers } from 'ethers'
-import { AnimatePresence } from 'motion/react'
+import { AnimatePresence } from 'framer-motion'
 import React, { useState, useEffect } from 'react'
 import { Connector, useAccount, useConfig, useConnections } from 'wagmi'
 
-import { DEFAULT_SESSION_EXPIRATION, WEB_SDK_VERSION, LocalStorageKey } from '../../constants'
+import { DEFAULT_SESSION_EXPIRATION, LocalStorageKey } from '../../constants'
 import { AnalyticsContextProvider } from '../../contexts/Analytics'
 import { ConnectModalContextProvider } from '../../contexts/ConnectModal'
-import { EnvironmentContextProvider } from '../../contexts/Environment'
 import { KitConfigContextProvider } from '../../contexts/KitConfig'
 import { ThemeContextProvider } from '../../contexts/Theme'
 import { WalletConfigContextProvider } from '../../contexts/WalletSettings'
 import { useStorage } from '../../hooks/useStorage'
 import { useWaasConfirmationHandler } from '../../hooks/useWaasConfirmationHandler'
 import { useEmailConflict } from '../../hooks/useWaasEmailConflict'
-import { ExtendedConnector, DisplayedAsset, EthAuthSettings, KitConfig, ModalPosition } from '../../types'
+import { ExtendedConnector, DisplayedAsset, EthAuthSettings, KitConfig, Theme, ModalPosition } from '../../types'
 import { getModalPositionCss } from '../../utils/styling'
-import { Connect } from '../Connect/Connect'
+import { ConnectWalletContent } from '../Connect'
 import { NetworkBadge } from '../NetworkBadge'
 import { PageHeading } from '../PageHeading'
 import { PoweredBySequence } from '../SequenceLogo'
-import { ShadowRoot } from '../ShadowRoot'
 import { TxnDetails } from '../TxnDetails'
 
 export type KitConnectProviderProps = {
@@ -41,10 +39,8 @@ export const KitProvider = (props: KitConnectProviderProps) => {
     signIn = {},
     position = 'center',
     displayedAssets: displayedAssetsSetting = [],
-    readOnlyNetworks,
     ethAuth = {} as EthAuthSettings,
-    disableAnalytics = false,
-    projectAccessKey
+    disableAnalytics = false
   } = config
 
   const defaultAppName = signIn.projectName || 'app'
@@ -56,10 +52,6 @@ export const KitProvider = (props: KitConnectProviderProps) => {
   const [modalPosition, setModalPosition] = useState<ModalPosition>(position)
   const [displayedAssets, setDisplayedAssets] = useState<DisplayedAsset[]>(displayedAssetsSetting)
   const [analytics, setAnalytics] = useState<SequenceClient['analytics']>()
-  const [isEnabledDevSequenceApis, setIsEnabledDevSequenceApis] = useState<boolean>(false)
-  const [isEnabledDevTransak, setIsEnabledDevTransak] = useState<boolean>(false)
-  const [isEnabledDevSardine, setIsEnabledDevSardine] = useState<boolean>(false)
-  const [devProjectAccessKey, setDevProjectAccessKey] = useState<string>(projectAccessKey)
   const { address, isConnected } = useAccount()
   const wagmiConfig = useConfig()
   const storage = useStorage()
@@ -76,22 +68,6 @@ export const KitProvider = (props: KitConnectProviderProps) => {
   const setupAnalytics = (projectAccessKey: string) => {
     const s = sequence.initWallet(projectAccessKey)
     const sequenceAnalytics = s.client.analytics
-
-    if (sequenceAnalytics) {
-      type TrackArgs = Parameters<typeof sequenceAnalytics.track>
-      const originalTrack = sequenceAnalytics.track
-      sequenceAnalytics.track = (...args: TrackArgs) => {
-        const [event] = args
-        if (event && typeof event === 'object' && 'props' in event) {
-          event.props = {
-            ...event.props,
-            sdkType: 'sequence kit',
-            version: WEB_SDK_VERSION
-          }
-        }
-        return originalTrack?.(...args)
-      }
-    }
     setAnalytics(sequenceAnalytics)
   }
 
@@ -151,57 +127,54 @@ export const KitProvider = (props: KitConnectProviderProps) => {
   const { isEmailConflictOpen, emailConflictInfo, toggleEmailConflictModal } = useEmailConflict()
 
   return (
-    <EnvironmentContextProvider
-      value={{
-        isEnabledDevSequenceApis,
-        setIsEnabledDevSequenceApis,
-        isEnabledDevTransak,
-        setIsEnabledDevTransak,
-        isEnabledDevSardine,
-        setIsEnabledDevSardine,
-        devProjectAccessKey,
-        setDevProjectAccessKey
-      }}
-    >
-      <KitConfigContextProvider value={config}>
-        <ThemeContextProvider
-          value={{
-            theme,
-            setTheme,
-            position: modalPosition,
-            setPosition: setModalPosition
-          }}
-        >
-          <GoogleOAuthProvider clientId={googleClientId}>
-            <ConnectModalContextProvider value={{ setOpenConnectModal, openConnectModalState: openConnectModal }}>
-              <WalletConfigContextProvider value={{ setDisplayedAssets, displayedAssets, readOnlyNetworks }}>
-                <AnalyticsContextProvider value={{ setAnalytics, analytics }}>
-                  <ShadowRoot theme={theme}>
+    <KitConfigContextProvider value={config}>
+      <ThemeContextProvider
+        value={{
+          theme,
+          setTheme,
+          position: modalPosition,
+          setPosition: setModalPosition
+        }}
+      >
+        <GoogleOAuthProvider clientId={googleClientId}>
+          <ConnectModalContextProvider value={{ setOpenConnectModal, openConnectModalState: openConnectModal }}>
+            <WalletConfigContextProvider value={{ setDisplayedAssets, displayedAssets }}>
+              <AnalyticsContextProvider value={{ setAnalytics, analytics }}>
+                <div id="kit-provider">
+                  <ThemeProvider root="#kit-provider" scope="kit" theme={theme}>
                     <AnimatePresence>
                       {openConnectModal && (
                         <Modal
                           scroll={false}
+                          backdropColor="backgroundBackdrop"
                           size="sm"
                           contentProps={{
                             style: {
-                              maxWidth: '390px',
+                              maxWidth: '364px',
                               overflow: 'visible',
                               ...getModalPositionCss(position)
                             }
                           }}
                           onClose={() => setOpenConnectModal(false)}
                         >
-                          <Connect onClose={() => setOpenConnectModal(false)} emailConflictInfo={emailConflictInfo} {...props} />
+                          <ConnectWalletContent
+                            onClose={() => setOpenConnectModal(false)}
+                            emailConflictInfo={emailConflictInfo}
+                            googleUseRedirectMode={props.config.googleUseRedirectMode}
+                            googleRedirectModeLoginUri={props.config.googleRedirectModeLoginUri}
+                            {...props}
+                          />
                         </Modal>
                       )}
 
                       {pendingRequestConfirmation && (
                         <Modal
                           scroll={false}
+                          backdropColor="backgroundBackdrop"
                           size="sm"
                           contentProps={{
                             style: {
-                              maxWidth: '390px',
+                              maxWidth: '364px',
                               ...getModalPositionCss(position)
                             }
                           }}
@@ -210,69 +183,70 @@ export const KitProvider = (props: KitConnectProviderProps) => {
                             rejectPendingRequest('')
                           }}
                         >
-                          <div className="px-4 pt-4 pb-2">
-                            <div
-                              className="flex flex-col justify-center text-primary items-center font-medium"
+                          <Box paddingX="4" paddingTop="4" paddingBottom="2">
+                            <Box
+                              flexDirection="column"
+                              justifyContent="center"
+                              color="text100"
+                              alignItems="center"
+                              fontWeight="medium"
                               style={{
                                 marginTop: '4px'
                               }}
                             >
                               <ModalPrimitive.Title asChild>
-                                <Text className="mb-5" variant="large" asChild>
-                                  <h1>
-                                    Confirm{' '}
-                                    {pendingRequestConfirmation.type === 'signMessage' ? 'signing message' : 'transaction'}
-                                  </h1>
+                                <Text as="h1" variant="large" marginBottom="5">
+                                  Confirm {pendingRequestConfirmation.type === 'signMessage' ? 'signing message' : 'transaction'}
                                 </Text>
                               </ModalPrimitive.Title>
 
                               {pendingRequestConfirmation.type === 'signMessage' && (
-                                <div className="flex flex-col w-full">
-                                  <Text variant="normal" color="muted" fontWeight="medium">
+                                <Box flexDirection="column" width="full">
+                                  <Text variant="normal" color="text50" fontWeight="medium">
                                     Message
                                   </Text>
-                                  <Card className="mt-2 py-6">
-                                    <Text className="mb-4" variant="normal">
+                                  <Card marginTop="2" paddingY="6">
+                                    <Text variant="normal" marginBottom="4">
                                       {ethers.toUtf8String(pendingRequestConfirmation.message ?? '')}
                                     </Text>
                                   </Card>
-                                </div>
+                                </Box>
                               )}
 
                               {pendingRequestConfirmation.type === 'signTransaction' && (
-                                <div className="flex flex-col w-full">
+                                <Box flexDirection="column" width="full">
                                   <TxnDetails
                                     address={address ?? ''}
                                     txs={pendingRequestConfirmation.txs ?? []}
                                     chainId={pendingRequestConfirmation.chainId ?? ChainId.POLYGON}
                                   />
 
-                                  <Collapsible className="mt-4" label="Transaction data">
-                                    <Card className="overflow-x-scroll my-3">
-                                      <Text className="mb-4" variant="code">
+                                  <Collapsible label="Transaction data" marginTop="4">
+                                    <Card overflowX="scroll" marginY="3">
+                                      <Text variant="code" marginBottom="4">
                                         {JSON.stringify(pendingRequestConfirmation.txs, null, 2)}
                                       </Text>
                                     </Card>
                                   </Collapsible>
-                                </div>
+                                </Box>
                               )}
 
                               {pendingRequestConfirmation.chainId && (
-                                <div className="flex w-full mt-3 justify-end items-center">
-                                  <div className="flex w-1/2 justify-start">
-                                    <Text variant="small" color="muted">
+                                <Box width="full" marginTop="3" justifyContent="flex-end" alignItems="center">
+                                  <Box width="1/2" justifyContent="flex-start">
+                                    <Text variant="small" color="text50">
                                       Network
                                     </Text>
-                                  </div>
-                                  <div className="flex w-1/2 justify-end">
+                                  </Box>
+                                  <Box width="1/2" justifyContent="flex-end">
                                     <NetworkBadge chainId={pendingRequestConfirmation.chainId} />
-                                  </div>
-                                </div>
+                                  </Box>
+                                </Box>
                               )}
 
-                              <div className="flex flex-row gap-2 w-full mt-5">
+                              <Box flexDirection="row" gap="2" width="full" marginTop="5">
                                 <Button
-                                  className="w-full"
+                                  width="full"
                                   shape="square"
                                   size="lg"
                                   label="Reject"
@@ -281,7 +255,9 @@ export const KitProvider = (props: KitConnectProviderProps) => {
                                   }}
                                 />
                                 <Button
-                                  className="flex items-center text-center w-full"
+                                  alignItems="center"
+                                  textAlign="center"
+                                  width="full"
                                   shape="square"
                                   size="lg"
                                   label="Confirm"
@@ -290,55 +266,42 @@ export const KitProvider = (props: KitConnectProviderProps) => {
                                     confirmPendingRequest(pendingRequestConfirmation?.id)
                                   }}
                                 />
-                              </div>
-                            </div>
+                              </Box>
+                            </Box>
 
                             <PoweredBySequence />
-                          </div>
+                          </Box>
                         </Modal>
                       )}
 
                       {isEmailConflictOpen && emailConflictInfo && (
-                        <Modal
-                          size="sm"
-                          scroll={false}
-                          onClose={() => {
-                            setOpenConnectModal(false)
-                            toggleEmailConflictModal(false)
-                          }}
-                        >
-                          <div className="p-4">
+                        <Modal size="sm" scroll={false} onClose={() => toggleEmailConflictModal(false)}>
+                          <Box padding="4">
                             <ModalPrimitive.Title asChild>
                               <PageHeading>Email already in use</PageHeading>
                             </ModalPrimitive.Title>
-                            <div>
-                              <Text className="text-center" variant="normal" color="secondary">
-                                Another account with this email address <Text color="primary">({emailConflictInfo.email})</Text>{' '}
-                                already exists with account type <Text color="primary">({emailConflictInfo.type})</Text>. Please
+                            <Box>
+                              <Text variant="normal" color="text80" textAlign="center">
+                                Another account with this email address <Text color="text100">({emailConflictInfo.email})</Text>{' '}
+                                already exists with account type <Text color="text100">({emailConflictInfo.type})</Text>. Please
                                 sign in again with the correct account.
                               </Text>
-                              <div className="flex mt-4 gap-2 items-center justify-center">
-                                <Button
-                                  label="OK"
-                                  onClick={() => {
-                                    setOpenConnectModal(false)
-                                    toggleEmailConflictModal(false)
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
+                              <Box marginTop="4" gap="2" alignItems="center" justifyContent="center">
+                                <Button label="OK" onClick={() => toggleEmailConflictModal(false)} />
+                              </Box>
+                            </Box>
+                          </Box>
                         </Modal>
                       )}
                     </AnimatePresence>
-                  </ShadowRoot>
-                  {children}
-                </AnalyticsContextProvider>
-              </WalletConfigContextProvider>
-            </ConnectModalContextProvider>
-          </GoogleOAuthProvider>
-        </ThemeContextProvider>
-      </KitConfigContextProvider>
-    </EnvironmentContextProvider>
+                  </ThemeProvider>
+                </div>
+                {children}
+              </AnalyticsContextProvider>
+            </WalletConfigContextProvider>
+          </ConnectModalContextProvider>
+        </GoogleOAuthProvider>
+      </ThemeContextProvider>
+    </KitConfigContextProvider>
   )
 }
