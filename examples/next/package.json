@@ -25,7 +25,7 @@
     "clsx": "^2.1.1",
     "example-shared-components": "workspace:*",
     "motion": "^12.9.2",
-    "next": "14.2.3",
+    "next": "14.2.35",
     "ox": "^0.7.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
