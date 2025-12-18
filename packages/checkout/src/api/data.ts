@@ -1,6 +1,5 @@
 import { TokenMetadata } from '@0xsequence/metadata'
 import { ChainId, networks } from '@0xsequence/network'
-import { isDevSardine, getDevSardineProjectAccessKey } from '@0xsequence/react-connect'
 
 import { CreditCardCheckout } from '../contexts'
 
@@ -17,16 +16,18 @@ export interface FetchSardineClientTokenArgs {
   order: CreditCardCheckout
   projectAccessKey: string
   tokenMetadata?: TokenMetadata
+  isDev?: boolean
 }
 
 export const fetchSardineClientToken = async ({
   order,
-  projectAccessKey: prodProjectAccessKey,
-  tokenMetadata
+  projectAccessKey,
+  tokenMetadata,
+  isDev = false
 }: FetchSardineClientTokenArgs): Promise<FetchSardineClientTokenReturn> => {
   // Test credentials: https://docs.sardine.ai/docs/integrate-payments/nft-checkout-testing-credentials
-  const accessKey = isDevSardine() ? getDevSardineProjectAccessKey(prodProjectAccessKey) : prodProjectAccessKey
-  const url = isDevSardine()
+  const accessKey = projectAccessKey
+  const url = isDev
     ? 'https://dev-api.sequence.app/rpc/API/SardineGetNFTCheckoutToken'
     : 'https://api.sequence.app/rpc/API/SardineGetNFTCheckoutToken'
 
@@ -67,17 +68,16 @@ export const fetchSardineClientToken = async ({
   }
 }
 
-export const fetchSardineOrderStatus = async (orderId: string, prodProjectAccessKey: string) => {
+export const fetchSardineOrderStatus = async (orderId: string, projectAccessKey: string, isDev?: boolean) => {
   // Test credentials: https://docs.sardine.ai/docs/integrate-payments/nft-checkout-testing-credentials
-  const accessKey = isDevSardine() ? getDevSardineProjectAccessKey(prodProjectAccessKey) : prodProjectAccessKey
-  const url = isDevSardine()
+  const url = isDev
     ? 'https://dev-api.sequence.app/rpc/API/SardineGetNFTCheckoutOrderStatus'
     : 'https://api.sequence.app/rpc/API/SardineGetNFTCheckoutOrderStatus'
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Access-Key': `${accessKey}`
+      'X-Access-Key': `${projectAccessKey}`
     },
     body: JSON.stringify({
       orderId

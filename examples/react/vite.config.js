@@ -21,12 +21,7 @@ export default defineConfig(() => {
       svgrPlugin()
     ],
     define: {
-      __WEB_SDK_PACKAGE_VERSION__: JSON.stringify(process.env.npm_package_version),
-      __WEB_SDK_DEV_GLOBAL__: JSON.stringify(process.env.DEV_GLOBAL || false),
-      __WEB_SDK_DEV_SARDINE__: JSON.stringify(process.env.DEV_SARDINE || false),
-      __WEB_SDK_DEV_TRANSAK__: JSON.stringify(process.env.DEV_TRANSAK || false),
-      __WEB_SDK_DEV_SEQUENCE_APIS__: JSON.stringify(process.env.DEV_SEQUENCE_APIS || false),
-      __WEB_SDK_DEV_SARDINE_PROJECT_ACCESS_KEY__: JSON.stringify(process.env.DEV_SARDINE_PROJECT_ACCESS_KEY || '')
+      __SEQUENCE_KIT_PACKAGE_VERSION__: JSON.stringify(process.env.npm_package_version)
     },
     resolve: {
       dedupe: ['wagmi', 'viem']

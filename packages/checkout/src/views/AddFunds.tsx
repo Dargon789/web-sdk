@@ -1,6 +1,7 @@
 import { useAPIClient } from '@0xsequence/kit'
 import { Box, Spinner, Text } from '@0xsequence/design-system'
 import React, { useEffect } from 'react'
+import { useEnvironment } from '@0xsequence/kit'
 
 import { HEADER_HEIGHT } from '../constants'
 import { useAddFundsModal, useSardineOnRampLink } from '../hooks'
@@ -13,6 +14,7 @@ const EventTypeOrderFailed = 'TRANSAK_ORDER_FAILED'
 
 export const AddFundsContent = () => {
   const { addFundsSettings } = useAddFundsModal()
+  const { isEnabledDevTransak } = useEnvironment()
 
   if (!addFundsSettings) {
     return
@@ -156,7 +158,7 @@ export const AddFundsContentTransak = () => {
     }
   }
 
-  const link = getTransakLink(addFundsSettings)
+  const link = getTransakLink(addFundsSettings, isEnabledDevTransak)
 
   return (
     <Box
