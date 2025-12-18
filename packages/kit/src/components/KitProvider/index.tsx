@@ -1,3 +1,5 @@
+'use client'
+
 import { sequence } from '0xsequence'
 import { Box, Button, Card, Collapsible, Modal, Text, ThemeProvider } from '@0xsequence/design-system'
 import { GoogleOAuthProvider } from '@react-oauth/google'

@@ -1,4 +1,5 @@
-import { createGenericContext } from '../utils'
-import { KitConfig } from '../components/KitProvider'
+import { KitConfig } from '../types'
+
+import { createGenericContext } from './genericContext'
 
 export const [useKitConfig, KitConfigContextProvider] = createGenericContext<KitConfig>()

@@ -1,5 +1,6 @@
 import { Box, Modal, ThemeProvider } from '@0xsequence/design-system'
-import { getModalPositionCss, useTheme, WaasCodeInputContent } from '@0xsequence/kit'
+import { getModalPositionCss } from '@0xsequence/kit'
+import { useTheme } from '@0xsequence/kit/hooks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence } from 'framer-motion'
 import React, { useState, useEffect } from 'react'

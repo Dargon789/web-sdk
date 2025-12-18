@@ -1,24 +1,17 @@
-import React from 'react'
+import { Box, Button, Image, NetworkImage, SendIcon, Text } from '@0xsequence/design-system'
+import { useExchangeRate, useTransactionHistory, useCollectiblePrices, useCollectibleBalance } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
-import { useAccount, useConfig } from 'wagmi'
-import { Box, Button, Image, SendIcon, Text } from '@0xsequence/design-system'
-import {
-  getNativeTokenInfoByChainId,
-  useExchangeRate,
-  useTransactionHistory,
-  useCollectiblePrices,
-  useCollectibleBalance
-} from '@0xsequence/kit'
+import React from 'react'
+import { useAccount } from 'wagmi'
 
-import { CollectibleDetailsSkeleton } from './Skeleton'
-
-import { computeBalanceFiat, formatDisplay, flattenPaginatedTransactionHistory } from '../../utils'
+import { HEADER_HEIGHT } from '../../constants'
 import { useSettings, useNavigation } from '../../hooks'
+import { CollectibleTileImage } from '../../shared/CollectibleTileImage'
 import { InfiniteScroll } from '../../shared/InfiniteScroll'
 import { TransactionHistoryList } from '../../shared/TransactionHistoryList'
-import { CollectibleTileImage } from '../../shared/CollectibleTileImage'
-import { HEADER_HEIGHT } from '../../constants'
-import { useScrollbarWidth } from '../../hooks/useScrollbarWidth'
+import { computeBalanceFiat, formatDisplay, flattenPaginatedTransactionHistory } from '../../utils'
+
+import { CollectibleDetailsSkeleton } from './Skeleton'
 
 export interface CollectibleDetailsProps {
   contractAddress: string
@@ -27,11 +20,9 @@ export interface CollectibleDetailsProps {
 }
 
 export const CollectibleDetails = ({ contractAddress, chainId, tokenId }: CollectibleDetailsProps) => {
-  const { chains } = useConfig()
   const { address: accountAddress } = useAccount()
   const { fiatCurrency } = useSettings()
   const { setNavigation } = useNavigation()
-  const scrollbarWidth = useScrollbarWidth()
 
   const {
     data: dataTransactionHistory,
@@ -83,7 +74,6 @@ export const CollectibleDetails = ({ contractAddress, chainId, tokenId }: Collec
     })
   }
 
-  const nativeTokenInfo = getNativeTokenInfoByChainId(chainId, chains)
   const collectionLogo = dataCollectibleBalance?.contractInfo?.logoURI
   const collectionName = dataCollectibleBalance?.contractInfo?.name || 'Unknown Collection'
 
@@ -128,7 +118,7 @@ export const CollectibleDetails = ({ contractAddress, chainId, tokenId }: Collec
               <Text fontWeight="bold" fontSize="small" color="text100">
                 {collectionName}
               </Text>
-              <Image width="3" src={nativeTokenInfo.logoURI} alt="collection logo" />
+              <NetworkImage chainId={chainId} size="xs" />
             </Box>
           </Box>
           <Box flexDirection="column" justifyContent="center" alignItems="center">

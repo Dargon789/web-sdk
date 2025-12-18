@@ -1,19 +1,15 @@
-import React from 'react'
+import { Box, Image, Text, TokenImage, vars } from '@0xsequence/design-system'
 import { TokenBalance } from '@0xsequence/indexer'
+import { useCollectionBalance } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
-import { Box, Image, Text, vars } from '@0xsequence/design-system'
-import { useCollectionBalance } from '@0xsequence/kit'
+import React from 'react'
 import { useAccount } from 'wagmi'
 
-import { CollectionDetailsSkeleton } from './Skeleton'
-
-import { NetworkBadge } from '../../shared/NetworkBadge'
-import { CoinIcon } from '../../shared/CoinIcon'
 import { useNavigation } from '../../hooks'
+import { NetworkBadge } from '../../shared/NetworkBadge'
 import { formatDisplay } from '../../utils'
 
-import * as sharedStyles from '../../shared/styles.css'
-import { useScrollbarWidth } from '../../hooks/useScrollbarWidth'
+import { CollectionDetailsSkeleton } from './Skeleton'
 
 interface CollectionDetailsProps {
   chainId: number
@@ -28,7 +24,6 @@ export const CollectionDetails = ({ chainId, contractAddress }: CollectionDetail
     accountAddress: accountAddress || '',
     contractAddress
   })
-  const scrollbarWidth = useScrollbarWidth()
 
   const contractInfo = collectionBalanceData?.[0]?.contractInfo
   const collectionLogoURI = contractInfo?.logoURI
@@ -61,7 +56,7 @@ export const CollectionDetails = ({ chainId, contractAddress }: CollectionDetail
       gap="10"
     >
       <Box flexDirection="column" gap="2" justifyContent="center" alignItems="center">
-        <CoinIcon imageUrl={collectionLogoURI} size={32} />
+        <TokenImage src={collectionLogoURI} size="lg" />
         <Text fontWeight="bold" fontSize="large" color="text100">
           {contractInfo?.name || 'Unknown'}
         </Text>
@@ -89,7 +84,7 @@ export const CollectionDetails = ({ chainId, contractAddress }: CollectionDetail
             const formattedBalance = formatDisplay(ethers.utils.formatUnits(unformattedBalance, decimals))
 
             return (
-              <Box key={index} onClick={() => onClickItem(balance)} className={sharedStyles.clickable}>
+              <Box key={index} onClick={() => onClickItem(balance)} userSelect="none" cursor="pointer" opacity={{ hover: '80' }}>
                 <Box
                   background="backgroundSecondary"
                   aspectRatio="1/1"

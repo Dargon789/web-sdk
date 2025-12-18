@@ -1,5 +1,3 @@
-import React, { useState, ChangeEvent, useRef } from 'react'
-import { ethers } from 'ethers'
 import {
   Box,
   Button,
@@ -11,24 +9,21 @@ import {
   NumericInput,
   TextInput,
   vars,
-  Spinner
+  Spinner,
+  Card
 } from '@0xsequence/design-system'
-import {
-  getNativeTokenInfoByChainId,
-  useAnalytics,
-  ExtendedConnector,
-  useExchangeRate,
-  useCoinPrices,
-  useBalances
-} from '@0xsequence/kit'
 import { TokenBalance } from '@0xsequence/indexer'
+import { getNativeTokenInfoByChainId, ExtendedConnector } from '@0xsequence/kit'
+import { useAnalyticsContext } from '@0xsequence/kit/contexts'
+import { useExchangeRate, useCoinPrices, useBalances } from '@0xsequence/kit/hooks'
+import { ethers } from 'ethers'
+import React, { useState, ChangeEvent, useRef } from 'react'
 import { useAccount, useChainId, useSwitchChain, useConfig, useSendTransaction } from 'wagmi'
 
-import { SendItemInfo } from '../shared/SendItemInfo'
 import { ERC_20_ABI, HEADER_HEIGHT } from '../constants'
-import { useSettings, useOpenWalletModal, useNavigation } from '../hooks'
+import { useSettings, useNavigation } from '../hooks'
+import { SendItemInfo } from '../shared/SendItemInfo'
 import { compareAddress, computeBalanceFiat, limitDecimals, isEthAddress, truncateAtMiddle } from '../utils'
-import * as sharedStyles from '../shared/styles.css'
 
 interface SendCoinProps {
   chainId: number
@@ -37,7 +32,7 @@ interface SendCoinProps {
 
 export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const { setNavigation } = useNavigation()
-  const { analytics } = useAnalytics()
+  const { analytics } = useAnalyticsContext()
   const { chains } = useConfig()
   const connectedChainId = useChainId()
   const { address: accountAddress = '', connector } = useAccount()
@@ -47,7 +42,6 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const showSwitchNetwork = !isCorrectChainId && !isConnectorSequenceBased
   const { switchChainAsync } = useSwitchChain()
   const amountInputRef = useRef<HTMLInputElement>(null)
-  const { setOpenWalletModal } = useOpenWalletModal()
   const { fiatCurrency } = useSettings()
   const [amount, setAmount] = useState<string>('0')
   const [toAddress, setToAddress] = useState<string>('')
@@ -146,7 +140,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
           gas: null
         },
         {
-          onSettled: (result, error) => {
+          onSettled: result => {
             if (result) {
               setNavigation({
                 location: 'home'
@@ -175,7 +169,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
           gas: null
         },
         {
-          onSettled: (result, error) => {
+          onSettled: result => {
             if (result) {
               setNavigation({
                 location: 'home'
@@ -245,15 +239,12 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
           To
         </Text>
         {isEthAddress(toAddress) ? (
-          <Box
-            borderRadius="md"
-            background="backgroundSecondary"
+          <Card
+            clickable
             width="full"
             flexDirection="row"
             justifyContent="space-between"
             alignItems="center"
-            padding="4"
-            className={sharedStyles.clickable}
             onClick={handleToAddressClear}
             style={{ height: '52px' }}
           >
@@ -262,7 +253,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
               <Text color="text100">{`0x${truncateAtMiddle(toAddress.substring(2), 8)}`}</Text>
             </Box>
             <CloseIcon size="xs" />
-          </Box>
+          </Card>
         ) : (
           <TextInput
             value={toAddress}

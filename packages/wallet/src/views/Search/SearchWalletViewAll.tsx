@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import { Box, SearchIcon, Skeleton, TabsContent, TabsHeader, TabsRoot, Text, TextInput } from '@0xsequence/design-system'
+import { getNativeTokenInfoByChainId } from '@0xsequence/kit'
+import { useExchangeRate, useCoinPrices, useBalances } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
-import { Box, SearchIcon, TabsContent, TabsHeader, TabsRoot, Text, TextInput } from '@0xsequence/design-system'
-import { getNativeTokenInfoByChainId, useExchangeRate, useCoinPrices, useBalances } from '@0xsequence/kit'
-import { BalanceItem } from './components/BalanceItem'
 import Fuse from 'fuse.js'
+import React, { useState, useEffect } from 'react'
 import { useAccount, useConfig } from 'wagmi'
 
-import { Skeleton } from '../../shared/Skeleton'
 import { useSettings } from '../../hooks'
 import { compareAddress, computeBalanceFiat } from '../../utils'
-import { useScrollbarWidth } from '../../hooks/useScrollbarWidth'
+
+import { BalanceItem } from './components/BalanceItem'
 
 interface SearchWalletViewAllProps {
   defaultTab: 'coins' | 'collections'
@@ -20,7 +20,6 @@ export const SearchWalletViewAll = ({ defaultTab }: SearchWalletViewAllProps) =>
   const { fiatCurrency, hideUnlistedTokens, selectedNetworks } = useSettings()
   const [search, setSearch] = useState('')
   const [selectedTab, setSelectedTab] = useState(defaultTab)
-  const scrollbarWidth = useScrollbarWidth()
 
   useEffect(() => {
     setSearch('')
@@ -120,7 +119,7 @@ export const SearchWalletViewAll = ({ defaultTab }: SearchWalletViewAllProps) =>
     search === '' ? indexedCollectionBalances : fuzzySearchCollections.search(search).map(result => result.item)
 
   const TabsHeaderSkeleton = () => {
-    return <Skeleton width="360px" height="48px" />
+    return <Skeleton style={{ width: '360px', height: '48px' }} />
   }
 
   const ItemsSkeletons = () => {
@@ -129,7 +128,7 @@ export const SearchWalletViewAll = ({ defaultTab }: SearchWalletViewAllProps) =>
         {Array(8)
           .fill(null)
           .map((_, i) => (
-            <Skeleton key={i} width="full" height="32px" />
+            <Skeleton key={i} width="full" height="8" />
           ))}
       </>
     )

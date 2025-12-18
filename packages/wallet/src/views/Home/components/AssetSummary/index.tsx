@@ -1,16 +1,15 @@
-import React from 'react'
 import { Box, vars } from '@0xsequence/design-system'
-import { useWalletSettings } from '@0xsequence/kit'
 import { TokenBalance } from '@0xsequence/indexer'
+import { useWalletSettings } from '@0xsequence/kit/hooks'
+import React from 'react'
 import { useAccount } from 'wagmi'
+
+import { useBalancesAssetsSummary, useNavigation, useSettings } from '../../../../hooks'
+import { sortBalancesByType } from '../../../../utils'
 
 import { CoinTile } from './CoinTile'
 import { CollectibleTile } from './CollectibleTile'
 import { SkeletonTiles } from './SkeletonTiles'
-
-import { sortBalancesByType } from '../../../../utils'
-import { useBalancesAssetsSummary, useNavigation, useSettings } from '../../../../hooks'
-import * as sharedStyles from '../../../../shared/styles.css'
 
 export const AssetSummary = () => {
   const { address } = useAccount()
@@ -21,7 +20,7 @@ export const AssetSummary = () => {
   const { data: balances = [], isPending: isPendingBalances } = useBalancesAssetsSummary({
     accountAddress: address || '',
     chainIds: selectedNetworks,
-    displayAssets: [...displayedAssets],
+    displayAssets: displayedAssets,
     hideCollectibles,
     verifiedOnly: hideUnlistedTokens
   })
@@ -74,21 +73,42 @@ export const AssetSummary = () => {
     >
       {nativeTokens.map((balance, index) => {
         return (
-          <Box key={index} className={sharedStyles.clickable} aspectRatio="1/1" onClick={() => onClickItem(balance)}>
+          <Box
+            key={index}
+            userSelect="none"
+            cursor="pointer"
+            opacity={{ hover: '80' }}
+            aspectRatio="1/1"
+            onClick={() => onClickItem(balance)}
+          >
             <CoinTile balance={balance} />
           </Box>
         )
       })}
       {erc20Tokens.map((balance, index) => {
         return (
-          <Box className={sharedStyles.clickable} key={index} aspectRatio="1/1" onClick={() => onClickItem(balance)}>
+          <Box
+            key={index}
+            userSelect="none"
+            cursor="pointer"
+            opacity={{ hover: '80' }}
+            aspectRatio="1/1"
+            onClick={() => onClickItem(balance)}
+          >
             <CoinTile balance={balance} />
           </Box>
         )
       })}
       {collectibles.map((balance, index) => {
         return (
-          <Box className={sharedStyles.clickable} aspectRatio="1/1" key={index} onClick={() => onClickItem(balance)}>
+          <Box
+            key={index}
+            userSelect="none"
+            cursor="pointer"
+            opacity={{ hover: '80' }}
+            aspectRatio="1/1"
+            onClick={() => onClickItem(balance)}
+          >
             <CollectibleTile balance={balance} />
           </Box>
         )

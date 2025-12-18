@@ -1,18 +1,15 @@
-import { Box, Card, GradientAvatar, Text } from '@0xsequence/design-system'
-
-import React, { useEffect, useState } from 'react'
-
+import { commons } from '@0xsequence/core'
+import { Box, Card, GradientAvatar, Skeleton, Text, TokenImage } from '@0xsequence/design-system'
+import { ContractType } from '@0xsequence/indexer'
+import { useTokenMetadata, useBalances } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
+import React, { useEffect, useState } from 'react'
 import { useConfig } from 'wagmi'
 
-import { useTokenMetadata, useBalances } from '@0xsequence/kit'
-import { Skeleton, CollectibleTileImage, CoinIcon, formatDisplay } from '@0xsequence/kit-wallet'
-import { compareAddress, getNativeTokenInfoByChainId } from '../../utils'
-import { commons } from '@0xsequence/core'
-import { DecodingType, TransferProps, AwardItemProps, decodeTransactions } from '../../utils/txnDecoding'
-import { ContractType } from '@0xsequence/indexer'
-import { getAddress } from 'ethers/lib/utils'
 import { useAPIClient } from '../../hooks'
+import { capitalize, compareAddress, getNativeTokenInfoByChainId } from '../../utils'
+import { DecodingType, TransferProps, AwardItemProps, decodeTransactions } from '../../utils/txnDecoding'
+import { CollectibleTileImage } from '../KitProvider/CollectibleTileImage'
 
 interface TxnDetailsProps {
   address: string
@@ -24,15 +21,15 @@ export const TxnDetailsSkeleton = () => {
   return (
     <Box alignItems="center" justifyContent="space-between">
       <Box justifyContent="center" alignItems="center" gap="2">
-        <Skeleton width={30} height={30} borderRadius="circle" />
+        <Skeleton style={{ width: 30, height: 30 }} borderRadius="circle" />
         <Box flexDirection="column" gap="2" alignItems="flex-start">
-          <Skeleton width={100} height={14} />
-          <Skeleton width={75} height={14} />
+          <Skeleton style={{ width: 100, height: 14 }} />
+          <Skeleton style={{ width: 75, height: 14 }} />
         </Box>
       </Box>
       <Box flexDirection="column" gap="2" alignItems="flex-end">
-        <Skeleton width={100} height={14} />
-        <Skeleton width={50} height={12} />
+        <Skeleton style={{ width: 100, height: 14 }} />
+        <Skeleton style={{ width: 50, height: 12 }} />
       </Box>
     </Box>
   )
@@ -96,21 +93,15 @@ const TransferItemInfo = ({ address, transferProps, chainId }: TransferItemInfoP
   const isNFT = transferProps[0]?.contractType === ContractType.ERC1155 || transferProps[0]?.contractType === ContractType.ERC721
   const nativeTokenInfo = getNativeTokenInfoByChainId(chainId, chains)
 
-  const { data: balances = [], isPending: isPendingBalances } = useBalances({
+  const { data: balances = [] } = useBalances({
     chainIds: [chainId],
     accountAddress: address,
     contractAddress
   })
 
-  const { data: tokenMetadata, isPending: isPendingTokenMetadata } = useTokenMetadata(
-    chainId,
-    contractAddress,
-    transferProps[0]?.tokenIds ?? []
-  )
+  const { data: tokenMetadata } = useTokenMetadata(chainId, contractAddress, transferProps[0]?.tokenIds ?? [])
 
-  const tokenBalance = contractAddress
-    ? balances.find(b => getAddress(b.contractAddress) === getAddress(contractAddress))
-    : undefined
+  const tokenBalance = contractAddress ? balances.find(b => compareAddress(b.contractAddress, contractAddress)) : undefined
   const decimals = isNativeCoin ? nativeTokenInfo.decimals : tokenBalance?.contractInfo?.decimals || 18
 
   const imageUrl = isNativeCoin
@@ -121,9 +112,6 @@ const TransferItemInfo = ({ address, transferProps, chainId }: TransferItemInfoP
   const name = isNativeCoin ? nativeTokenInfo.name : isNFT ? tokenMetadata?.[0]?.name : tokenBalance?.contractInfo?.name || ''
   const symbol = isNativeCoin ? nativeTokenInfo.symbol : isNFT ? '' : tokenBalance?.contractInfo?.symbol || ''
 
-  const formattedBalance = tokenBalance !== undefined ? ethers.utils.formatUnits(tokenBalance.balance, decimals) : ''
-  const balanceDisplayed = formatDisplay(formattedBalance)
-
   const amountSending = transferProps[0]?.amounts?.[0] ?? transferProps[0]?.value
 
   const showSquareImage = isNFT
@@ -131,7 +119,7 @@ const TransferItemInfo = ({ address, transferProps, chainId }: TransferItemInfoP
     <Card>
       <Box marginBottom="2">
         <Text variant="medium" color="text100">
-          {capitalizeFirstLetter(transferProps[0]?.type ?? '')}
+          {capitalize(transferProps[0]?.type ?? '')}
         </Text>
       </Box>
 
@@ -142,7 +130,7 @@ const TransferItemInfo = ({ address, transferProps, chainId }: TransferItemInfoP
               <CollectibleTileImage imageUrl={imageUrl} />
             </Box>
           ) : (
-            <CoinIcon imageUrl={imageUrl} size={40} />
+            <TokenImage src={imageUrl} symbol={symbol} size="md" />
           )}
           <Box flexDirection="column" alignItems="flex-start">
             <Box flexDirection="row" alignItems="center" gap="1">
@@ -248,10 +236,6 @@ const AwardItemInfo = ({ awardItemProps }: AwardItemInfoProps) => {
       )}
     </Card>
   )
-}
-
-const capitalizeFirstLetter = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 const truncateAtMiddle = (text: string, truncateAt: number) => {

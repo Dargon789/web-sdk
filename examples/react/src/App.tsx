@@ -1,28 +1,33 @@
-import { SequenceCheckoutProvider } from '@0xsequence/checkout'
-import { SequenceConnect } from '@0xsequence/connect'
+import '@0xsequence/design-system/styles.css'
+
 import { ThemeProvider } from '@0xsequence/design-system'
-import { SequenceWalletProvider } from '@0xsequence/wallet-widget'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { KitProvider } from '@0xsequence/kit/components'
+import { KitCheckoutProvider } from '@0xsequence/kit-checkout'
+import { KitWalletProvider } from '@0xsequence/kit-wallet'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { WagmiProvider } from 'wagmi'
 
 import { Homepage } from './components/Homepage'
-import { ImmutableCallback } from './components/ImmutableCallback'
-import { config, checkoutConfig } from './config'
+import { kitConfig, wagmiConfig } from './config'
+
+const queryClient = new QueryClient()
 
 export const App = () => {
   return (
-    <ThemeProvider theme="dark">
-      <SequenceConnect config={config}>
-        <SequenceWalletProvider>
-          <SequenceCheckoutProvider config={checkoutConfig}>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Homepage />} />
-                <Route path="/auth-callback" element={<ImmutableCallback />} />
-              </Routes>
-            </BrowserRouter>
-          </SequenceCheckoutProvider>
-        </SequenceWalletProvider>
-      </SequenceConnect>
-    </ThemeProvider>
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <KitProvider config={kitConfig}>
+          <KitWalletProvider>
+            <KitCheckoutProvider>
+              <div id="app">
+                <ThemeProvider root="#app" scope="app" theme="dark">
+                  <Homepage />
+                </ThemeProvider>
+              </div>
+            </KitCheckoutProvider>
+          </KitWalletProvider>
+        </KitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   )
 }

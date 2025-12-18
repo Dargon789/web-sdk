@@ -1,67 +1,50 @@
 {
-  "name": "@0xsequence/checkout",
-  "version": "5.3.10",
-  "description": "Checkout UI for Sequence Web SDK",
-  "repository": "https://github.com/0xsequence/web-sdk/tree/master/packages/checkout",
+  "name": "@0xsequence/kit-checkout",
+  "version": "2.5.1",
+  "description": "Checkout UI for Sequence Kit",
+  "repository": "https://github.com/0xsequence/kit/tree/master/packages/checkout",
+  "main": "dist/0xsequence-kit-checkout.cjs.js",
+  "module": "dist/0xsequence-kit-checkout.esm.js",
+  "types": "dist/0xsequence-kit-checkout.cjs.d.ts",
   "author": "Horizon Blockchain Games",
   "license": "Apache-2.0",
-  "type": "module",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/esm/index.d.ts",
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "require": "./dist/cjs/index.js",
-      "import": "./dist/esm/index.js"
-    }
-  },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "pnpm build:clean && pnpm build:esm",
-    "build:esm": "tsc --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/esm",
-    "build:clean": "rimraf -g ./dist",
-    "build:check": "attw --pack .",
-    "dev": "tsc --watch --module es2022 --moduleResolution node --declaration --declarationMap --outDir dist/esm",
     "test": "echo",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@0xsequence/design-system": "2.1.11",
-    "@0xsequence/marketplace": "^2.3.23",
-    "date-fns": "^4.1.0",
-    "fuse.js": "^7.1.0",
-    "motion": "^12.9.2",
-    "pako": "^2.1.0",
-    "qrcode.react": "^4.2.0"
+    "0xsequence": "^1.9.26",
+    "@0xsequence/api": "^1.9.26",
+    "@0xsequence/indexer": "^1.9.26",
+    "@0xsequence/metadata": "^1.9.26",
+    "@0xsequence/network": "^1.9.26",
+    "@paperxyz/react-client-sdk": "^1.1.3",
+    "@tanstack/react-query": "^5.32.0",
+    "react-copy-to-clipboard": "^5.1.0"
   },
   "peerDependencies": {
-    "0xsequence": ">= 2.3.23",
-    "@0xsequence/api": ">=2.3.23",
-    "@0xsequence/connect": "workspace:*",
-    "@0xsequence/hooks": "workspace:*",
-    "@0xsequence/indexer": ">= 2.3.23",
-    "@0xsequence/metadata": ">= 2.3.23",
-    "@0xsequence/network": ">= 2.3.23",
-    "@0xsequence/waas": ">= 2.3.23",
-    "@tanstack/react-query": ">= 5",
-    "ethers": ">= 6.13.0",
-    "react": ">= 17",
-    "react-dom": ">= 17",
-    "viem": "^2.33.3",
-    "wagmi": "2.15.0"
+    "@0xsequence/design-system": ">=1.7.1",
+    "@0xsequence/kit": "workspace:*",
+    "ethers": ">=5.7.2",
+    "framer-motion": ">=8.5.2",
+    "react": ">=17",
+    "react-dom": ">=17",
+    "wagmi": ">=2.0.0",
+    "viem": ">=2.0.0"
   },
   "devDependencies": {
-    "@0xsequence/connect": "workspace:*",
-    "@tanstack/react-query": "^5.74.11",
-    "@types/pako": "^2.0.3",
-    "ethers": "^6.13.7",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "viem": "^2.33.3",
-    "vite": "^5.4.19",
-    "wagmi": "2.15.1"
-  }
+    "@0xsequence/design-system": "^1.7.1",
+    "@0xsequence/kit": "workspace:*",
+    "@types/react-copy-to-clipboard": "^5.0.4",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "ethers": "^5.7.2",
+    "framer-motion": "^8.5.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "wagmi": "^2.5.20"
+  },
+  "files": [
+    "src",
+    "dist"
+  ]
 }

@@ -1,16 +1,15 @@
-import React from 'react'
-import { ethers } from 'ethers'
-import { useConfig } from 'wagmi'
 import { Box } from '@0xsequence/design-system'
 import { TokenBalance } from '@0xsequence/indexer'
-
-import { CoinTileContent } from './CoinTileContent'
-
-import { getNativeTokenInfoByChainId, useContractInfo, useExchangeRate, useCoinPrices } from '@0xsequence/kit'
-
-import { computeBalanceFiat, formatDisplay, getPercentagePriceChange, compareAddress } from '../../../../../utils'
+import { getNativeTokenInfoByChainId } from '@0xsequence/kit'
+import { useContractInfo, useExchangeRate, useCoinPrices } from '@0xsequence/kit/hooks'
+import { ethers } from 'ethers'
+import React from 'react'
+import { useConfig } from 'wagmi'
 
 import { useSettings } from '../../../../../hooks'
+import { computeBalanceFiat, formatDisplay, getPercentagePriceChange, compareAddress } from '../../../../../utils'
+
+import { CoinTileContent } from './CoinTileContent'
 
 interface CoinTileProps {
   balance: TokenBalance
@@ -51,7 +50,7 @@ export const CoinTile = ({ balance }: CoinTileProps) => {
 
     return (
       <CoinTileContent
-        networkLogoUrl={nativeTokenInfo.logoURI}
+        chainId={balance.chainId}
         logoUrl={nativeTokenInfo.logoURI}
         tokenName={nativeTokenInfo.name}
         balance={balanceDisplayed}
@@ -81,7 +80,7 @@ export const CoinTile = ({ balance }: CoinTileProps) => {
 
   return (
     <CoinTileContent
-      networkLogoUrl={nativeTokenInfo.logoURI}
+      chainId={balance.chainId}
       logoUrl={url}
       tokenName={name}
       balance={balanceDisplayed}

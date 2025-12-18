@@ -1,25 +1,42 @@
 'use client'
 
-import { SequenceCheckoutProvider } from '@0xsequence/checkout'
-import { SequenceConnect } from '@0xsequence/connect'
-import { SequenceWalletProvider } from '@0xsequence/wallet-widget'
-import { State } from 'wagmi'
+<<<<<<<< HEAD:examples/next/src/app/Web3Provider.tsx
+========
+import { KitProvider } from '@0xsequence/kit/components'
+import { KitCheckoutProvider } from '@0xsequence/kit-checkout'
+import { KitWalletProvider } from '@0xsequence/kit-wallet'
+>>>>>>>> upstream/next-ssr-improvements:examples/next/src/app/Providers.tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { State, WagmiProvider } from 'wagmi'
 
-import { config } from '../config'
+<<<<<<<< HEAD:examples/next/src/app/Web3Provider.tsx
+import { wagmiConfig, kitConfig } from './config'
+import { KitProvider } from '@0xsequence/kit'
+import { KitWalletProvider } from '@0xsequence/kit-wallet'
+import { KitCheckoutProvider } from '@0xsequence/kit-checkout'
+========
+import { kitConfig, wagmiConfig } from '@/config'
+>>>>>>>> upstream/next-ssr-improvements:examples/next/src/app/Providers.tsx
+
+const queryClient = new QueryClient()
 
 export interface ProvidersProps {
+  initialState: State | undefined
   children: React.ReactNode
-  initialState?: State | undefined
 }
 
 export const Providers = (props: ProvidersProps) => {
-  const { children, initialState } = props
+  const { initialState, children } = props
 
   return (
-    <SequenceConnect config={config} initialState={initialState}>
-      <SequenceWalletProvider>
-        <SequenceCheckoutProvider>{children}</SequenceCheckoutProvider>
-      </SequenceWalletProvider>
-    </SequenceConnect>
+    <WagmiProvider config={wagmiConfig} initialState={initialState}>
+      <QueryClientProvider client={queryClient}>
+        <KitProvider config={kitConfig}>
+          <KitWalletProvider>
+            <KitCheckoutProvider>{children}</KitCheckoutProvider>
+          </KitWalletProvider>
+        </KitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   )
 }

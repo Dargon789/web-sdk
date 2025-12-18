@@ -8,7 +8,7 @@ export const Header = () => {
   return (
     <Box position="fixed" width="full" padding="5" justifyContent="space-between">
       <Box flexDirection="row" alignItems="center" justifyContent="center" gap="3">
-        <Image style={{ width: '36px' }} src="kit-logo.svg" alt="Sequence kit" />
+        <Image style={{ width: '36px' }} src="kit-logo.svg" alt="Sequence kit" disableAnimation />
         <Image
           style={{
             width: '24px'
@@ -16,6 +16,7 @@ export const Header = () => {
           }}
           src="kit-logo-text.svg"
           alt="Sequence Kit Text Logo"
+          disableAnimation
         />
       </Box>
       <Box>
