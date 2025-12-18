@@ -1,13 +1,14 @@
 import {
+  TransactionOnRampProvider,
   useAddFundsModal,
   useCheckoutModal,
   useSelectPaymentModal,
   useSwapModal,
-  TransactionOnRampProvider,
-  type ForteConfig,
+  useTransactionStatusModal,
   type SwapModalSettings
 } from '@0xsequence/checkout'
 import {
+  getModalPositionCss,
   signEthAuthProof,
   useOpenConnectModal,
   useSocialLink,
@@ -16,35 +17,34 @@ import {
   useWallets,
   validateEthProof
 } from '@0xsequence/connect'
-import { Button, Card, cn, Modal, Scroll, Select, Switch, Text, TextInput } from '@0xsequence/design-system'
+import { Button, Card, cn, Modal, Scroll, Switch, Text, TextInput } from '@0xsequence/design-system'
 import { allNetworks, ChainId } from '@0xsequence/network'
 import { useOpenWalletModal } from '@0xsequence/wallet-widget'
-import { getModalPositionCss } from '@0xsequence/web-sdk-core'
 import { CardButton, Header, WalletListItem } from 'example-shared-components'
 import { AnimatePresence } from 'motion/react'
 import React, { useEffect, type ComponentProps } from 'react'
-import { encodeFunctionData, formatUnits, parseAbi, toHex, zeroAddress } from 'viem'
+import { encodeFunctionData, formatUnits, parseAbi, zeroAddress } from 'viem'
 import { createSiweMessage, generateSiweNonce } from 'viem/siwe'
 import { useAccount, useChainId, usePublicClient, useSendTransaction, useWalletClient, useWriteContract } from 'wagmi'
 
 import { sponsoredContractAddresses } from '../config'
 import { messageToSign } from '../constants'
-import { ERC_1155_SALE_CONTRACT } from '../constants/erc1155-sale-contract'
-// import { ERC_721_SALE_CONTRACT } from '../constants/erc721-sale-contract'
 import { abi } from '../constants/nft-abi'
 import { delay, getCheckoutSettings, getOrderbookCalldata } from '../utils'
 import { checkoutPresets } from '../utils/checkout'
 
 import { CustomCheckout } from './CustomCheckout'
+import { Select } from './Select'
 
 // append ?debug to url to enable debug mode
 const searchParams = new URLSearchParams(location.search)
 const isDebugMode = searchParams.has('debug')
 const checkoutProvider = searchParams.get('checkoutProvider')
 const onRampProvider = searchParams.get('onRampProvider')
-const checkoutPreset = searchParams.get('checkoutPreset') || 'erc1155-sale-erc20-token-polygon'
+const checkoutPreset = searchParams.get('checkoutPreset') || 'forte-transak-payment-erc1155-sale-native-token-testnet'
 
 export const Connected = () => {
+  const { openTransactionStatusModal } = useTransactionStatusModal()
   const [isOpenCustomCheckout, setIsOpenCustomCheckout] = React.useState(false)
   const { setOpenConnectModal } = useOpenConnectModal()
   const { address } = useAccount()
@@ -403,15 +403,12 @@ export const Connected = () => {
       return
     }
 
-    const creditCardProvider = checkoutProvider || 'transak'
+    const creditCardProvider = checkoutProvider || 'forte'
 
     openSelectPaymentModal({
       recipientAddress: address,
       creditCardProviders: [creditCardProvider],
       onRampProvider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak,
-      transakConfig: {
-        contractId: '674eb5613d739107bbd18ed2'
-      },
       onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
       },
@@ -458,7 +455,8 @@ export const Connected = () => {
   const onClickAddFunds = () => {
     triggerAddFunds({
       walletAddress: address || '',
-      provider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak
+      provider: onRampProvider ? (onRampProvider as TransactionOnRampProvider) : TransactionOnRampProvider.transak,
+      transakOnRampKind: 'default'
     })
   }
 
@@ -468,6 +466,23 @@ export const Connected = () => {
 
   const onClickSocialLink = () => {
     setIsSocialLinkOpen(true)
+  }
+
+  const onClickTransactionStatus = () => {
+    openTransactionStatusModal({
+      chainId: 137,
+      currencyAddress: zeroAddress,
+      collectionAddress: '0x92473261f2c26f2264429c451f70b0192f858795',
+      txHash: '0x7824a5f7107a964553f799a82d8178fd66ff5055e84f586010ccd80e5e40145b',
+      items: [
+        {
+          tokenId: '1',
+          quantity: '1',
+          decimals: 18,
+          price: '1000'
+        }
+      ]
+    })
   }
 
   useEffect(() => {
@@ -597,7 +612,6 @@ export const Connected = () => {
               <div className="my-3">
                 <Select
                   name="feeOption"
-                  labelLocation="top"
                   label="Pick a fee option"
                   onValueChange={val => {
                     const selected = pendingFeeOptionConfirmation?.options?.find(option => option.token.name === val)
@@ -606,7 +620,7 @@ export const Connected = () => {
                       setFeeOptionAlert(undefined)
                     }
                   }}
-                  value={selectedFeeOptionTokenName}
+                  value={selectedFeeOptionTokenName || ''}
                   options={[
                     ...pendingFeeOptionConfirmation.options.map(option => ({
                       label: (
@@ -632,19 +646,34 @@ export const Connected = () => {
                         option => option.token.name === selectedFeeOptionTokenName
                       )
 
-                      if (selected?.token.contractAddress !== undefined) {
-                        if (!('hasEnoughBalanceForFee' in selected) || !selected.hasEnoughBalanceForFee) {
-                          setFeeOptionAlert({
-                            title: 'Insufficient balance',
-                            description: `You do not have enough balance to pay the fee with ${selected.token.name}, please make sure you have enough balance in your wallet for the selected fee option.`,
-                            secondaryDescription:
-                              'You can also switch network to Arbitrum Sepolia to test a gasless transaction.',
-                            variant: 'warning'
-                          })
-                          return
-                        }
+                      if (!selected) {
+                        setFeeOptionAlert({
+                          title: 'No option selected',
+                          description: 'Please select a fee option before confirming.',
+                          variant: 'warning'
+                        })
+                        return
+                      }
 
-                        confirmPendingFeeOption(pendingFeeOptionConfirmation?.id, selected.token.contractAddress)
+                      if (!('hasEnoughBalanceForFee' in selected) || !selected.hasEnoughBalanceForFee) {
+                        console.log('Insufficient balance for selected option')
+                        setFeeOptionAlert({
+                          title: 'Insufficient balance',
+                          description: `You do not have enough balance to pay the fee with ${selected.token.name}, please make sure you have enough balance in your wallet for the selected fee option.`,
+                          secondaryDescription: 'You can also switch network to Arbitrum Sepolia to test a gasless transaction.',
+                          variant: 'warning'
+                        })
+                        return
+                      }
+
+                      const feeTokenAddress: string | null =
+                        selected.token.contractAddress === zeroAddress || selected.token.contractAddress === null
+                          ? null
+                          : selected.token.contractAddress || null
+
+                      console.log('Confirming fee option with token address:', feeTokenAddress)
+                      if (pendingFeeOptionConfirmation?.id) {
+                        confirmPendingFeeOption(pendingFeeOptionConfirmation.id, feeTokenAddress)
                       }
                     }}
                     label="Confirm fee option"
@@ -761,17 +790,23 @@ export const Connected = () => {
                   description="Hook for creating custom checkout UIs"
                   onClick={() => setIsOpenCustomCheckout(true)}
                 />
+
+                <CardButton
+                  title="Transaction Status Modal"
+                  description="Transaction status modal"
+                  onClick={onClickTransactionStatus}
+                />
               </>
             )}
 
             <CardButton
-              title="Swap with Sequence Pay"
+              title="Swap"
               description="Seamlessly swap eligible currencies in your wallet to a target currency"
               onClick={onClickSwap}
             />
 
             <CardButton
-              title="Checkout with Sequence Pay"
+              title="Checkout"
               description="Purchase an NFT through various purchase methods"
               onClick={onClickSelectPayment}
             />
