@@ -376,7 +376,11 @@ export const Connected = () => {
       onClose: () => {
         console.log('modal closed!')
       },
-      ...checkoutPresets[checkoutPreset as keyof typeof checkoutPresets](address || '')
+      ...(checkoutPresets.hasOwnProperty(checkoutPreset) &&
+        typeof checkoutPresets[checkoutPreset] === 'function'
+        ? checkoutPresets[checkoutPreset as keyof typeof checkoutPresets](address || '')
+        : checkoutPresets['forte-transak-payment-erc1155-sale-native-token-testnet'](address || '')
+      )
     })
   }
 
