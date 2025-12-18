@@ -1,6 +1,6 @@
 {
   "name": "@0xsequence/kit",
-  "version": "2.5.1",
+  "version": "4.5.9",
   "description": "Core package for Sequence Kit",
   "keywords": [
     "sequence",
@@ -8,51 +8,70 @@
     "wallet"
   ],
   "repository": "https://github.com/0xsequence/kit/tree/master/packages/kit",
-  "main": "dist/0xsequence-kit.cjs.js",
-  "module": "dist/0xsequence-kit.esm.js",
-  "types": "dist/0xsequence-kit.cjs.d.ts",
   "author": "Horizon Blockchain Games",
   "license": "Apache-2.0",
-  "scripts": {
-    "test": "echo",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@0xsequence/api": "^1.9.26",
-    "@0xsequence/auth": "^1.9.26",
-    "@0xsequence/core": "^1.9.26",
-    "@0xsequence/design-system": "^1.7.0",
-    "@0xsequence/ethauth": "^0.8.1",
-    "@0xsequence/indexer": "^1.9.26",
-    "@0xsequence/kit-connectors": "workspace:*",
-    "@0xsequence/metadata": "^1.9.26",
-    "@0xsequence/network": "^1.9.26",
-    "@0xsequence/provider": "^1.9.26",
-    "@0xsequence/utils": "^1.9.26",
-    "framer-motion": "^8.5.2",
-    "valtio": "^1.13.2"
-  },
-  "peerDependencies": {
-    "0xsequence": ">=1.9.26",
-    "@0xsequence/waas": ">=1.9.24",
-    "@react-oauth/google": ">=0.11.1",
-    "@tanstack/react-query": ">=5.0.0",
-    "ethers": ">=5.7.2",
-    "react": ">=17",
-    "react-apple-signin-auth": ">=1.1.0",
-    "react-dom": ">=17",
-    "viem": ">=2.0.0",
-    "wagmi": ">=2.0.0"
-  },
-  "devDependencies": {
-    "0xsequence": "^1.9.26",
-    "@tanstack/react-query": "^5.32.0",
-    "ethers": "5.7.2",
-    "viem": "^2.9.26",
-    "wagmi": "^2.5.20"
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
   },
   "files": [
     "src",
     "dist"
-  ]
+  ],
+  "scripts": {
+    "build": "pnpm build:clean && pnpm build:esm && pnpm build:cjs && pnpm build:types && pnpm build:copy-styles",
+    "build:cjs": "tsc --module commonjs --outDir dist/cjs/",
+    "build:esm": "tsc --module es2022 --outDir dist/esm/",
+    "build:types": "tsc --declaration --declarationMap --emitDeclarationOnly --declarationDir dist/types/",
+    "build:copy-styles": "cp ./node_modules/@0xsequence/design-system/dist/style.css ./dist/styles.css",
+    "build:clean": "rimraf -g ./dist",
+    "dev": "pnpm build:types && pnpm build:copy-styles && tsc --watch --module es2022 --declaration --declarationMap --outDir dist/esm/ --declarationDir dist/types/",
+    "test": "echo",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@0xsequence/api": ">= 2.2.4",
+    "@0xsequence/auth": ">= 2.2.4",
+    "@0xsequence/core": ">= 2.2.4",
+    "@0xsequence/indexer": ">= 2.2.4",
+    "@0xsequence/metadata": ">= 2.2.4",
+    "@0xsequence/network": ">= 2.2.4",
+    "@0xsequence/provider": ">= 2.2.4",
+    "@0xsequence/utils": ">= 2.2.4",
+    "@0xsequence/waas": ">= 2.2.4",
+    "@0xsequence/ethauth": "^1.0.0",
+    "@0xsequence/design-system": "^1.9.0",
+    "framer-motion": "^8.5.2",
+    "fuse.js": "^6.6.2",
+    "uuid": "^10.0.0"
+  },
+  "peerDependencies": {
+    "0xsequence": ">= 2.2.4",
+    "@react-oauth/google": ">= 0.11.1",
+    "@tanstack/react-query": ">= 5.0.0",
+    "ethers": ">= 6.13.0",
+    "react": ">= 17",
+    "react-apple-signin-auth": ">= 1.1.0",
+    "react-dom": ">= 17",
+    "viem": ">= 2.0.0",
+    "wagmi": "^2.13.3"
+  },
+  "devDependencies": {
+    "0xsequence": "^2.2.4",
+    "@react-oauth/google": ">= 0.11.1",
+    "react-apple-signin-auth": ">= 1.1.0",
+    "@tanstack/react-query": "^5.37.1",
+    "@types/uuid": "^9.0.8",
+    "ethers": "6.13.0",
+    "viem": "^2.12.0",
+    "wagmi": "^2.13.3"
+  }
 }
