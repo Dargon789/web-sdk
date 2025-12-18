@@ -2,27 +2,27 @@ import {
   CollectibleTileImage,
   formatDisplay,
   TRANSACTION_CONFIRMATIONS_DEFAULT,
-  waitForTransactionReceipt,
-  useGetTokenMetadata,
   useGetContractInfo,
-  useIndexerClient
+  useGetTokenMetadata,
+  useIndexerClient,
+  waitForTransactionReceipt
 } from '@0xsequence/connect'
 import {
   ArrowDownIcon,
   Card,
+  CheckmarkIcon,
+  CloseIcon,
   NetworkImage,
   Spinner,
   Text,
   TokenImage,
-  CheckmarkIcon,
-  CloseIcon,
   truncateAddress
 } from '@0xsequence/design-system'
 import { TransactionStatus as TransactionStatusSequence } from '@0xsequence/indexer'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import TimeAgo from 'timeago-react'
-import { formatUnits, Hex, PublicClient } from 'viem'
+import { formatUnits, type Hex, type PublicClient } from 'viem'
 import { usePublicClient } from 'wagmi'
 
 import { HEADER_HEIGHT } from '../../constants'

@@ -1,21 +1,21 @@
 import {
-  CryptoOption,
   compareAddress,
   ContractVerificationStatus,
+  CryptoOption,
   formatDisplay,
   useClearCachedBalances,
   useGetContractInfo,
   useGetSwapRoutes,
   useGetTokenBalancesSummary
 } from '@0xsequence/connect'
-import { AddIcon, Button, SubtractIcon, Text, Spinner } from '@0xsequence/design-system'
+import { AddIcon, Button, Spinner, SubtractIcon, Text } from '@0xsequence/design-system'
 import { findSupportedNetwork } from '@0xsequence/network'
 import { motion } from 'motion/react'
-import { useState, useEffect, Fragment, SetStateAction, useMemo } from 'react'
+import { Fragment, useEffect, useMemo, useState, type SetStateAction } from 'react'
 import { formatUnits, zeroAddress } from 'viem'
 import { useAccount } from 'wagmi'
 
-import { SelectPaymentSettings } from '../../../contexts'
+import type { SelectPaymentSettings } from '../../../contexts'
 
 interface PayWithCryptoProps {
   settings: SelectPaymentSettings

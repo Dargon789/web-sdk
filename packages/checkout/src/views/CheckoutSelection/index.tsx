@@ -1,28 +1,28 @@
 import {
-  ContractVerificationStatus,
-  getNativeTokenInfoByChainId,
   compareAddress,
+  ContractVerificationStatus,
   formatDisplay,
-  useGetTokenBalancesSummary,
-  useGetContractInfo
+  getNativeTokenInfoByChainId,
+  useGetContractInfo,
+  useGetTokenBalancesSummary
 } from '@0xsequence/connect'
 import {
   Button,
   ChevronRightIcon,
   Divider,
   HelpIcon,
-  Text,
-  Tooltip,
   PaymentsIcon,
   Skeleton,
-  TokenImage
+  Text,
+  TokenImage,
+  Tooltip
 } from '@0xsequence/design-system'
 import { useEffect } from 'react'
-import { zeroAddress, formatUnits } from 'viem'
+import { formatUnits, zeroAddress } from 'viem'
 import { useAccount, useConfig } from 'wagmi'
 
 import { HEADER_HEIGHT } from '../../constants'
-import { useNavigation, useCheckoutModal } from '../../hooks'
+import { useCheckoutModal, useNavigation } from '../../hooks'
 
 import { OrderSummaryItem } from './component/OrderSummaryItem'
 

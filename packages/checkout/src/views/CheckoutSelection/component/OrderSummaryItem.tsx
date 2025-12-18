@@ -1,5 +1,5 @@
-import { formatDisplay, useGetTokenMetadata, useGetContractInfo } from '@0xsequence/connect'
-import { Card, Image, Text, Skeleton, TokenImage, NetworkImage } from '@0xsequence/design-system'
+import { formatDisplay, useGetContractInfo, useGetTokenMetadata } from '@0xsequence/connect'
+import { Card, Image, NetworkImage, Skeleton, Text, TokenImage } from '@0xsequence/design-system'
 import { formatUnits } from 'viem'
 
 interface OrderSummaryItem {

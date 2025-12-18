@@ -1,26 +1,26 @@
-import { LifiToken } from '@0xsequence/api'
+import type { LifiToken } from '@0xsequence/api'
 import {
-  useAnalyticsContext,
   compareAddress,
-  TRANSACTION_CONFIRMATIONS_DEFAULT,
   sendTransactions,
-  useIndexerClient,
+  TRANSACTION_CONFIRMATIONS_DEFAULT,
+  useAnalyticsContext,
+  useClearCachedBalances,
   useGetContractInfo,
   useGetSwapQuote,
   useGetSwapRoutes,
-  useClearCachedBalances
+  useIndexerClient
 } from '@0xsequence/connect'
-import { Button, Divider, Text, Spinner } from '@0xsequence/design-system'
+import { Button, Divider, Spinner, Text } from '@0xsequence/design-system'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { useState, useEffect } from 'react'
-import { encodeFunctionData, Hex, zeroAddress } from 'viem'
-import { usePublicClient, useWalletClient, useReadContract, useAccount } from 'wagmi'
+import { useEffect, useState } from 'react'
+import { encodeFunctionData, zeroAddress, type Hex } from 'viem'
+import { useAccount, usePublicClient, useReadContract, useWalletClient } from 'wagmi'
 
 import { NavigationHeader } from '../../components/NavigationHeader'
 import { HEADER_HEIGHT, NFT_CHECKOUT_SOURCE } from '../../constants'
 import { ERC_20_CONTRACT_ABI } from '../../constants/abi'
-import { SelectPaymentSettings } from '../../contexts/SelectPaymentModal'
-import { useSelectPaymentModal, useTransactionStatusModal, useSkipOnCloseCallback } from '../../hooks'
+import type { SelectPaymentSettings } from '../../contexts/SelectPaymentModal'
+import { useSelectPaymentModal, useSkipOnCloseCallback, useTransactionStatusModal } from '../../hooks'
 
 import { Footer } from './Footer'
 import { FundWithFiat } from './FundWithFiat'
