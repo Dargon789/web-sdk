@@ -1,15 +1,9 @@
-import {
-  createExplicitSessionConfig,
-  getNetwork,
-  LocalStorageKey,
-  type ExplicitSessionParams,
-  type Permission
-} from '@0xsequence/connect'
+import { getNetwork, LocalStorageKey } from '@0xsequence/connect'
 import {
   DappClient,
   Relayer,
+  Signers,
   Utils,
-  type ExplicitSessionConfig,
   type TransactionRequest as DappClientTransactionRequest
 } from '@0xsequence/dapp-client'
 import type { FeeToken } from '@0xsequence/waas'
@@ -43,7 +37,7 @@ export interface BaseSequenceV3ConnectorOptions {
   dappOrigin: string
   defaultNetwork: number
   loginType: 'email' | 'google' | 'apple' | 'passkey'
-  explicitSessionParams?: ExplicitSessionParams
+  explicitSession?: Signers.Session.ExplicitParams
   enableImplicitSession?: boolean
   nodesUrl?: string
   relayerUrl?: string
@@ -78,7 +72,7 @@ export function sequenceV3Wallet(params: BaseSequenceV3ConnectorOptions) {
     params.nodesUrl,
     params.projectAccessKey,
     params.loginType,
-    params.explicitSessionParams ? createExplicitSessionConfig(params.explicitSessionParams) : undefined,
+    params.explicitSession,
     params.enableImplicitSession
   )
 
@@ -199,7 +193,7 @@ export class SequenceV3Provider implements EIP1193Provider {
   private projectAccessKey: string
   private enableImplicitSession?: boolean
   private loginType: 'email' | 'google' | 'apple' | 'passkey'
-  private initialSessionConfig?: ExplicitSessionConfig
+  private initialSession?: Signers.Session.ExplicitParams
 
   email?: string
 
@@ -220,13 +214,13 @@ export class SequenceV3Provider implements EIP1193Provider {
     nodesUrl = 'https://nodes.sequence.app',
     projectAccessKey: string,
     loginType: 'email' | 'google' | 'apple' | 'passkey',
-    initialSessionConfig?: ExplicitSessionConfig,
+    initialSession?: Signers.Session.ExplicitParams,
     enableImplicitSession?: boolean
   ) {
     this.currentChainId = defaultNetwork
     this.nodesUrl = nodesUrl
     this.loginType = loginType
-    this.initialSessionConfig = initialSessionConfig
+    this.initialSession = initialSession
     this.projectAccessKey = projectAccessKey
     this.enableImplicitSession = enableImplicitSession
   }
@@ -286,43 +280,33 @@ export class SequenceV3Provider implements EIP1193Provider {
           body: '{}'
         }
         const chainName = getNetwork(this.currentChainId).name
+        const feeOptions: { isFeeRequired: boolean; tokens: FeeToken[] } = await fetch(
+          `https://${chainName}-relayer.sequence.app/rpc/Relayer/FeeTokens`,
+          options
+        ).then(res => res.json())
 
-        let combinedPermissions: Permission[] = []
-        // do not include fee options if there is no explicit session
-        if (this.initialSessionConfig) {
-          const feeOptions: { isFeeRequired: boolean; tokens: FeeToken[] } = await fetch(
-            `https://${chainName}-relayer.sequence.app/rpc/Relayer/FeeTokens`,
-            options
-          ).then(res => res.json())
+        const feeOptionPermissions = feeOptions.isFeeRequired
+          ? feeOptions.tokens.map(option =>
+              Utils.ERC20PermissionBuilder.buildTransfer(option.contractAddress as Address, maxUint256)
+            )
+          : []
 
-          const feeOptionPermissions = feeOptions.isFeeRequired
-            ? feeOptions.tokens.map(option =>
-                Utils.ERC20PermissionBuilder.buildTransfer(option.contractAddress as Address, maxUint256)
-              )
-            : []
+        // Combine initial permissions with fee option permissions
+        const combinedPermissions = this.initialSession
+          ? [...this.initialSession.permissions, ...feeOptionPermissions]
+          : feeOptionPermissions
 
-          // Combine initial permissions with fee option permissions
-          combinedPermissions = this.initialSessionConfig
-            ? [...this.initialSessionConfig.permissions, ...feeOptionPermissions]
-            : []
-
-          // Ensure we have at least one permission
-          if (combinedPermissions.length === 0) {
-            throw new Error('No permissions available for session')
-          }
+        // Ensure we have at least one permission
+        if (combinedPermissions.length === 0) {
+          throw new Error('No permissions available for session')
         }
 
         await this.client.connect(
           this.currentChainId,
-          this.initialSessionConfig
-            ? {
-                ...this.initialSessionConfig,
-                permissions: combinedPermissions,
-                valueLimit: this.initialSessionConfig?.valueLimit || 0n,
-                deadline: this.initialSessionConfig?.deadline || 0n,
-                chainId: this.currentChainId
-              }
-            : undefined,
+          this.initialSession && {
+            ...this.initialSession,
+            permissions: combinedPermissions as Signers.Session.ExplicitParams['permissions']
+          },
           {
             preferredLoginMethod: this.loginType,
             ...(this.loginType === 'email' && this.email ? { email: this.email } : {}),
@@ -425,13 +409,19 @@ export class SequenceV3Provider implements EIP1193Provider {
         const tx = params[0] as TransactionRequest
         const transactions = [{ to: tx.to!, value: BigInt(tx.value?.toString() ?? '0'), data: tx.data ?? '0x' }]
 
-        const { hasPermission, isImplicit } = await this.client.checkForPermissions(this.currentChainId, transactions)
+        const signerValidity = await this.client.listSignerValidity(this.currentChainId)
+        let hasValidSigner = signerValidity.some(s => s.isValid)
+        if (!hasValidSigner) {
+          // Fix our session issues and recheck
+          await this.client.fixInvalidSessions(this.currentChainId, true)
+          hasValidSigner = await this.client.hasValidSigner(this.currentChainId)
+        }
 
-        if (hasPermission) {
-          let selectedFeeOption: Relayer.FeeOption | undefined
-          // do not check fee options if session is implicit
-          if (!isImplicit) {
+        if (hasValidSigner) {
+          try {
             const feeOptions = await this.client.getFeeOptions(this.currentChainId, transactions)
+            let selectedFeeOption: Relayer.FeeOption | undefined
+
             if (feeOptions && feeOptions.length > 0) {
               if (this.feeConfirmationHandler) {
                 const id = uuidv4()
@@ -456,42 +446,45 @@ export class SequenceV3Provider implements EIP1193Provider {
                 selectedFeeOption = feeOptions.find(option => option.token.contractAddress === zeroAddress)
               }
             }
+            return this.client.sendTransaction(this.currentChainId, transactions, selectedFeeOption)
+          } catch (err) {
+            // Log and continue, try calling the wallet directly
+            console.error('Transaction using session signer failed', err)
           }
-          return this.client.sendTransaction(this.currentChainId, transactions, selectedFeeOption)
-        } else {
-          return new Promise((resolve, reject) => {
-            const unsubscribe = this.client.on('walletActionResponse', (data: any) => {
-              unsubscribe()
-              if (data.error) {
-                reject(new RpcError(new Error(data.error), { code: 4001, shortMessage: data.error }))
-              } else {
-                resolve(data.response.transactionHash)
-              }
-            })
-
-            if (!tx.to) {
-              const error = new RpcError(new Error('Transaction requires a "to" address.'), {
-                code: -32602,
-                shortMessage: 'Invalid transaction params'
-              })
-              unsubscribe()
-              reject(error)
-              return
-            }
-
-            const walletTransactionRequest: DappClientTransactionRequest = {
-              to: tx.to,
-              value: tx.value,
-              data: tx.data,
-              gasLimit: tx.gas
-            }
-
-            this.client.sendWalletTransaction(this.currentChainId, walletTransactionRequest).catch(err => {
-              unsubscribe()
-              reject(err)
-            })
-          })
         }
+
+        return new Promise((resolve, reject) => {
+          const unsubscribe = this.client.on('walletActionResponse', (data: any) => {
+            unsubscribe()
+            if (data.error) {
+              reject(new RpcError(new Error(data.error), { code: 4001, shortMessage: data.error }))
+            } else {
+              resolve(data.response.transactionHash)
+            }
+          })
+
+          if (!tx.to) {
+            const error = new RpcError(new Error('Transaction requires a "to" address.'), {
+              code: -32602,
+              shortMessage: 'Invalid transaction params'
+            })
+            unsubscribe()
+            reject(error)
+            return
+          }
+
+          const walletTransactionRequest: DappClientTransactionRequest = {
+            to: tx.to,
+            value: tx.value,
+            data: tx.data,
+            gasLimit: tx.gas
+          }
+
+          this.client.sendWalletTransaction(this.currentChainId, walletTransactionRequest).catch(err => {
+            unsubscribe()
+            reject(err)
+          })
+        })
       }
 
       case 'wallet_switchEthereumChain': {
