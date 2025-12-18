@@ -1,3 +1,4 @@
+import { ThemeProvider } from '@0xsequence/design-system'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { headers } from 'next/headers'
@@ -8,6 +9,7 @@ import './globals.css'
 import { config } from '../config'
 
 import { Providers } from './Providers'
+import { EnvironmentSetter } from './components/EnvironmentSetter'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,7 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers initialState={initialState}>{children}</Providers>
+        <EnvironmentSetter />
+        <ThemeProvider theme="dark">
+          <Providers initialState={initialState}>{children}</Providers>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -1,19 +1,20 @@
-import { useAnalyticsContext, useConfig, useGetContractInfo, useGetTokenMetadata, useProjectAccessKey } from '@0xsequence/connect'
 import { Spinner, Text } from '@0xsequence/design-system'
 import { findSupportedNetwork } from '@0xsequence/network'
+import { useAnalyticsContext, useProjectAccessKey, isDevSardine, isDevTransak } from '@0xsequence/react-connect'
+import { useGetTokenMetadata, useGetContractInfo } from '@0xsequence/react-hooks'
 import pako from 'pako'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { formatUnits } from 'viem'
 
 import { fetchSardineOrderStatus } from '../api'
 import { NFT_CHECKOUT_SOURCE } from '../constants'
-import { useEnvironmentContext, type TransactionPendingNavigation } from '../contexts'
+import { TransactionPendingNavigation } from '../contexts'
 import {
-  useCheckoutModal,
   useNavigation,
+  useCheckoutModal,
   useSardineClientToken,
-  useSkipOnCloseCallback,
-  useTransactionStatusModal
+  useTransactionStatusModal,
+  useSkipOnCloseCallback
 } from '../hooks'
 import { TRANSAK_PROXY_ADDRESS } from '../utils/transak'
 
@@ -43,12 +44,10 @@ export const PendingCreditCardTransaction = () => {
 }
 
 export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: PendingCreditTransactionProps) => {
-  const { transakApiUrl } = useEnvironmentContext()
   const { analytics } = useAnalyticsContext()
   const { openTransactionStatusModal } = useTransactionStatusModal()
   const nav = useNavigation()
   const { settings, closeCheckout } = useCheckoutModal()
-  const iframeRef = useRef<HTMLIFrameElement | null>(null)
 
   const {
     params: { creditCardCheckout }
@@ -79,6 +78,8 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
   const tokenMetadata = tokensMetadata ? tokensMetadata[0] : undefined
 
   const transakConfig = settings?.creditCardCheckout?.transakConfig
+
+  const baseUrl = isDevTransak() ? 'https://global-stg.transak.com' : 'https://global.transak.com'
 
   // Transak requires the recipient address to be the proxy address
   // so we need to replace the recipient address with the proxy address in the calldata
@@ -120,15 +121,17 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
   // Note: the network name might not always line up with Transak. A conversion function might be necessary
   const networkName = network?.name.toLowerCase()
 
-  const transakLink = `${transakApiUrl}?apiKey=${transakConfig?.apiKey}&isNFT=true&calldata=${transakCallData}&contractId=${transakConfig?.contractId}&cryptoCurrencyCode=${creditCardCheckout.currencySymbol}&estimatedGasLimit=${estimatedGasLimit}&nftData=${transakNftData}&walletAddress=${creditCardCheckout.recipientAddress}&disableWalletAddressForm=true&partnerOrderId=${partnerOrderId}&network=${networkName}`
+  const transakLink = `${baseUrl}?apiKey=${transakConfig?.apiKey}&isNFT=true&calldata=${transakCallData}&contractId=${transakConfig?.contractId}&cryptoCurrencyCode=${creditCardCheckout.currencySymbol}&estimatedGasLimit=${estimatedGasLimit}&nftData=${transakNftData}&walletAddress=${creditCardCheckout.recipientAddress}&disableWalletAddressForm=true&partnerOrderId=${partnerOrderId}&network=${networkName}`
 
   const isLoading = isLoadingTokenMetadata || isLoadingCollectionInfo
   const isError = isErrorTokenMetadata || isErrorCollectionInfo
 
   useEffect(() => {
+    const transakIframeElement = document.getElementById('transakIframe') as HTMLIFrameElement
+    const transakIframe = transakIframeElement.contentWindow
+
     const readMessage = (message: any) => {
-      const transakIframe = iframeRef.current?.contentWindow
-      if (!transakIframe || message.source !== transakIframe) {
+      if (message.source !== transakIframe) {
         return
       }
 
@@ -202,7 +205,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
         className="flex flex-col justify-center items-center gap-6"
         style={{
           height: '650px',
-          width: '500px'
+          width: '380px'
         }}
       >
         <div>
@@ -222,7 +225,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
         className="flex flex-col justify-center items-center gap-6"
         style={{
           height: '650px',
-          width: '500px'
+          width: '380px'
         }}
       >
         <div>
@@ -235,16 +238,15 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
   return (
     <div className="flex items-center justify-center" style={{ height: '770px' }}>
       <iframe
-        ref={iframeRef}
+        id="transakIframe"
         allow="camera;microphone;payment"
         src={transakLink}
         style={{
           maxHeight: '650px',
           height: '100%',
-          maxWidth: '500px',
+          maxWidth: '380px',
           width: '100%'
         }}
-        referrerPolicy="strict-origin-when-cross-origin"
       />
     </div>
   )
@@ -255,9 +257,6 @@ export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: Pen
   const { openTransactionStatusModal } = useTransactionStatusModal()
   const nav = useNavigation()
   const { closeCheckout } = useCheckoutModal()
-  const { sardineCheckoutUrl: sardineProxyUrl } = useEnvironmentContext()
-  const { env } = useConfig()
-  const iframeRef = useRef<HTMLIFrameElement | null>(null)
 
   const {
     params: { creditCardCheckout }
@@ -278,7 +277,6 @@ export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: Pen
     {
       order: creditCardCheckout,
       projectAccessKey: projectAccessKey,
-      apiClientUrl: env.apiUrl,
       tokenMetadata: tokenMetadata
     },
     disableSardineClientTokenFetch
@@ -286,9 +284,9 @@ export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: Pen
 
   const authToken = data?.token
 
-  const sardineCheckoutUrl = sardineProxyUrl.replace('checkout', 'api')
-
-  const url = `${sardineProxyUrl}?api_url=${sardineCheckoutUrl}&client_token=${authToken}&show_features=true`
+  const url = isDevSardine()
+    ? `https://sardine-checkout-sandbox.sequence.info?api_url=https://sardine-api-sandbox.sequence.info&client_token=${authToken}&show_features=true`
+    : `https://sardine-checkout.sequence.info?api_url=https://sardine-api.sequence.info&client_token=${authToken}&show_features=true`
 
   const pollForOrderStatus = async () => {
     try {
@@ -299,7 +297,7 @@ export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: Pen
       const { orderId } = data
 
       console.log('Polling for transaction status')
-      const pollResponse = await fetchSardineOrderStatus(orderId, projectAccessKey, env.apiUrl)
+      const pollResponse = await fetchSardineOrderStatus(orderId, projectAccessKey)
       const status = pollResponse.resp.status
       const transactionHash = pollResponse.resp?.transactionHash
 
@@ -389,7 +387,7 @@ export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: Pen
         className="flex flex-col justify-center items-center gap-6"
         style={{
           height: '650px',
-          width: '500px'
+          width: '380px'
         }}
       >
         <div>
@@ -405,7 +403,7 @@ export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: Pen
         className="flex flex-col justify-center items-center gap-6"
         style={{
           height: '650px',
-          width: '500px'
+          width: '380px'
         }}
       >
         <div>
@@ -418,12 +416,11 @@ export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: Pen
   return (
     <div className="flex items-center justify-center" style={{ height: '770px' }}>
       <iframe
-        ref={iframeRef}
         src={url}
         style={{
           maxHeight: '650px',
           height: '100%',
-          maxWidth: '500px',
+          maxWidth: '380px',
           width: '100%'
         }}
       />

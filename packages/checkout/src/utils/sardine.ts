@@ -1,7 +1,6 @@
-import { DEBUG } from '@0xsequence/kit'
-import { SequenceAPIClient } from '@0xsequence/api'
 import { ChainId, networks } from '@0xsequence/network'
-import { ethers } from 'ethers'
+import { zeroAddress } from 'viem'
+import { isDevSardine, getDevSardineProjectAccessKey } from '@0xsequence/react-connect'
 
 export interface CheckSardineWhitelistStatusArgs {
   chainId: number
@@ -14,9 +13,8 @@ export const checkSardineWhitelistStatus = async (
 ) => {
   const referenceId = `sequence-kit-sardine-whitelist-check`
 
-  const accessKey = DEBUG ? '17xhjK4yjRf1fr0am8kgKfICAAAAAAAAA' : projectAccessKey
-
-  const url = DEBUG
+  const accessKey = isDevSardine() ? getDevSardineProjectAccessKey(projectAccessKey) : projectAccessKey
+  const url = isDevSardine()
     ? 'https://dev-api.sequence.app/rpc/API/SardineGetNFTCheckoutToken'
     : 'https://api.sequence.app/rpc/API/SardineGetNFTCheckoutToken'
 
@@ -37,7 +35,7 @@ export const checkSardineWhitelistStatus = async (
         name: 'whitelist-check',
         imageUrl: 'https://www.sequence.market/images/placeholder.png',
         network: networks[chainId as ChainId].name,
-        recipientAddress: ethers.ZeroAddress,
+        recipientAddress: zeroAddress,
         contractAddress: marketplaceAddress,
         platform: 'calldata_execution',
         executionType: 'smart_contract',

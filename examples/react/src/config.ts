@@ -1,9 +1,5 @@
-import { SequenceCheckoutConfig } from '@0xsequence/checkout'
-import { ConnectConfig, createConfig, WalletType } from '@0xsequence/connect'
-import { immutable } from '@0xsequence/immutable-connector'
 import { ChainId } from '@0xsequence/network'
-import { Environment } from '@imtbl/config'
-import { passport } from '@imtbl/sdk'
+import { ConnectConfig, createConfig, isDevSequenceApis, WalletType } from '@0xsequence/react-connect'
 import { zeroAddress } from 'viem'
 
 const searchParams = new URLSearchParams(location.search)
@@ -13,9 +9,7 @@ const walletType: WalletType = searchParams.get('type') === 'universal' ? 'unive
 
 // append ?debug to url to enable debug mode
 const isDebugMode = searchParams.has('debug')
-// @ts-ignore
-const isDev = __SEQUENCE_WEB_SDK_IS_DEV__
-const projectAccessKey = isDev ? 'AQAAAAAAAAbRfXdDS5e-ZD2pNeMcCtNnij4' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
+const projectAccessKey = isDevSequenceApis() ? 'AQAAAAAAAAK2JvvZhWqZ51riasWBftkrVXE' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
 const walletConnectProjectId = 'c65a6cb1aa83c4e24500130f23a437d8'
 
 export const sponsoredContractAddresses: Record<number, `0x${string}`> = {
@@ -27,15 +21,8 @@ export const connectConfig: ConnectConfig = {
   defaultTheme: 'dark',
   signIn: {
     projectName: 'Sequence Web SDK Demo',
-    useMock: isDebugMode,
-    showWalletAuthOptionsFirst: false
+    useMock: isDebugMode
   },
-  // Custom css injected into shadow dom
-  // customCSS: `
-  //   span {
-  //     color: red !important;
-  //   }
-  // `,
   displayedAssets: [
     // Native token
     {
@@ -63,30 +50,8 @@ export const connectConfig: ConnectConfig = {
       chainId: ChainId.POLYGON
     }
   ],
-  readOnlyNetworks: [ChainId.OPTIMISM],
-  env: isDev
-    ? {
-        indexerGatewayUrl: 'https://dev-indexer.sequence.app',
-        metadataUrl: 'https://dev-metadata.sequence.app',
-        apiUrl: 'https://dev-api.sequence.app',
-        indexerUrl: 'https://dev-indexer.sequence.app',
-        builderUrl: 'https://dev-api.sequence.build'
-      }
-    : undefined
+  readOnlyNetworks: [ChainId.OPTIMISM]
 }
-
-export const passportInstance = new passport.Passport({
-  baseConfig: {
-    environment: Environment.SANDBOX,
-    publishableKey: 'pk_imapik-test-VEMeW7wUX7hE7LHg3FxY'
-  },
-  forceScwDeployBeforeMessageSignature: true,
-  clientId: 'ap8Gv3188GLFROiBFBNFz77DojRpqxnS',
-  redirectUri: `${window.location.origin}/auth-callback`,
-  logoutRedirectUri: `${window.location.origin}`,
-  audience: 'platform_api',
-  scope: 'openid offline_access email transact'
-})
 
 export const config =
   walletType === 'waas'
@@ -98,21 +63,16 @@ export const config =
           ChainId.ARBITRUM_SEPOLIA,
           ChainId.POLYGON,
           ChainId.IMMUTABLE_ZKEVM,
-          ChainId.IMMUTABLE_ZKEVM_TESTNET,
-          ChainId.BASE_SEPOLIA,
-          ChainId.BASE,
-          ChainId.SEPOLIA
+          ChainId.IMMUTABLE_ZKEVM_TESTNET
         ],
         defaultChainId: ChainId.ARBITRUM_NOVA,
-        waasConfigKey: isDebugMode
+        waasConfigKey: isDevSequenceApis()
           ? 'eyJwcm9qZWN0SWQiOjY5NCwicnBjU2VydmVyIjoiaHR0cHM6Ly9kZXYtd2Fhcy5zZXF1ZW5jZS5hcHAiLCJlbWFpbFJlZ2lvbiI6ImNhLWNlbnRyYWwtMSIsImVtYWlsQ2xpZW50SWQiOiI1NGF0bjV1cGk2M3FjNTlhMWVtM3ZiaHJzbiJ9'
           : 'eyJwcm9qZWN0SWQiOjE2ODE1LCJlbWFpbFJlZ2lvbiI6ImNhLWNlbnRyYWwtMSIsImVtYWlsQ2xpZW50SWQiOiI2N2V2NXVvc3ZxMzVmcGI2OXI3NnJoYnVoIiwicnBjU2VydmVyIjoiaHR0cHM6Ly93YWFzLnNlcXVlbmNlLmFwcCJ9',
         enableConfirmationModal: localStorage.getItem('confirmationEnabled') === 'true',
 
-        guest: true,
-        email: true,
         google: {
-          clientId: isDebugMode
+          clientId: isDevSequenceApis()
             ? '603294233249-6h5saeg2uiu8akpcbar3r2aqjp6j7oem.apps.googleusercontent.com'
             : '970987756660-35a6tc48hvi8cev9cnknp0iugv9poa23.apps.googleusercontent.com'
         },
@@ -120,19 +80,9 @@ export const config =
           clientId: 'com.horizon.sequence.waas',
           redirectURI: window.location.origin + window.location.pathname
         },
-        X: {
-          clientId: 'MVZ6aHMyNmMtSF9mNHVldFR6TV86MTpjaQ',
-          redirectURI: window.location.origin + '/auth-callback-X'
-        },
         walletConnect: {
           projectId: walletConnectProjectId
-        },
-        additionalWallets: [
-          immutable({
-            passportInstance,
-            environment: Environment.SANDBOX
-          })
-        ]
+        }
       })
     : createConfig('universal', {
         ...connectConfig,
@@ -143,22 +93,13 @@ export const config =
           ChainId.ARBITRUM_SEPOLIA,
           ChainId.POLYGON,
           ChainId.IMMUTABLE_ZKEVM,
-          ChainId.IMMUTABLE_ZKEVM_TESTNET,
-          ChainId.BASE_SEPOLIA,
-          ChainId.BASE,
-          ChainId.SEPOLIA
+          ChainId.IMMUTABLE_ZKEVM_TESTNET
         ],
         defaultChainId: ChainId.ARBITRUM_NOVA,
 
         walletConnect: {
           projectId: walletConnectProjectId
-        },
-        additionalWallets: [
-          immutable({
-            passportInstance,
-            environment: Environment.SANDBOX
-          })
-        ]
+        }
       })
 
 export const getErc1155SaleContractConfig = (walletAddress: string) => ({
@@ -180,11 +121,3 @@ export const getErc1155SaleContractConfig = (walletAddress: string) => ({
     console.log('success')
   }
 })
-
-export const checkoutConfig: SequenceCheckoutConfig = {
-  env: isDev
-    ? {
-        forteWidgetUrl: 'https://payments.sandbox.lemmax.com/forte-payments-widget.js'
-      }
-    : undefined
-}

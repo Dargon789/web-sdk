@@ -1,40 +1,34 @@
-import { allNetworks, type EIP1193Provider } from '@0xsequence/network'
+import { allNetworks, EIP1193Provider } from '@0xsequence/network'
 import {
   SequenceWaaS,
-  WebrpcEndpointError,
-  type ExtendedSequenceConfig,
-  type FeeOption,
-  type SequenceConfig,
-  type SignInResponse,
-  type Transaction
+  SequenceConfig,
+  ExtendedSequenceConfig,
+  Transaction,
+  FeeOption,
+  WebrpcEndpointError
 } from '@0xsequence/waas'
 import { ethers } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
 import {
-  getAddress,
   InternalRpcError,
   ProviderDisconnectedError,
-  toHex,
   TransactionRejectedRpcError,
   UserRejectedRequestError,
-  zeroAddress
+  getAddress,
+  zeroAddress,
+  toHex
 } from 'viem'
 import { createConnector } from 'wagmi'
 
-import { LocalStorageKey } from '../../constants/localStorage.js'
-import { normalizeChainId } from '../../utils/helpers.js'
-import { getPkcePair, getXOauthUrl } from '../X/XAuth.js'
+import { LocalStorageKey } from '../../constants/localStorage'
+import { isDevSequenceApis } from '../../env'
 
 export interface SequenceWaasConnectConfig {
   googleClientId?: string
   appleClientId?: string
-  XClientId?: string
-  XRedirectURI?: string
-  epicAuthUrl?: string
   appleRedirectURI?: string
   enableConfirmationModal?: boolean
-  nodesUrl?: string
-  loginType: 'email' | 'google' | 'apple' | 'epic' | 'X' | 'guest'
+  loginType: 'email' | 'google' | 'apple'
 }
 
 export type BaseSequenceWaasConnectorOptions = SequenceConfig & SequenceWaasConnectConfig & Partial<ExtendedSequenceConfig>
@@ -53,20 +47,13 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
     [LocalStorageKey.WaasGoogleIdToken]: string
     [LocalStorageKey.WaasEmailIdToken]: string
     [LocalStorageKey.WaasAppleIdToken]: string
-    [LocalStorageKey.WaasXAuthUrl]: string
-    [LocalStorageKey.WaasXClientID]: string
-    [LocalStorageKey.WaasXRedirectURI]: string
-    [LocalStorageKey.WaasXCodeVerifier]: string
-    [LocalStorageKey.WaasXIdToken]: string
     [LocalStorageKey.WaasGoogleClientID]: string
     [LocalStorageKey.WaasAppleClientID]: string
     [LocalStorageKey.WaasAppleRedirectURI]: string
-    [LocalStorageKey.WaasEpicAuthUrl]: string
-    [LocalStorageKey.WaasEpicIdToken]: string
     [LocalStorageKey.WaasSignInEmail]: string
   }
 
-  const nodesUrl = params.nodesUrl ?? 'https://nodes.sequence.app'
+  const nodesUrl = isDevSequenceApis() ? 'https://dev-nodes.sequence.app' : 'https://nodes.sequence.app'
 
   const showConfirmationModal = params.enableConfirmationModal ?? false
 
@@ -101,17 +88,6 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       if (params.appleRedirectURI) {
         await config.storage?.setItem(LocalStorageKey.WaasAppleRedirectURI, params.appleRedirectURI)
       }
-      if (params.epicAuthUrl) {
-        await config.storage?.setItem(LocalStorageKey.WaasEpicAuthUrl, params.epicAuthUrl)
-      }
-      if (params.XClientId && params.XRedirectURI) {
-        const { code_challenge, code_verifier } = await getPkcePair()
-        const authUrl = await getXOauthUrl(params.XClientId, params.XRedirectURI, code_challenge)
-        await config.storage?.setItem(LocalStorageKey.WaasXAuthUrl, authUrl)
-        await config.storage?.setItem(LocalStorageKey.WaasXClientID, params.XClientId)
-        await config.storage?.setItem(LocalStorageKey.WaasXRedirectURI, params.XRedirectURI)
-        await config.storage?.setItem(LocalStorageKey.WaasXCodeVerifier, code_verifier)
-      }
 
       sequenceWaasProvider.on('error', error => {
         if (isSessionInvalidOrNotFoundError(error)) {
@@ -128,8 +104,6 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
         const googleIdToken = await config.storage?.getItem(LocalStorageKey.WaasGoogleIdToken)
         const emailIdToken = await config.storage?.getItem(LocalStorageKey.WaasEmailIdToken)
         const appleIdToken = await config.storage?.getItem(LocalStorageKey.WaasAppleIdToken)
-        const epicIdToken = await config.storage?.getItem(LocalStorageKey.WaasEpicIdToken)
-        const xIdToken = await config.storage?.getItem(LocalStorageKey.WaasXIdToken)
 
         let idToken: string | undefined
 
@@ -139,28 +113,15 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
           idToken = emailIdToken
         } else if (params.loginType === 'apple' && appleIdToken) {
           idToken = appleIdToken
-        } else if (params.loginType === 'epic' && epicIdToken) {
-          idToken = epicIdToken
-        } else if (params.loginType === 'X' && xIdToken) {
-          idToken = xIdToken
         }
 
         await config.storage?.removeItem(LocalStorageKey.WaasGoogleIdToken)
         await config.storage?.removeItem(LocalStorageKey.WaasEmailIdToken)
         await config.storage?.removeItem(LocalStorageKey.WaasAppleIdToken)
-        await config.storage?.removeItem(LocalStorageKey.WaasEpicIdToken)
-        await config.storage?.removeItem(LocalStorageKey.WaasXIdToken)
 
         if (idToken) {
           try {
-            let signInResponse: SignInResponse | undefined
-
-            if (params.loginType === 'X') {
-              signInResponse = await provider.sequenceWaas.signIn({ xAccessToken: idToken }, randomName())
-            } else {
-              signInResponse = await provider.sequenceWaas.signIn({ idToken }, randomName())
-            }
-
+            const signInResponse = await provider.sequenceWaas.signIn({ idToken }, randomName())
             if (signInResponse?.email) {
               await config.storage?.setItem(LocalStorageKey.WaasSignInEmail, signInResponse.email)
             }
@@ -565,6 +526,19 @@ export function randomName() {
   const randomWord2 = words.getWord(Math.floor(Math.random() * wordlistSize))
 
   return `${randomEmoji} ${randomWord1} ${randomWord2}`
+}
+
+function normalizeChainId(chainId: string | number | bigint | { chainId: string }) {
+  if (typeof chainId === 'object') {
+    return normalizeChainId(chainId.chainId)
+  }
+  if (typeof chainId === 'string') {
+    return Number.parseInt(chainId, chainId.trim().substring(0, 2) === '0x' ? 16 : 10)
+  }
+  if (typeof chainId === 'bigint') {
+    return Number(chainId)
+  }
+  return chainId
 }
 
 function isSessionInvalidOrNotFoundError(error: unknown) {
