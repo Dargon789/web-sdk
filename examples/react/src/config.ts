@@ -29,12 +29,6 @@ export const connectConfig: ConnectConfig = {
     projectName: 'Sequence Web SDK Demo',
     useMock: isDebugMode
   },
-  // Custom css injected into shadow dom
-  // customCSS: `
-  //   span {
-  //     color: red !important;
-  //   }
-  // `,
   displayedAssets: [
     // Native token
     {
@@ -81,7 +75,6 @@ export const passportInstance = new passport.Passport({
   forceScwDeployBeforeMessageSignature: true,
   clientId: 'ap8Gv3188GLFROiBFBNFz77DojRpqxnS',
   redirectUri: `${window.location.origin}/auth-callback`,
-  logoutRedirectUri: `${window.location.origin}`,
   audience: 'platform_api',
   scope: 'openid offline_access email transact'
 })
@@ -96,9 +89,7 @@ export const config =
           ChainId.ARBITRUM_SEPOLIA,
           ChainId.POLYGON,
           ChainId.IMMUTABLE_ZKEVM,
-          ChainId.IMMUTABLE_ZKEVM_TESTNET,
-          ChainId.BASE_SEPOLIA,
-          ChainId.BASE
+          ChainId.IMMUTABLE_ZKEVM_TESTNET
         ],
         defaultChainId: ChainId.ARBITRUM_NOVA,
         waasConfigKey: isDebugMode
@@ -106,8 +97,6 @@ export const config =
           : 'eyJwcm9qZWN0SWQiOjE2ODE1LCJlbWFpbFJlZ2lvbiI6ImNhLWNlbnRyYWwtMSIsImVtYWlsQ2xpZW50SWQiOiI2N2V2NXVvc3ZxMzVmcGI2OXI3NnJoYnVoIiwicnBjU2VydmVyIjoiaHR0cHM6Ly93YWFzLnNlcXVlbmNlLmFwcCJ9',
         enableConfirmationModal: localStorage.getItem('confirmationEnabled') === 'true',
 
-        guest: true,
-        email: true,
         google: {
           clientId: isDebugMode
             ? '603294233249-6h5saeg2uiu8akpcbar3r2aqjp6j7oem.apps.googleusercontent.com'
@@ -136,9 +125,7 @@ export const config =
           ChainId.ARBITRUM_SEPOLIA,
           ChainId.POLYGON,
           ChainId.IMMUTABLE_ZKEVM,
-          ChainId.IMMUTABLE_ZKEVM_TESTNET,
-          ChainId.BASE_SEPOLIA,
-          ChainId.BASE
+          ChainId.IMMUTABLE_ZKEVM_TESTNET
         ],
         defaultChainId: ChainId.ARBITRUM_NOVA,
 
@@ -179,10 +166,7 @@ export const checkoutConfig: SequenceCheckoutConfig = {
         sardineCheckoutUrl: 'https://sardine-checkout-sandbox.sequence.info',
         sardineOnRampUrl: 'https://crypto.sandbox.sardine.ai/',
         transakApiUrl: 'https://global-stg.transak.com',
-        transakApiKey: 'c20f2a0e-fe6a-4133-8fa7-77e9f84edf98',
-        // Confirmation code: 947293
-        fortePaymentUrl: 'https://sandbox-api.sandbox.lemmax.com',
-        forteWidgetUrl: 'https://dev-forte-payments-cdn.pti-dev.cloud/forte-payments-widget.js'
+        transakApiKey: 'c20f2a0e-fe6a-4133-8fa7-77e9f84edf98'
       }
     : undefined
 }
