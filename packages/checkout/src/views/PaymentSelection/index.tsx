@@ -46,6 +46,7 @@ export const PaymentSelectionContent = () => {
 
   const [disableButtons, setDisableButtons] = useState(false)
   const [isError, setIsError] = useState<boolean>(false)
+  const [isSendingTransaction, setIsSendingTransaction] = useState<boolean>(false)
 
   const {
     chain,
@@ -142,13 +143,13 @@ export const PaymentSelectionContent = () => {
   }, [])
 
   const onPurchaseMainCurrency = async () => {
-    if (!walletClient || !userAddress || !publicClient || !userAddress || !connector) {
+    if (!walletClient || !userAddress || !publicClient || !connector) {
       return
     }
-
     setIsError(false)
     setDisableButtons(true)
 
+    setIsSendingTransaction(true)
     try {
       const walletClientChainId = await walletClient.getChainId()
       if (walletClientChainId !== chainId) {
@@ -213,6 +214,7 @@ export const PaymentSelectionContent = () => {
         }
       })
 
+      setIsSendingTransaction(false)
       closeSelectPaymentModal()
 
       skipOnCloseCallback()
@@ -232,10 +234,12 @@ export const PaymentSelectionContent = () => {
           clearCachedBalances()
           onSuccess(txHash)
         },
-        onClose
+        onClose,
+        statusOverride: 'success'
       })
     } catch (e) {
       console.error('Failed to purchase...', e)
+      setIsSendingTransaction(false)
       onError(e as Error)
       setIsError(true)
     }
@@ -244,13 +248,13 @@ export const PaymentSelectionContent = () => {
   }
 
   const onClickPurchaseSwap = async (swapTokenOption: LifiToken) => {
-    if (!walletClient || !userAddress || !publicClient || !userAddress || !connector || !swapQuote) {
+    if (!walletClient || !userAddress || !publicClient || !connector || !swapQuote) {
       return
     }
 
     setIsError(false)
     setDisableButtons(true)
-
+    setIsSendingTransaction(true)
     try {
       const walletClientChainId = await walletClient.getChainId()
       if (walletClientChainId !== chainId) {
@@ -340,6 +344,7 @@ export const PaymentSelectionContent = () => {
         }
       })
 
+      setIsSendingTransaction(false)
       closeSelectPaymentModal()
 
       skipOnCloseCallback()
@@ -359,10 +364,12 @@ export const PaymentSelectionContent = () => {
           clearCachedBalances()
           onSuccess(txHash)
         },
-        onClose
+        onClose,
+        statusOverride: 'success'
       })
     } catch (e) {
       console.error('Failed to purchase...', e)
+      setIsSendingTransaction(false)
       onError(e as Error)
       setIsError(true)
     }
@@ -370,15 +377,15 @@ export const PaymentSelectionContent = () => {
     setDisableButtons(false)
   }
 
-  const onClickPurchase = () => {
+  const onClickPurchase = async () => {
     if (compareAddress(selectedCurrency || '', currencyAddress)) {
-      onPurchaseMainCurrency()
+      await onPurchaseMainCurrency()
     } else {
       const foundSwap = swapRoutes
         .flatMap(route => route.fromTokens)
         .find(fromToken => fromToken.address.toLowerCase() === selectedCurrency?.toLowerCase())
       if (foundSwap) {
-        onClickPurchaseSwap(foundSwap)
+        await onClickPurchaseSwap(foundSwap)
       }
     }
   }
@@ -473,7 +480,15 @@ export const PaymentSelectionContent = () => {
                 }
                 shape="square"
                 variant="primary"
-                label="Complete Purchase"
+                label={
+                  isSendingTransaction ? (
+                    <div className="flex items-center justify-center w-full h-full">
+                      <span>Sending transaction ...</span>
+                    </div>
+                  ) : (
+                    'Complete Purchase'
+                  )
+                }
               />
               <div className="flex w-full justify-center items-center gap-0.5 my-2">
                 {/* Replace by icon from design-system once new release is out */}
