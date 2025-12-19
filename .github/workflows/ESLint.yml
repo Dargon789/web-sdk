@@ -1,5 +1,5 @@
 name: "ESLint analysis"
-
+# Runs the ESlint code analysis
 # Run workflow each time code is pushed to your repository and on a schedule.
 # The scheduled workflow runs every Wednesday at 15:45 UTC.
 on:
