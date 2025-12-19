@@ -82,7 +82,7 @@ export const PaperTransaction = ({ settings }: PaperTransactionProps) => {
   }, [email])
 
   const isValidEmailAddress = () => {
-    const emailRegEx = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,})+$/
+    const emailRegEx = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
     const isValidEmail = emailRegEx.test(inputEmailAddress || '')
     return isValidEmail
   }
