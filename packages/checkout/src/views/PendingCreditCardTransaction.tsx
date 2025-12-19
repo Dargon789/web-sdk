@@ -1,21 +1,25 @@
-import { useAnalyticsContext } from '@0xsequence/connect'
+import { useProjectAccessKey } from '@0xsequence/connect'
 import { Spinner, Text } from '@0xsequence/design-system'
-import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
+import { useConfig, useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { useEffect, useMemo, useRef } from 'react'
+import { useAnalyticsContext } from '@0xsequence/web-sdk-core'
+import pako from 'pako'
+import { useEffect, useRef } from 'react'
 import { formatUnits } from 'viem'
 
+import { fetchSardineOrderStatus } from '../api/data.js'
 import { EVENT_SOURCE } from '../constants/index.js'
-import { useFortePaymentController, type TransactionPendingNavigation } from '../contexts/index.js'
+import { useEnvironmentContext, type TransactionPendingNavigation } from '../contexts/index.js'
 import {
   useCheckoutModal,
-  useFortePaymentIntent,
   useNavigation,
+  useSardineClientToken,
   useSkipOnCloseCallback,
   useTransactionStatusModal
 } from '../hooks/index.js'
-import { useTransakWidgetUrl } from '../hooks/useTransakWidgetUrl.js'
-import { getCurrencyCode, TRANSAK_PROXY_ADDRESS } from '../utils/transak.js'
+import { TRANSAK_PROXY_ADDRESS } from '../utils/transak.js'
+
+const POLLING_TIME = 10 * 1000
 
 interface PendingCreditTransactionProps {
   skipOnCloseCallback: () => void
@@ -32,16 +36,16 @@ export const PendingCreditCardTransaction = () => {
   const { skipOnCloseCallback } = useSkipOnCloseCallback(onClose)
 
   switch (provider) {
-    case 'forte':
-      return <PendingCreditCardTransactionForte skipOnCloseCallback={skipOnCloseCallback} />
     case 'transak':
       return <PendingCreditCardTransactionTransak skipOnCloseCallback={skipOnCloseCallback} />
+    case 'sardine':
     default:
-      return null
+      return <PendingCreditCardTransactionSardine skipOnCloseCallback={skipOnCloseCallback} />
   }
 }
 
 export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: PendingCreditTransactionProps) => {
+  const { transakApiUrl, transakApiKey: transakGlobalApiKey } = useEnvironmentContext()
   const { analytics } = useAnalyticsContext()
   const { openTransactionStatusModal } = useTransactionStatusModal()
   const nav = useNavigation()
@@ -77,6 +81,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
   const tokenMetadata = tokensMetadata ? tokensMetadata[0] : undefined
 
   const transakConfig = settings?.creditCardCheckout?.transakConfig
+  const transakApiKey = transakConfig?.apiKey || transakGlobalApiKey
 
   // Transak requires the recipient address to be the proxy address
   // so we need to replace the recipient address with the proxy address in the calldata
@@ -90,59 +95,38 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
       TRANSAK_PROXY_ADDRESS.toLowerCase().substring(2)
     )
 
+  const pakoData = Array.from(pako.deflate(calldataWithProxy))
+
+  const transakCallData = encodeURIComponent(btoa(String.fromCharCode.apply(null, pakoData)))
+
   const price = Number(formatUnits(BigInt(creditCardCheckout.currencyQuantity), Number(creditCardCheckout.currencyDecimals)))
 
-  const transakNftData = [
+  const transakNftDataJson = JSON.stringify([
     {
       imageURL: tokenMetadata?.image || '',
       nftName: tokenMetadata?.name || 'collectible',
       collectionAddress: creditCardCheckout.nftAddress,
-      tokenIDs: [creditCardCheckout.nftId],
-      prices: [price],
+      tokenID: [creditCardCheckout.nftId],
+      price: [price],
       quantity: Number(creditCardCheckout.nftQuantity),
       nftType: collectionInfo?.type || 'ERC721'
     }
-  ]
+  ])
 
-  const estimatedGasLimit = 500000
+  console.log('transakNftDataJson', JSON.parse(transakNftDataJson))
+  const transakNftData = encodeURIComponent(btoa(transakNftDataJson))
 
-  const partnerOrderId = useMemo(() => {
-    return `${creditCardCheckout.recipientAddress}-${new Date().getTime()}`
-  }, [creditCardCheckout.recipientAddress])
+  const estimatedGasLimit = '500000'
+
+  const partnerOrderId = `${creditCardCheckout.recipientAddress}-${new Date().getTime()}`
 
   // Note: the network name might not always line up with Transak. A conversion function might be necessary
   const networkName = network?.name.toLowerCase()
 
-  const disableTransakWidgetUrlFetch = isLoadingTokenMetadata || isLoadingCollectionInfo
+  const transakLink = `${transakApiUrl}?apiKey=${transakApiKey}&isNFT=true&calldata=${transakCallData}&contractId=${transakConfig?.contractId}&cryptoCurrencyCode=${creditCardCheckout.currencySymbol}&estimatedGasLimit=${estimatedGasLimit}&nftData=${transakNftData}&walletAddress=${creditCardCheckout.recipientAddress}&disableWalletAddressForm=true&partnerOrderId=${partnerOrderId}&network=${networkName}`
 
-  const {
-    data: transakLinkData,
-    isLoading: isLoadingTransakLink,
-    isError: isErrorTransakLink
-  } = useTransakWidgetUrl(
-    {
-      isNFT: true,
-      calldata: calldataWithProxy,
-      targetContractAddress: creditCardCheckout.contractAddress,
-      cryptoCurrencyCode: getCurrencyCode({
-        chainId: creditCardCheckout.chainId,
-        currencyAddress: creditCardCheckout.currencyAddress,
-        defaultCurrencyCode: creditCardCheckout.currencySymbol || 'ETH'
-      }),
-      estimatedGasLimit,
-      nftData: transakNftData,
-      walletAddress: creditCardCheckout.recipientAddress,
-      disableWalletAddressForm: true,
-      partnerOrderId,
-      network: networkName,
-      referrerDomain: window.location.origin
-    },
-    disableTransakWidgetUrlFetch
-  )
-  const transakLink = transakLinkData?.url || ''
-
-  const isLoading = isLoadingTokenMetadata || isLoadingCollectionInfo || isLoadingTransakLink
-  const isError = isErrorTokenMetadata || isErrorCollectionInfo || isErrorTransakLink
+  const isLoading = isLoadingTokenMetadata || isLoadingCollectionInfo
+  const isError = isErrorTokenMetadata || isErrorCollectionInfo
 
   useEffect(() => {
     const readMessage = (message: any) => {
@@ -165,7 +149,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
             provider: 'transak',
             source: EVENT_SOURCE,
             chainId: String(creditCardCheckout.chainId),
-            purchasedCurrencySymbol: creditCardCheckout.currencySymbol,
+            listedCurrency: creditCardCheckout.currencyAddress,
             purchasedCurrency: creditCardCheckout.currencyAddress,
             origin: window.location.origin,
             from: creditCardCheckout.recipientAddress,
@@ -221,7 +205,7 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
     return () => window.removeEventListener('message', readMessage)
   }, [isLoading])
 
-  if (isError) {
+  if (isError || !transakConfig) {
     return (
       <div
         className="flex flex-col justify-center items-center gap-6"
@@ -231,7 +215,11 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
         }}
       >
         <div>
-          <Text color="primary">An error has occurred</Text>
+          {!transakConfig ? (
+            <Text color="primary">Error: No Transak configuration found</Text>
+          ) : (
+            <Text color="primary">An error has occurred</Text>
+          )}
         </div>
       </div>
     )
@@ -271,100 +259,184 @@ export const PendingCreditCardTransactionTransak = ({ skipOnCloseCallback }: Pen
   )
 }
 
-export const PendingCreditCardTransactionForte = ({ skipOnCloseCallback }: PendingCreditTransactionProps) => {
-  const { initializeWidget } = useFortePaymentController()
+export const PendingCreditCardTransactionSardine = ({ skipOnCloseCallback }: PendingCreditTransactionProps) => {
+  const { analytics } = useAnalyticsContext()
+  const { openTransactionStatusModal } = useTransactionStatusModal()
   const nav = useNavigation()
+  const { closeCheckout } = useCheckoutModal()
+  const { sardineCheckoutUrl: sardineProxyUrl } = useEnvironmentContext()
+  const { env } = useConfig()
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+
   const {
     params: { creditCardCheckout }
   } = nav.navigation as TransactionPendingNavigation
-  const { closeCheckout } = useCheckoutModal()
+  const { setNavigation } = nav
+  const projectAccessKey = useProjectAccessKey()
 
-  const {
-    data: tokenMetadatas,
-    isLoading: isLoadingTokenMetadata,
-    isError: isErrorTokenMetadata
-  } = useGetTokenMetadata({
+  const { data: tokensMetadata, isLoading: isLoadingTokenMetadata } = useGetTokenMetadata({
     chainID: String(creditCardCheckout.chainId),
     contractAddress: creditCardCheckout.nftAddress,
     tokenIDs: [creditCardCheckout.nftId]
   })
+  const tokenMetadata = tokensMetadata ? tokensMetadata[0] : undefined
 
-  const tokenMetadata = tokenMetadatas ? tokenMetadatas[0] : undefined
+  const disableSardineClientTokenFetch = isLoadingTokenMetadata
 
-  const currencyQuantity = formatUnits(
-    BigInt(creditCardCheckout.currencyQuantity),
-    Number(creditCardCheckout.currencyDecimals || 18)
-  )
-
-  const {
-    data: paymentIntentData,
-    isError: isErrorPaymentIntent,
-    error: paymentIntentError
-  } = useFortePaymentIntent(
+  const { data, isLoading, isError } = useSardineClientToken(
     {
-      recipientAddress: creditCardCheckout.recipientAddress,
-      chainId: creditCardCheckout.chainId.toString(),
-      nftAddress: creditCardCheckout.nftAddress,
-      currencyAddress: creditCardCheckout.currencyAddress,
-      currencySymbol: creditCardCheckout.currencySymbol,
-      targetContractAddress: creditCardCheckout.contractAddress,
-      nftName: tokenMetadata?.name || '',
-      imageUrl: tokenMetadata?.image || '',
-      tokenId: creditCardCheckout.nftId,
-      protocolConfig: creditCardCheckout.forteConfig!,
-      currencyQuantity,
-      calldata:
-        creditCardCheckout.forteConfig!.protocol === 'mint'
-          ? creditCardCheckout.forteConfig!.calldata
-          : creditCardCheckout.calldata,
-      approvedSpenderAddress: creditCardCheckout.approvedSpenderAddress
+      order: creditCardCheckout,
+      projectAccessKey: projectAccessKey,
+      apiClientUrl: env.apiUrl,
+      tokenMetadata: tokenMetadata
     },
-    {
-      disabled: isLoadingTokenMetadata
-    }
+    disableSardineClientTokenFetch
   )
 
-  const isPriceTooLow = paymentIntentError?.message?.includes('price too low')
-  // A more unique error message in the case of a high price is pending from forte
-  const isPriceTooHigh = paymentIntentError?.message?.includes('failed with status code 500')
+  const authToken = data?.token
 
-  const getErrorMessage = () => {
-    if (isPriceTooLow) {
-      return 'The price for the item is too low for credit card paymetns'
+  const sardineCheckoutUrl = sardineProxyUrl.replace('checkout', 'api')
+
+  const url = `${sardineProxyUrl}?api_url=${sardineCheckoutUrl}&client_token=${authToken}&show_features=true`
+
+  const pollForOrderStatus = async () => {
+    try {
+      if (!data) {
+        return
+      }
+
+      const { orderId } = data
+
+      console.log('Polling for transaction status')
+      const pollResponse = await fetchSardineOrderStatus(orderId, projectAccessKey, env.apiUrl)
+      const status = pollResponse.resp.status
+      const transactionHash = pollResponse.resp?.transactionHash
+
+      console.log('transaction status poll response:', status)
+
+      if (status === 'Draft') {
+        return
+      }
+      if (status === 'Complete') {
+        skipOnCloseCallback()
+
+        analytics?.track({
+          event: 'SEND_TRANSACTION_REQUEST',
+          props: {
+            ...creditCardCheckout.supplementaryAnalyticsInfo,
+            type: 'credit_card',
+            provider: 'sardine',
+            source: EVENT_SOURCE,
+            chainId: String(creditCardCheckout.chainId),
+            listedCurrency: creditCardCheckout.currencyAddress,
+            purchasedCurrency: creditCardCheckout.currencyAddress,
+            origin: window.location.origin,
+            from: creditCardCheckout.recipientAddress,
+            to: creditCardCheckout.contractAddress,
+            item_ids: JSON.stringify([creditCardCheckout.nftId]),
+            item_quantities: JSON.stringify([JSON.stringify([creditCardCheckout.nftQuantity])]),
+            txHash: transactionHash
+          }
+        })
+
+        closeCheckout()
+        openTransactionStatusModal({
+          chainId: creditCardCheckout.chainId,
+          currencyAddress: creditCardCheckout.currencyAddress,
+          collectionAddress: creditCardCheckout.nftAddress,
+          txHash: transactionHash,
+          items: [
+            {
+              tokenId: creditCardCheckout.nftId,
+              quantity: creditCardCheckout.nftQuantity,
+              decimals: creditCardCheckout.nftDecimals === undefined ? undefined : Number(creditCardCheckout.nftDecimals),
+              price: creditCardCheckout.currencyQuantity
+            }
+          ],
+          onSuccess: () => {
+            if (creditCardCheckout.onSuccess) {
+              creditCardCheckout.onSuccess(transactionHash, creditCardCheckout)
+            }
+          },
+          onClose: creditCardCheckout?.onClose,
+          successActionButtons: creditCardCheckout.successActionButtons
+        })
+        return
+      }
+      if (status === 'Declined' || status === 'Cancelled') {
+        setNavigation({
+          location: 'transaction-error',
+          params: {
+            error: new Error('Failed to transfer collectible')
+          }
+        })
+        return
+      }
+    } catch (e) {
+      console.error('An error occurred while fetching the transaction status')
+      setNavigation({
+        location: 'transaction-error',
+        params: {
+          error: e as Error
+        }
+      })
     }
-    if (isPriceTooHigh) {
-      return 'The price for the item is too high for credit card payments'
-    }
-    return 'An error has occurred'
   }
 
   useEffect(() => {
-    if (!paymentIntentData) {
-      return
+    const interval = setInterval(() => {
+      pollForOrderStatus()
+    }, POLLING_TIME)
+
+    return () => {
+      clearInterval(interval)
     }
-
-    initializeWidget({
-      paymentIntentId: paymentIntentData.paymentIntentId,
-      widgetData: paymentIntentData,
-      creditCardCheckout
-    })
-    skipOnCloseCallback()
-    closeCheckout()
-  }, [paymentIntentData])
-
-  const isError = isErrorTokenMetadata || isErrorPaymentIntent
+  }, [isLoading])
 
   if (isError) {
     return (
-      <div className="flex items-center justify-center px-4 text-center" style={{ height: '770px' }}>
-        <Text color="primary">{getErrorMessage()}</Text>
+      <div
+        className="flex flex-col justify-center items-center gap-6"
+        style={{
+          height: '650px',
+          width: '500px'
+        }}
+      >
+        <div>
+          <Text color="primary">An error has occurred</Text>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading || !authToken) {
+    return (
+      <div
+        className="flex flex-col justify-center items-center gap-6"
+        style={{
+          height: '650px',
+          width: '500px'
+        }}
+      >
+        <div>
+          <Spinner size="lg" />
+        </div>
       </div>
     )
   }
 
   return (
     <div className="flex items-center justify-center" style={{ height: '770px' }}>
-      <Spinner size="lg" />
+      <iframe
+        ref={iframeRef}
+        src={url}
+        style={{
+          maxHeight: '650px',
+          height: '100%',
+          maxWidth: '500px',
+          width: '100%'
+        }}
+      />
     </div>
   )
 }

@@ -14,7 +14,7 @@ export const QUERY_KEYS = {
   useGetCollectiblePrices: 'useGetCollectiblePrices',
   useGetSwapQuote: 'useGetSwapQuote',
   useGetSwapRoutes: 'useGetSwapRoutes',
-  useFindVersion: 'useFindVersion'
+  useDetectContractVersion: 'useDetectContractVersion'
 }
 
 export const time = {
@@ -24,9 +24,6 @@ export const time = {
 }
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-
-// Address displayed for native tokens by the swap API
-export const NATIVE_TOKEN_ADDRESS_0X_SWAP = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 
 export const ACCOUNT_ADDRESS = '0x345458cfD2F0c808455342CD0A6e07a09f893292'
 

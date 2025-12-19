@@ -36,13 +36,13 @@ const App = () => {
 }
 ```
 
-# NFT Checkout
+# NFT Checkout (Sequence Pay)
 
 <div align="center">
   <img src="../../public/docs/checkout-modal.png">
 </div>
 
-NFT Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
+Sequence Pay Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
 
 ## Basic Usage
 
@@ -100,7 +100,7 @@ const MyComponent = () => {
       recipientAddress: address,
       currencyAddress,
       collectionAddress,
-      creditCardProviders: ['transak'],
+      creditCardProviders: ['sardine'],
       copyrightText: 'ⓒ2024 Sequence',
       onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
@@ -133,47 +133,6 @@ const MyComponent = () => {
 - **onSuccess**: Callback function triggered once the transaction has been confirmed on the blockchain.
 - **blockConfirmations**: The number of block confirmations required for the transaction to be considered successful and trigger `onSuccess`.
 - **onError**: Callback function triggered if an error has occurred before or after sending the transaction.
-
-## Utility functions
-
-The `@0xsequence/checkout` library indeed simplifies the integration of Web3 payment solutions by providing utility functions. One such function, `useERC1155SaleContractPaymentModal`, is tailored for use cases involving the minting of ERC-1155 tokens. This function works in conjunction with Sequence's wallet ecosystem and its deployable smart contract infrastructure, such as the ERC-1155 sale contract available through the [Sequence Builder](https://sequence.build).
-
-```js
-import { useERC1155SaleContractCheckout } from "@0xsequence/checkout";
-import { useAccount } from "wagmi";
-
-const MyComponent = () => {
-  const { address: userAddress } = useAccount();
-  const { openCheckoutModal } = useERC1155SaleContractCheckout({
-    chain: 80001, // chainId of the chain the collectible is on
-    contractAddress: "0x0327b2f274e04d292e74a06809bcd687c63a4ba4", // address of the contract handling the minting function
-    wallet: userAddress!, // address of the recipient
-    collectionAddress: "0x888a322db4b8033bac3ff84412738c096f87f9d0", // address of the collection contract
-    items: [
-      // array of collectibles to purchase
-      {
-        tokenId: "0",
-        quantity: "1",
-      },
-    ],
-    onSuccess: (txnHash?: string) => {
-      console.log("success!", txnHash);
-    },
-    onError: (error: Error) => {
-      console.error(error);
-    },
-  });
-
-  const onClick = () => {
-    if (!userAddress) {
-      return;
-    }
-    openCheckoutModal();
-  };
-
-  return <button onClick={onClick}>Buy ERC-1155 collectible!</button>;
-};
-```
 
 # Swap
 
@@ -274,6 +233,10 @@ const CustomCheckoutUI = () => {
     currencyAddress,
     collectionAddress,
     creditCardProvider: 'transak' as CreditCardProviders,
+    transakConfig: {
+      contractId,
+      apiKey: '5911d9ec-46b5-48fa-a755-d59a715ff0cf'
+    },
     onSuccess: (txnHash?: string) => {
       console.log('success!', txnHash)
     },

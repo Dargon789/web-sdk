@@ -1,20 +1,22 @@
 {
   "compilerOptions": {
+    "target": "es2021",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "declaration": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "target": "es2022",
-    "allowJs": true,
     "resolveJsonModule": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
     "strict": true,
-    // "noUncheckedIndexedAccess": true,
-    "module": "NodeNext",
-    "sourceMap": true,
-    "declaration": false,
-    "lib": ["es2022", "dom", "dom.iterable"],
-    "jsx": "react-jsx"
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "typeRoots": ["node_modules/@types"],
+    "types": ["node"]
   },
   "include": ["./packages/**/src/**/*.ts", "./packages/**/src/**/*.tsx"]
 }

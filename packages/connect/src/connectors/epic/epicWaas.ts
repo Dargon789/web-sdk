@@ -1,8 +1,7 @@
 import type { Wallet } from '../../types.js'
 import { sequenceWaasWallet, type BaseSequenceWaasConnectorOptions } from '../wagmiConnectors/sequenceWaasConnector.js'
 
-import { getMonochromeEpicLogo } from './EpicLogo.js'
-import { EpicLogo } from './EpicLogo.js'
+import { EpicLogo, getMonochromeEpicLogo } from './EpicLogo.js'
 
 export type EpicWaasOptions = Omit<BaseSequenceWaasConnectorOptions, 'loginType'>
 
@@ -15,10 +14,10 @@ export const epicWaas = (options: EpicWaasOptions): Wallet => ({
   name: 'Epic',
   type: 'social',
   createConnector: () => {
-    return sequenceWaasWallet({
-          ...options,
-          loginType: 'epic'
-        });
-
+    const connector = sequenceWaasWallet({
+      ...options,
+      loginType: 'epic'
+    })
+    return connector
   }
 })

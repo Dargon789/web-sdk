@@ -5,18 +5,13 @@ import { useAccount, useConfig } from 'wagmi'
 
 import { LocalStorageKey } from '../constants/localStorage.js'
 
-/**
- * @deprecated use useSignInEmail instead
- */
 export const useWaasSignInEmail = () => {
   const { storage } = useConfig()
   const { isConnected } = useAccount()
   const [email, setEmail] = useState<null | string>(null)
 
   const storeEmail = async () => {
-    const key = LocalStorageKey.WaasSignInEmail
-    const storedEmail = await storage?.getItem(key as any)
-
+    const storedEmail = await storage?.getItem(LocalStorageKey.WaasSignInEmail)
     setEmail(storedEmail as string)
   }
 

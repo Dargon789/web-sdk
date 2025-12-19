@@ -1,5 +1,5 @@
 name: Run Tests
-
+# corepack use pnpm@10 
 on:
   pull_request:
     branches: [master]

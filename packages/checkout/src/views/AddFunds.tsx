@@ -18,9 +18,6 @@ export const AddFundsContent = () => {
 export const AddFundsContentTransak = () => {
   const { addFundsSettings = {} as AddFundsSettings } = useAddFundsModal()
 
-  const defaultNetworks =
-    'ethereum,mainnet,arbitrum,optimism,polygon,polygonzkevm,zksync,base,bnb,oasys,astar,avaxcchain,immutablezkevm'
-
   const {
     data: transakLinkData,
     isLoading: isLoadingTransakLink,
@@ -68,7 +65,7 @@ export const AddFundsContentTransak = () => {
 
   if (isLoadingTransakLink) {
     return (
-      <div className="flex items-center justify-center w-full px-4 pb-4 h-[200px]">
+      <div className="flex items-center justify-center w-full px-4 pb-4 h-full">
         <Spinner />
       </div>
     )
@@ -76,7 +73,7 @@ export const AddFundsContentTransak = () => {
 
   if (errorTransakLink) {
     return (
-      <div className="flex items-center justify-center w-full px-4 pb-4 h-[200px]">
+      <div className="flex items-center justify-center w-full px-4 pb-4 h-full">
         <Text color="text100">An error has occurred</Text>
       </div>
     )
