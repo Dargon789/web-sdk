@@ -1,12 +1,10 @@
-import { type SequenceIndexer, type TransactionReceipt } from '@0xsequence/indexer'
 import { TransactionOnRampProvider } from '@0xsequence/marketplace'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
 import type { Hex } from 'viem'
 
-import type { ForteConfig, TransakConfig } from '../contexts/CheckoutModal.js'
+import type { TransakConfig } from '../contexts/CheckoutModal.js'
 
-import { createGenericContext } from './genericContext.js'
-
-export type CreditCardProviders = 'transak' | 'forte'
+export type CreditCardProviders = 'sardine' | 'transak'
 
 export interface Collectible {
   tokenId?: string
@@ -17,6 +15,10 @@ export interface Collectible {
 
 export interface SupplementaryAnalyticsInfo {
   [key: string]: string
+}
+
+export interface SardineConfig {
+  approvedSpenderAddress?: string
 }
 
 export interface ActionButtons {
@@ -35,20 +37,19 @@ export interface SelectPaymentSettings {
   recipientAddress: string | Hex
   approvedSpenderAddress?: string
   transactionConfirmations?: number
-  onSuccess?: (txHash?: string) => void
+  onSuccess?: (txHash: string) => void
   onError?: (error: Error) => void
   onClose?: () => void
   onRampProvider?: TransactionOnRampProvider
   creditCardProviders?: string[]
   transakConfig?: TransakConfig
-  forteConfig?: ForteConfig
+  sardineConfig?: SardineConfig
   customProviderCallback?: (onSuccess: (txHash: string) => void, onError: (error: Error) => void, onClose: () => void) => void
   supplementaryAnalyticsInfo?: SupplementaryAnalyticsInfo
   skipNativeBalanceCheck?: boolean
   slippageBps?: number
   nativeTokenAddress?: string
   successActionButtons?: ActionButtons[]
-  onSuccessChecker?: (receipt: TransactionReceipt, indexerClient?: SequenceIndexer) => Promise<void>
 }
 
 type SelectPaymentModalContext = {

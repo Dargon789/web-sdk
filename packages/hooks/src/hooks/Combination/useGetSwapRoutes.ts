@@ -53,7 +53,9 @@ const getSwapRoutes = async (apiClient: SequenceAPIClient, args: GetSwapRoutesAr
  * Hook to fetch available swap routes for a given token.
  *
  * This hook uses React Query to fetch and cache swap routes from the Sequence API.
- * Stale time is set to one hour by default
+ * Stale time is set to one hour by default.
+ *
+ * This hook replaces useGetSwapPrices hook which has been removed in v5.2.3.
  *
  * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetSwapRoutes} for more detailed documentation.
  *

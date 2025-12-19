@@ -28,7 +28,7 @@
     "build": "pnpm run writeVersion && pnpm build:clean && pnpm build:css && pnpm build:esm && pnpm build:cjs",
     "build:cjs": "tsc --module commonjs --moduleResolution node --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/cjs && echo '{ \"type\": \"commonjs\" }' > dist/cjs/package.json",
     "build:esm": "tsc --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/esm",
-    "build:css": "node scripts/build-css.js",
+    "build:css": "node scripts/build-css.js && prettier --write src/styles.ts",
     "build:clean": "rimraf -g ./dist",
     "build:check": "attw --pack .",
     "dev": "pnpm run writeVersion && concurrently \"pnpm dev:tsc\"  \"pnpm watch-css\"",
@@ -39,6 +39,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@0xsequence/dapp-client": "3.0.0-beta.4",
     "@0xsequence/api": ">=2.3.38",
     "@0xsequence/auth": "^2.3.38",
     "@0xsequence/core": "^2.3.38",
