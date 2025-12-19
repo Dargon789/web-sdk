@@ -1,5 +1,50 @@
 # @0xsequence/immutable-connector
 
+## 5.4.8
+
+### Patch Changes
+
+- sequence.js dependency upgrades
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.8
+
+## 5.4.7
+
+### Patch Changes
+
+- sequence.js upgrades
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.7
+
+## 5.4.6
+
+### Patch Changes
+
+- Dependency updates
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.6
+
+## 5.4.5
+
+### Patch Changes
+
+- Fix for free items checkout, sequence dep upgrades
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.5
+
+## 5.4.4
+
+### Patch Changes
+
+- Sequence logo update
+
+- Updated dependencies []:
+  - @0xsequence/connect@5.4.4
+
 ## 5.4.3
 
 ### Patch Changes
