@@ -262,13 +262,33 @@ const DEVICE_EMOJIS = [
   ...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷🕸🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐓🦃🦚🦜🦢🦩🕊🐇🦝🦨🦡🦦🦥🐁🐀🐿🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿🍀🎍🎋🍃👣🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🥭🍍🥥🥝🍅🥑🥦🥬🥒🌶🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🥪🥙🧆🌮🌯🥗🥘🥫🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜👀👂👃👄👅👆👇👈👉👊👋👌👍👎👏👐👑👒👓🎯🎰🎱🎲🎳👾👯👺👻👽🏂🏃🏄'
 ]
 
+function getSecureRandomInt(maxExclusive: number): number {
+  if (maxExclusive <= 0) {
+    throw new Error('maxExclusive must be greater than 0')
+  }
+
+  // Use crypto.getRandomValues when available to avoid Math.random in security-sensitive contexts.
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    // Generate a 32-bit unsigned integer and scale it into [0, maxExclusive).
+    const array = new Uint32Array(1)
+    crypto.getRandomValues(array)
+    const randomUint32 = array[0]
+    const range = maxExclusive
+    const maxUint32Exclusive = 0xffffffff + 1
+    return Math.floor((randomUint32 / maxUint32Exclusive) * range)
+  }
+
+  // Fallback to Math.random if crypto.getRandomValues is not available.
+  return Math.floor(Math.random() * maxExclusive)
+}
+
 function randomName() {
   const wordlistSize = 2048
   const words = ethers.wordlists.en
 
-  const randomEmoji = DEVICE_EMOJIS[Math.floor(Math.random() * DEVICE_EMOJIS.length)]
-  const randomWord1 = words.getWord(Math.floor(Math.random() * wordlistSize))
-  const randomWord2 = words.getWord(Math.floor(Math.random() * wordlistSize))
+  const randomEmoji = DEVICE_EMOJIS[getSecureRandomInt(DEVICE_EMOJIS.length)]
+  const randomWord1 = words.getWord(getSecureRandomInt(wordlistSize))
+  const randomWord2 = words.getWord(getSecureRandomInt(wordlistSize))
 
   return `${randomEmoji} ${randomWord1} ${randomWord2}`
 }
