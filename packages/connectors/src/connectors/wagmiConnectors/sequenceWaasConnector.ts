@@ -1,10 +1,10 @@
-import { sequence } from '0xsequence'
-import { LocalStorageKey } from '@0xsequence/kit'
 import { SequenceWaaS, SequenceConfig, ExtendedSequenceConfig, Transaction, FeeOption } from '@0xsequence/waas'
-import { ethers } from 'ethers'
-import { v4 as uuidv4 } from 'uuid'
+import { LocalStorageKey } from '@0xsequence/kit'
 import { TransactionRejectedRpcError, UserRejectedRequestError, getAddress } from 'viem'
 import { createConnector, CreateConnectorFn } from 'wagmi'
+import { ethers } from 'ethers'
+import { v4 as uuidv4 } from 'uuid'
+import { sequence } from '0xsequence'
 
 export interface SequenceWaasConnectConfig {
   googleClientId?: string
@@ -18,22 +18,20 @@ export type BaseSequenceWaasConnectorOptions = SequenceConfig & SequenceWaasConn
 
 sequenceWaasWallet.type = 'sequence-waas' as const
 
-export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
+export type SequenceWaasConnector = CreateConnectorFn<SequenceWaasProvider, any, {}>
+
+export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions): SequenceWaasConnector {
   type Provider = SequenceWaasProvider
-  type Properties = {
-    sequenceWaas: SequenceWaaS
-    sequenceWaasProvider: SequenceWaasProvider
-    params: BaseSequenceWaasConnectorOptions
+  type Properties = { sequenceWaas: SequenceWaaS; sequenceWaasProvider: SequenceWaasProvider }
+
+  if (params.googleClientId) {
+    localStorage.setItem(LocalStorageKey.WaasGoogleClientID, params.googleClientId)
   }
-  type StorageItem = {
-    [LocalStorageKey.WaasSessionHash]: string
-    [LocalStorageKey.WaasActiveLoginType]: string
-    [LocalStorageKey.WaasGoogleIdToken]: string
-    [LocalStorageKey.WaasEmailIdToken]: string
-    [LocalStorageKey.WaasAppleIdToken]: string
-    [LocalStorageKey.WaasGoogleClientID]: string
-    [LocalStorageKey.WaasAppleClientID]: string
-    [LocalStorageKey.WaasAppleRedirectURI]: string
+  if (params.appleClientId) {
+    localStorage.setItem(LocalStorageKey.WaasAppleClientID, params.appleClientId)
+  }
+  if (params.appleRedirectURI) {
+    localStorage.setItem(LocalStorageKey.WaasAppleRedirectURI, params.appleRedirectURI)
   }
 
   const showConfirmationModal = params.enableConfirmationModal ?? false
@@ -63,51 +61,40 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
     sequenceWaasProvider.updateNetwork(ethers.providers.getNetwork(chainId))
   }
 
-  return createConnector<Provider, Properties, StorageItem>(config => ({
+  return createConnector<Provider, Properties>(config => ({
     id: `sequence-waas`,
     name: 'Sequence WaaS',
     type: sequenceWaasWallet.type,
     sequenceWaas,
     sequenceWaasProvider,
-    params,
-
     async setup() {
-      if (typeof window !== 'object') {
-        // (for SSR) only run in browser client
-        return
-      }
-
-      const provider = await this.getProvider()
-
-      if (params.googleClientId) {
-        await config.storage?.setItem(LocalStorageKey.WaasGoogleClientID, params.googleClientId)
-      }
-      if (params.appleClientId) {
-        await config.storage?.setItem(LocalStorageKey.WaasAppleClientID, params.appleClientId)
-      }
-      if (params.appleRedirectURI) {
-        await config.storage?.setItem(LocalStorageKey.WaasAppleRedirectURI, params.appleRedirectURI)
-      }
-
-      const isConnected = await provider.sequenceWaas.isSignedIn()
+      const isConnected = await sequenceWaas.isSignedIn()
       if (!isConnected) {
-        const sessionHash = await provider.sequenceWaas.getSessionHash()
-        await config.storage?.setItem(LocalStorageKey.WaasSessionHash, sessionHash)
+        const sessionHash = await sequenceWaas.getSessionHash()
+        localStorage.setItem(LocalStorageKey.WaasSessionHash, sessionHash)
       }
 
-      provider.on('disconnect', () => {
+      sequenceWaasProvider.on('disconnect', () => {
         this.onDisconnect()
       })
     },
+    async connect({ chainId, isReconnecting } = {}) {
+      const isSignedIn = await sequenceWaas.isSignedIn()
 
-    async connect(_connectInfo) {
-      const provider = await this.getProvider()
-      const isSignedIn = await provider.sequenceWaas.isSignedIn()
+      let accounts: `0x${string}`[] = []
+      chainId = sequenceWaasProvider.getChainId()
 
-      if (!isSignedIn) {
-        const googleIdToken = await config.storage?.getItem(LocalStorageKey.WaasGoogleIdToken)
-        const emailIdToken = await config.storage?.getItem(LocalStorageKey.WaasEmailIdToken)
-        const appleIdToken = await config.storage?.getItem(LocalStorageKey.WaasAppleIdToken)
+      if (isSignedIn) {
+        try {
+          accounts = await this.getAccounts()
+        } catch (e) {
+          console.log(e)
+          await this.disconnect()
+        }
+      } else {
+        const googleIdToken = localStorage.getItem(LocalStorageKey.WaasGoogleIdToken)
+        const emailIdToken = localStorage.getItem(LocalStorageKey.WaasEmailIdToken)
+        const appleIdToken = localStorage.getItem(LocalStorageKey.WaasAppleIdToken)
 
         let idToken: string | undefined
 
@@ -121,81 +108,68 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
 
         if (idToken) {
           try {
-            await provider.sequenceWaas.signIn({ idToken }, randomName())
+            await sequenceWaas.signIn({ idToken }, randomName())
           } catch (e) {
             console.log(e)
             await this.disconnect()
           }
 
-          const accounts = await this.getAccounts()
+          accounts = await this.getAccounts()
 
           if (accounts.length) {
-            await config.storage?.setItem(LocalStorageKey.WaasActiveLoginType, params.loginType)
+            localStorage.setItem(LocalStorageKey.WaasActiveLoginType, params.loginType)
           }
         }
 
-        await config.storage?.removeItem(LocalStorageKey.WaasGoogleIdToken)
-        await config.storage?.removeItem(LocalStorageKey.WaasEmailIdToken)
-        await config.storage?.removeItem(LocalStorageKey.WaasAppleIdToken)
+        localStorage.removeItem(LocalStorageKey.WaasGoogleIdToken)
+        localStorage.removeItem(LocalStorageKey.WaasEmailIdToken)
+        localStorage.removeItem(LocalStorageKey.WaasAppleIdToken)
       }
 
       return {
-        accounts: await this.getAccounts(),
-        chainId: await this.getChainId()
+        accounts,
+        chainId
       }
     },
-
     async disconnect() {
-      const provider = await this.getProvider()
-
       try {
-        await provider.sequenceWaas.dropSession({ sessionId: await provider.sequenceWaas.getSessionId() })
+        await sequenceWaas.dropSession({ sessionId: await sequenceWaas.getSessionId() })
       } catch (e) {
         console.log(e)
       }
 
-      await config.storage?.removeItem(LocalStorageKey.WaasSessionHash)
-      await config.storage?.removeItem(LocalStorageKey.WaasActiveLoginType)
+      localStorage.removeItem(LocalStorageKey.WaasSessionHash)
+      localStorage.removeItem(LocalStorageKey.WaasActiveLoginType)
 
-      const sessionHash = await provider.sequenceWaas.getSessionHash()
-      await config.storage?.setItem(LocalStorageKey.WaasSessionHash, sessionHash)
+      const sessionHash = await sequenceWaas.getSessionHash()
+      localStorage.setItem(LocalStorageKey.WaasSessionHash, sessionHash)
     },
-
     async getAccounts() {
-      const provider = await this.getProvider()
-
       try {
-        const isSignedIn = await provider.sequenceWaas.isSignedIn()
-
+        const isSignedIn = await sequenceWaas.isSignedIn()
         if (isSignedIn) {
-          const address = await provider.sequenceWaas.getAddress()
+          const address = await sequenceWaas.getAddress()
           return [getAddress(address)]
         }
-      } catch (err) {
+      } catch (e) {
         return []
       }
-
       return []
     },
-
     async getProvider(): Promise<SequenceWaasProvider> {
       return sequenceWaasProvider
     },
-
     async isAuthorized() {
-      const provider = await this.getProvider()
-
-      const activeWaasOption = await config.storage?.getItem(LocalStorageKey.WaasActiveLoginType)
+      const activeWaasOption = localStorage.getItem(LocalStorageKey.WaasActiveLoginType)
       if (params.loginType !== activeWaasOption) {
         return false
       }
       try {
-        return await provider.sequenceWaas.isSignedIn()
+        return await sequenceWaas.isSignedIn()
       } catch (e) {
         return false
       }
     },
-
     async switchChain({ chainId }) {
       const chain = config.chains.find(c => c.id === chainId) || config.chains[0]
 
@@ -205,26 +179,20 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
 
       return chain
     },
-
     async getChainId() {
       const provider = await this.getProvider()
       return provider.getChainId()
     },
-
     async onAccountsChanged(accounts) {
       return { account: accounts[0] }
     },
-
     async onChainChanged(chain) {
-      // const provider = await this.getProvider()
+      const provider = await this.getProvider()
 
       config.emitter.emit('change', { chainId: normalizeChainId(chain) })
-
-      // provider.setDefaultChainId(normalizeChainId(chain))
+      provider.setDefaultChainId(normalizeChainId(chain))
     },
-
-    async onConnect(_connectInfo) {},
-
+    async onConnect(connectinfo) {},
     async onDisconnect() {
       await this.disconnect()
     }
@@ -241,7 +209,6 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
     super(network)
   }
 
-  triggerSessionValidation: (() => void ) | undefined
   requestConfirmationHandler: WaasRequestConfirmationHandler | undefined
   feeConfirmationHandler: WaasFeeOptionConfirmationHandler | undefined
 
@@ -254,26 +221,8 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
   updateNetwork(network: ethers.providers.Network) {
     this.currentNetwork = network
   }
-  async checkAndValidateSession() {
-    let isSessionValid = false
-    try {
-      isSessionValid = await this.sequenceWaas.isSessionValid()
-    } catch(e) {
-      console.error('session valid error', e)
-      isSessionValid = false
-    } 
 
-    console.log('is session valid.....', isSessionValid)
-    if (!isSessionValid) {
-      this.triggerSessionValidation && this.triggerSessionValidation()
-      console.log('validate sessions s....')
-      await this.sequenceWaas.validateSession()
-      console.log('validate sessions e....')
-      await this.sequenceWaas.waitForSessionValid()
-      console.log('finished waiting for validation')
-    }
-  }
-  async request({ method, params }: { method: string; params?: any[] }) {
+  async request({ method, params }: { method: string; params: any[] }) {
     if (method === 'eth_accounts') {
       const address = await this.sequenceWaas.getAddress()
       const account = getAddress(address)
@@ -281,7 +230,7 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
     }
 
     if (method === 'eth_sendTransaction') {
-      const txns: ethers.Transaction[] = await ethers.utils.resolveProperties(params?.[0])
+      const txns: ethers.Transaction[] = await ethers.utils.resolveProperties(params[0])
 
       const chainId = this.getChainId()
 
@@ -323,10 +272,8 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
         }
       }
 
-      // await this.checkAndValidateSession()
-
       const response = await this.sequenceWaas.sendTransaction({
-        transactions: [await ethers.utils.resolveProperties(params?.[0])],
+        transactions: [await ethers.utils.resolveProperties(params[0])],
         network: chainId,
         transactionsFeeOption: selectedFeeOption,
         transactionsFeeQuote: feeOptionsResponse?.feeQuote
@@ -356,7 +303,7 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
         const id = uuidv4()
         const confirmation = await this.requestConfirmationHandler.confirmSignMessageRequest(
           id,
-          params?.[0],
+          params[0],
           this.currentNetwork.chainId
         )
 
@@ -368,11 +315,7 @@ export class SequenceWaasProvider extends ethers.providers.BaseProvider implemen
           throw new UserRejectedRequestError(new Error('User confirmation ids do not match'))
         }
       }
-
-      console.log('b4 check and validate')
-      // await this.checkAndValidateSession()
-      console.log('b4 signing')
-      const sig = await this.sequenceWaas.signMessage({ message: params?.[0], network: this.currentNetwork.chainId })
+      const sig = await this.sequenceWaas.signMessage({ message: params[0], network: this.currentNetwork.chainId })
 
       return sig.data.signature
     }
