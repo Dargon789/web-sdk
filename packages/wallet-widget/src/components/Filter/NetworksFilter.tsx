@@ -1,39 +1,33 @@
-import { Text } from '@0xsequence/design-system'
 import { useObservable } from 'micro-observables'
 
-import { useSettings } from '../../hooks'
-import { MediaIconWrapper } from '../IconWrappers'
-import { ListCardSelect } from '../ListCard/ListCardSelect'
-
-import { NetworkImageCustom } from './NetworkImageCustom'
-import { NetworkRow } from './NetworkRow'
+import { useSettings } from '../../hooks/index.js'
+import { ListCardNetwork } from '../ListCard/ListCardNetwork.js'
 
 export const NetworksFilter = () => {
   const { selectedNetworksObservable, setSelectedNetworks, allNetworks } = useSettings()
   const selectedNetworks = useObservable(selectedNetworksObservable)
-  // NetworksFilter is using an observable since its used in settings detached from FilterMenu
+
+  const onClickNetwork = (chainId: number) => {
+    if (selectedNetworks.length === allNetworks.length) {
+          setSelectedNetworks([chainId])
+        }
+    else if (selectedNetworks.includes(chainId)) {
+            setSelectedNetworks(selectedNetworks.filter(n => n !== chainId))
+          }
+    else {
+            setSelectedNetworks([...selectedNetworks, chainId])
+          }
+
+  }
 
   return (
     <div className="flex flex-col bg-background-primary gap-3">
-      {allNetworks.length > 1 && (
-        <ListCardSelect key="all" isSelected={selectedNetworks.length > 1} onClick={() => setSelectedNetworks([])}>
-          <MediaIconWrapper
-            iconList={allNetworks.map(network => (
-              <NetworkImageCustom chainId={network} style={{ width: '32px', height: '32px' }} />
-            ))}
-            size="sm"
-          />
-          <Text color="primary" fontWeight="medium" variant="normal">
-            All
-          </Text>
-        </ListCardSelect>
-      )}
       {allNetworks.map(chainId => (
-        <NetworkRow
+        <ListCardNetwork
           key={chainId}
           chainId={chainId}
-          isSelected={selectedNetworks.length === 1 && selectedNetworks.includes(chainId)}
-          onClick={() => setSelectedNetworks([chainId])}
+          isSelected={selectedNetworks.length !== allNetworks.length && selectedNetworks.includes(chainId)}
+          onClick={() => onClickNetwork(chainId)}
         />
       ))}
     </div>

@@ -1,5 +1,4 @@
-import { Token } from '@0xsequence/api'
-import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/connect'
+import type { Token } from '@0xsequence/api'
 import {
   ArrowRightIcon,
   Button,
@@ -12,14 +11,15 @@ import {
   TokenImage
 } from '@0xsequence/design-system'
 import { useGetCoinPrices, useGetCollectiblePrices, useGetExchangeRate } from '@0xsequence/hooks'
-import { Transaction, TxnTransfer, TxnTransferType } from '@0xsequence/indexer'
+import { TxnTransferType, type Transaction, type TxnTransfer } from '@0xsequence/indexer'
+import { compareAddress, formatDisplay, getNativeTokenInfoByChainId, truncateAtIndex } from '@0xsequence/web-sdk-core'
 import dayjs from 'dayjs'
 import { formatUnits, zeroAddress } from 'viem'
 import { useConfig } from 'wagmi'
 
-import { CopyButton } from '../../components/CopyButton'
-import { NetworkBadge } from '../../components/NetworkBadge'
-import { useSettings } from '../../hooks'
+import { CopyButton } from '../../components/CopyButton.js'
+import { NetworkBadge } from '../../components/NetworkBadge.js'
+import { useSettings } from '../../hooks/index.js'
 
 interface TransactionDetailProps {
   transaction: Transaction
@@ -88,8 +88,7 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
   }
   const Transfer = ({ transfer }: TransferProps) => {
     const recipientAddress = transfer.to
-    const recipientAddressFormatted =
-      recipientAddress.substring(0, 10) + '...' + recipientAddress.substring(transfer.to.length - 4, transfer.to.length)
+    const recipientAddressFormatted = truncateAtIndex(recipientAddress, 10)
     const isNativeToken = compareAddress(transfer?.contractInfo?.address || '', zeroAddress)
     const isCollectible = transfer.contractType === 'ERC721' || transfer.contractType === 'ERC1155'
     const tokenId = transfer.tokenIds?.[0]
@@ -112,9 +111,14 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
         style={{ flexBasis: '100%' }}
       >
         <GradientAvatar size="sm" address={recipientAddress} />
-        <Text variant="xsmall" fontWeight="bold" color="primary">
-          {recipientAddressFormatted}
-        </Text>
+        <div className="flex flex-row justify-between items-center w-full">
+          <Text variant="xsmall" fontWeight="bold" color="primary">
+            {recipientAddressFormatted}
+          </Text>
+          <div className="px-1">
+            <CopyButton text={recipientAddress} />
+          </div>
+        </div>
       </div>
     )
 
@@ -126,56 +130,72 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
       balanceDisplayed: string
       fiatValue: string
       fiatPrice: number
-    }) => (
-      <div
-        className={`flex flex-col justify-center items-start gap-2 rounded-xl bg-button-glass p-2 ${!isCollectible && 'h-12'}`}
-        style={{ flexBasis: '100%' }}
-      >
-        {isCollectible && (
-          <div className="flex flex-row justify-start items-center gap-2">
-            <TokenImage src={contractLogoURI} symbol={contractSymbol} size="sm" />
-            <Text
-              variant="xsmall"
-              fontWeight="bold"
-              color="primary"
-              style={{
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden'
-              }}
-            >
-              {contractSymbol}
-            </Text>
-          </div>
-        )}
-        <div className="flex flex-row justify-start items-center gap-2">
-          <TokenImage src={tokenLogoURI} symbol={tokenSymbol} size="sm" />
-          <div className="flex gap-0.5 flex-col items-start justify-center">
-            <Text
-              variant="xsmall"
-              fontWeight={isCollectible ? 'normal' : 'bold'}
-              color="primary"
-              style={{
-                display: '-webkit-box',
-                WebkitLineClamp: 1,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden'
-              }}
-            >
-              {`${balanceDisplayed} ${tokenSymbol}`}
-            </Text>
-            {arePricesLoading ? (
-              <Skeleton style={{ width: '44px', height: '12px' }} />
-            ) : (
-              <Text variant="xsmall" fontWeight="bold" color="muted">
-                {fiatPrice ? `${fiatCurrency.sign}${fiatValue}` : ''}
+    }) => {
+      const senderAddress = transfer.from
+      const senderAddressFormatted = truncateAtIndex(senderAddress, 10)
+
+      return (
+        <div
+          className={`flex flex-col justify-center items-start gap-2 rounded-xl bg-button-glass p-2`}
+          style={{ flexBasis: '100%' }}
+        >
+          <div className="flex flex-row items-center gap-2 w-full">
+            <GradientAvatar size="sm" address={senderAddress} />
+            <div className="flex flex-row justify-between items-center w-full">
+              <Text variant="xsmall" fontWeight="bold" color="primary">
+                {senderAddressFormatted}
               </Text>
-            )}
+              <div className="px-1">
+                <CopyButton text={senderAddress} />
+              </div>
+            </div>
+          </div>
+          {isCollectible && (
+            <div className="flex flex-row justify-start items-center gap-2">
+              <TokenImage src={contractLogoURI} symbol={contractSymbol} size="sm" />
+              <Text
+                variant="xsmall"
+                fontWeight="bold"
+                color="primary"
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}
+              >
+                {contractSymbol}
+              </Text>
+            </div>
+          )}
+          <div className="flex flex-row justify-start items-center gap-2">
+            <TokenImage src={tokenLogoURI} symbol={tokenSymbol} size="sm" />
+            <div className="flex gap-0.5 flex-col items-start justify-center">
+              <Text
+                variant="xsmall"
+                fontWeight={isCollectible ? 'normal' : 'bold'}
+                color="primary"
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}
+              >
+                {`${balanceDisplayed} ${tokenSymbol}`}
+              </Text>
+              {arePricesLoading ? (
+                <Skeleton style={{ width: '44px', height: '12px' }} />
+              ) : (
+                <Text variant="xsmall" fontWeight="bold" color="muted">
+                  {fiatPrice ? `${fiatCurrency.sign}${fiatValue}` : ''}
+                </Text>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    )
+      )
+    }
 
     return (
       <>
@@ -227,8 +247,8 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
   }
 
   return (
-    <div className="flex p-5 pt-3 flex-col items-center justify-center gap-10 mt-5">
-      <div className="flex mt-6 flex-col justify-center items-center gap-1">
+    <div className="flex p-4 pt-3 flex-col items-center justify-center gap-10">
+      <div className="flex flex-col justify-center items-center gap-1">
         <Text variant="normal" fontWeight="medium" color="primary">
           Transaction details
         </Text>
@@ -240,7 +260,7 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
       <div className="flex flex-col items-center justify-center gap-4 w-full p-4 bg-background-secondary rounded-xl">
         <div className="flex w-full gap-1 flex-row items-center justify-start">
           <Text variant="normal" fontWeight="medium" color="muted">
-            Transfer
+            Transfers
           </Text>
           <NetworkImage chainId={transaction.chainId} size="xs" />
         </div>
@@ -275,7 +295,7 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
           <Text variant="normal" color="primary" fontWeight="medium" style={{ overflowWrap: 'anywhere' }}>
             {transaction.txnHash}
           </Text>
-          <CopyButton className="mt-2" buttonVariant="with-label" text={transaction.txnHash} />
+          <CopyButton className="mt-2" includeLabel text={transaction.txnHash} />
         </div>
       </div>
     </div>

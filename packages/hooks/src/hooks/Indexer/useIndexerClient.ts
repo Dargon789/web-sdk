@@ -2,9 +2,9 @@ import { SequenceIndexer } from '@0xsequence/indexer'
 import { ChainId, networks } from '@0xsequence/network'
 import { useMemo } from 'react'
 
-import { envString } from '../../utils/envstring'
-import { useConfig } from '../useConfig'
-import { useNetwork } from '../useNetwork'
+import { envString } from '../../utils/envstring.js'
+import { useConfig } from '../useConfig.js'
+import { useNetwork } from '../useNetwork.js'
 
 /**
  * Hook that creates and manages a Sequence Indexer client for a specific chain.
@@ -97,7 +97,6 @@ export const useIndexerClient = (chainId: ChainId) => {
  *
  * @throws Error if an indexer client cannot be created for any of the specified chain IDs
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useIndexerClients} for more detailed documentation.
  *
  * @example
  * ```typescript

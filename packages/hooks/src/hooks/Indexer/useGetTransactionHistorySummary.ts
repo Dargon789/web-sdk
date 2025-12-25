@@ -1,11 +1,11 @@
-import { SequenceIndexer, Transaction } from '@0xsequence/indexer'
+import type { SequenceIndexer, Transaction } from '@0xsequence/indexer'
 import { useQuery } from '@tanstack/react-query'
 import { getAddress } from 'viem'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
 
-import { useIndexerClients } from './useIndexerClient'
+import { useIndexerClients } from './useIndexerClient.js'
 
 export interface GetTransactionHistorySummaryArgs {
   accountAddresses: string[]
@@ -60,7 +60,7 @@ const getTransactionHistorySummary = async (
  * @param getTransactionHistorySummaryArgs.chainIds - Array of chain IDs to fetch transactions from. Each chain ID will be queried in parallel.
  * @param options - Optional configuration for the hook behavior
  * @param options.disabled - If true, disables the query
- * @param options.retry - If true (default), retries failed requests
+ * @param options.retry - If false, retries failed requests
  *
  * @returns A React Query result object containing:
  * - data: Array of Transaction objects combined from all specified chains, each containing:
@@ -73,7 +73,7 @@ const getTransactionHistorySummary = async (
  *   - metaTxnID: Optional meta transaction ID
  * - Other standard React Query properties (isLoading, isError, etc.)
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetTransactionHistorySummary} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetTransactionHistorySummary} for more detailed documentation.
  *
  * @example
  * ```tsx
@@ -125,7 +125,7 @@ export const useGetTransactionHistorySummary = (
     queryFn: async () => {
       return await getTransactionHistorySummary(indexerClients, getTransactionHistorySummaryArgs)
     },
-    retry: options?.retry ?? true,
+    retry: options?.retry ?? false,
     staleTime: time.oneSecond * 30,
     refetchOnMount: true,
     enabled:

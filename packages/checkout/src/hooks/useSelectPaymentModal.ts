@@ -1,4 +1,4 @@
-import { SelectPaymentSettings, useSelectPaymentContext } from '../contexts/SelectPaymentModal'
+import { useSelectPaymentContext, type SelectPaymentSettings } from '../contexts/SelectPaymentModal.js'
 
 /**
  * Return type for the useSelectPaymentModal hook.
@@ -23,7 +23,7 @@ type UseSelectPaymentModalReturnType = {
  * - Pay with credit/debit card
  * - Receive funds from another wallet
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useSelectPaymentModal} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/checkout-sdk/hooks/useSelectPaymentModal} for more detailed documentation.
  *
  * @returns An object containing functions to control the Payment Selection modal and its state {@link UseSelectPaymentModalReturnType}
  *
@@ -79,11 +79,7 @@ type UseSelectPaymentModalReturnType = {
  *       recipientAddress: address,
  *       currencyAddress,
  *       collectionAddress,
- *       creditCardProviders: ['sardine', 'transak'],
- *       transakConfig: {
- *         contractId: 'your-contract-id',
- *         apiKey: 'your-api-key'
- *       },
+ *       creditCardProviders: ['transak'],
  *       copyrightText: 'ⓒ2024 Your Company',
  *       onSuccess: (txnHash: string) => {
  *         console.log('success!', txnHash)

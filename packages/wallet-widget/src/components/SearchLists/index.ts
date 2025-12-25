@@ -1,2 +1,1 @@
-export * from './TokenList'
-export * from './CollectiblesList'
+export * from './GeneralList.js'

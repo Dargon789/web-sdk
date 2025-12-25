@@ -4,10 +4,19 @@ import { Transaction } from '@0xsequence/indexer'
 
 import { createGenericContext } from './genericContext'
 
+export interface CollectionDetailsParams {
+  contractAddress: string
+  chainId: number
+}
+
+export interface CollectionDetailsNavigation {
+  location: 'collection-details'
+  params: CollectionDetailsParams
+}
+
 export interface CoinDetailsParams {
   contractAddress: string
   chainId: number
-  accountAddress: string
 }
 
 export interface CoinDetailsNavigation {
@@ -19,7 +28,6 @@ export interface CollectibleDetailsParams {
   contractAddress: string
   chainId: number
   tokenId: string
-  accountAddress: string
 }
 
 export interface CollectibleDetailsNavigation {
@@ -90,8 +98,10 @@ export interface SendCollectibleNavigation {
 export interface BasicNavigation {
   location:
     | 'home'
-    | 'send-general'
+    | 'send'
     | 'swap'
+    | 'receive'
+    | 'buy'
     | 'receive'
     | 'history'
     | 'legacy-settings'
@@ -100,12 +110,8 @@ export interface BasicNavigation {
     | 'legacy-settings-networks'
     | 'settings'
     | 'settings-wallets'
-    | 'settings-networks'
-    | 'settings-currency'
     | 'settings-profiles'
     | 'settings-apps'
-    | 'settings-preferences'
-    | 'connect-dapp'
     | 'search'
     | 'search-tokens'
     | 'search-collectibles'
@@ -115,6 +121,7 @@ export type Navigation =
   | BasicNavigation
   | CoinDetailsNavigation
   | CollectibleDetailsNavigation
+  | CollectionDetailsNavigation
   | TransactionDetailsNavigation
   | SearchViewAllNavigation
   | SendCoinNavigation
@@ -131,6 +138,4 @@ type NavigationContext = {
   setIsBackButtonEnabled: (enabled: boolean) => void
 }
 
-const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
-
-export { useNavigationContext, NavigationContextProvider }
+export const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()

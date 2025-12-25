@@ -1,181 +1,147 @@
-# Sequence Web SDK 🧰
+# Sequence Connect SDK
 
-Sequence Web SDK 🧰 is a library enabling developers to easily integrate web3 wallets in their app. It is based on [wagmi](https://wagmi.sh/) and supports all wagmi features.
+[@0xsequence/connect](https://www.npmjs.com/package/@0xsequence/connect/v/0.0.0-20250924112110) is the React Hooks SDK powering the Sequence wallet experiences. It supports both the Ecosystem (v3) wallet connector and the WaaS connector—configure which one you want per app. Highlights:
 
-- Connect via social logins eg: facebook, google, discord, etc...! 🔐🪪
-- Connect to popular web3 wallets eg: walletConnect, metamask ! 🦊 ⛓️
-- Full-fledged embedded wallet for coins and collectibles 👛 🖼️ 🪙
-- Fiat onramp 💵 💶 💴 💷
+- Social logins plus passkeys with Sequence wallets
+- Works with Sequence wallets or external web3 wallets (WalletConnect, MetaMask, etc.)
+- Inline or modal UI, customizable themes
+- Checkout and fiat on-ramp support
 
-View the [demo](https://0xsequence.github.io/web-sdk)! 👀
+## Key Features
 
-## Quick Start
+- Social auth (Email, Google, Apple)
+- Passkeys
+- Smart sessions management
+- Customizable theming
+- Built in UI components
 
-### Installing the Library
+# Quickstart
 
-`@0xsequence/connect` is the core package. Any extra modules require this package to be installed first.
-To install this package:
+1. Install the package:
 
 ```bash
-npm install @0xsequence/connect wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+npm install @0xsequence/connect
 # or
-pnpm install @0xsequence/connect wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+pnpm install @0xsequence/connect
 # or
-yarn add @0xsequence/connect wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+yarn add @0xsequence/connect
 ```
 
-### Setting up the Library
+2. Create the wallet configuration
 
-#### The 'easy' way
+```typescript [config.ts]
+import { createConfig, createContractPermission } from '@0xsequence/connect'
+import { parseEther, parseUnits } from 'viem'
 
-- `createConfig(walletType, options)` method is used to create your initial config and prepare sensible defaults that can be overridden
+export const USDC_ADDRESS_ARBITRUM = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
+export const AAVE_V3_POOL_ADDRESS_ARBITRUM = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 
-`walletType` is either 'waas' or 'universal'
-
-```ts
-interface CreateConfigOptions {
-  appName: string
-  projectAccessKey: string
-  chainIds?: number[]
-  defaultChainId?: number
-  disableAnalytics?: boolean
-  defaultTheme?: Theme
-  position?: ModalPosition
-  signIn?: {
-    logoUrl?: string
-    projectName?: string
-    useMock?: boolean
-  }
-  displayedAssets?: Array<{
-    contractAddress: string
-    chainId: number
-  }>
-  ethAuth?: EthAuthSettings
-
-  wagmiConfig?: WagmiConfig // optional wagmiConfig overrides
-
-  waasConfigKey: string
-  enableConfirmationModal?: boolean
-
-  walletConnect?:
-    | boolean
-    | {
-        projectId: string
-      }
-
-  google?:
-    | boolean
-    | {
-        clientId: string
-      }
-
-  apple?:
-    | boolean
-    | {
-        clientId: string
-        rediretURI: string
-      }
-
-  email?:
-    | boolean
-    | {
-        legacyEmailAuth?: boolean
-      }
-}
-```
-
-```js
-import { SequenceConnect, createConfig } from '@0xsequence/connect'
-
-import Content from './components/Content'
-
-const config = createConfig('waas', {
-  projectAccessKey: '<your-project-access-key>',
-  chainIds: [1, 137],
-  defaultChainId: 1,
-  appName: 'Demo Dapp',
-  waasConfigKey: '<your-waas-config-key>',
-
-  google: {
-    clientId: '<your-google-client-id>'
+export const config: any = createConfig({
+  projectAccessKey: 'AQAAAAAAAABtDHG1It7lxRF_9bbxw4diip8',
+  signIn: {
+    projectName: 'Sequence Web SDK Demo'
   },
-
-  apple: {
-    clientId: '<your-apple-client-id>',
-    redirectUrl: '...'
-  },
-
-  walletConnect: {
-    projectId: '<your-wallet-connect-id>'
+  walletUrl: 'https://next-acme-wallet.sequence-dev.app/',
+  dappOrigin: window.location.origin,
+  appName: 'Sequence Web SDK Demo',
+  chainIds: [42161],
+  defaultChainId: 42161,
+  google: true,
+  apple: true,
+  email: true,
+  explicitSessionParams: {
+    chainId: 42161,
+    nativeTokenSpending: {
+      valueLimit: parseEther('0.01') // Allow spending up to 0.01 ETH for gas fees
+    },
+    expiresIn: {
+      hours: 24 // Session lasts for 24 hours
+    },
+    permissions: [
+      createContractPermission({
+        address: AAVE_V3_POOL_ADDRESS_ARBITRUM,
+        functionSignature: 'function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode)',
+        rules: [
+          {
+            param: 'asset',
+            type: 'address',
+            condition: 'EQUAL',
+            value: USDC_ADDRESS_ARBITRUM
+          },
+          {
+            param: 'amount',
+            type: 'uint256',
+            condition: 'LESS_THAN_OR_EQUAL',
+            value: parseUnits('100', 6), // Max cumulative amount of 100 USDC
+            cumulative: true
+          }
+        ]
+      })
+    ]
   }
 })
+```
 
-function App() {
+For WaaS, use `createConfig('waas', { ... })` and include WaaS-specific options such as:
+
+- `waasConfigKey`
+- social auth providers (google/email/apple/X)
+- `walletConnect` projectId
+- `enableConfirmationModal`
+- `additionalWallets` (e.g., Immutable passport)
+
+3. Wrap your app with the SequenceConnect provider.
+
+```typescript [main.tsx]
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+
+import App from "./App";
+import { config } from "./config";
+import { SequenceConnect } from "@0xsequence/connect";
+
+function Dapp() {
   return (
     <SequenceConnect config={config}>
-      <Content />
+      <App />
     </SequenceConnect>
-  )
+  );
 }
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <Dapp />
+  </React.StrictMode>
+);
 ```
 
-#### Need more customization?
+4. Trigger the connection modal
 
-React apps must be wrapped by a Wagmi client and the SequenceWalletProvider components. It is important that the Wagmi wrapper comes before the Sequence Web SDK wrapper.
-
-```js
-import Content from './components/Content'
-import { SequenceConnectProvider, getDefaultConnectors, getDefaultChains } from '@0xsequence/connect'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createConfig, http, WagmiProvider } from 'wagmi'
-import { mainnet, polygon, Chain } from 'wagmi/chains'
-
-const projectAccessKey = 'xyz'
-
-const chains = getDefaultChains(/* optional array of chain ids to filter */)
-
-const transports = {}
-
-chains.forEach(chain => {
-  transports[chain.id] = http()
-})
-
-const connectors = getDefaultConnectors('universal', {
-  projectAccessKey,
-  appName: 'demo app',
-  defaultChainId: 137,
-
-  walletConnect: {
-    projectId: '<your-wallet-connect-project-id>'
-  }
-})
-
-const config = createConfig({
-  chains,
-  transports,
-  connectors
-})
-
-const queryClient = new QueryClient()
+```typescript [App.tsx]
+import './App.css'
+import { useOpenConnectModal } from '@0xsequence/connect'
 
 function App() {
+  const {setOpenConnectModal} = useOpenConnectModal()
+
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <SequenceConnectProvider>
-          <Content />
-        </SequenceConnectProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <>
+      <button onClick={() => setOpenConnectModal(true)}>Connect</button>
+    </>
   )
 }
+
+export default App
 ```
 
-### Opening the Sign in Modal
-
-<div align="center">
-  <img src="public/docs/sign-in-modal.png">
+<div align="center" style="width: 50%; height: 50%;">
+  <img src="../../public/docs/connect-modal.png">
 </div>
+
+### Learn more
+
+For more information, please visit the [Connect SDK documentation](https://docs.sequence.xyz/sdk/web/wallet-sdk/ecosystem/getting-started). Wallet selection is done through a modal by default; the inline examples below show how to embed it when preferred.
 
 Wallet selection is done through a modal which can be called programmatically.
 
@@ -193,6 +159,76 @@ const MyReactComponent = () => {
   }
 
   return <>{!isConnected && <button onClick={onClick}>Sign in</button>}</>
+}
+```
+
+### Inline Connect UI
+
+<div align="center">
+  <img src="public/docs/inline-connect.png" alt="Inline Connect UI">
+</div>
+
+Instead of using a modal, you can render the connect UI inline within your layout using the `SequenceConnectInline` component. This is perfect for custom layouts, embedded wallet experiences, or when you want the connect UI to be part of your page flow.
+
+```js
+import { SequenceConnectInline, createConfig } from '@0xsequence/connect'
+import { useNavigate } from 'react-router-dom'
+
+const config = createConfig('waas', {
+  projectAccessKey: '<your-project-access-key>',
+  chainIds: [1, 137],
+  defaultChainId: 1,
+  appName: 'Demo Dapp',
+  waasConfigKey: '<your-waas-config-key>',
+
+  // Optional: callback fired when wallet connects successfully
+  onConnectSuccess: address => {
+    console.log('Connected wallet:', address)
+    // Redirect or perform other actions
+  },
+
+  google: { clientId: '<your-google-client-id>' },
+  email: true
+})
+
+function InlinePage() {
+  return (
+    <div className="my-custom-layout">
+      <h1>Connect Your Wallet</h1>
+      <SequenceConnectInline config={config} />
+    </div>
+  )
+}
+```
+
+#### Key Differences from Modal UI:
+
+- **No padding/margins**: The inline UI removes the default padding designed for modal display
+- **Full width**: The component fills its container width
+- **No modal backdrop**: Renders directly in your layout
+- **Custom positioning**: You control the placement with your own CSS/layout
+
+#### Advanced: Using SequenceConnectInlineProvider
+
+For more control, you can use the lower-level `SequenceConnectInlineProvider`:
+
+```js
+import { SequenceConnectInlineProvider } from '@0xsequence/connect'
+import { WagmiProvider } from 'wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
+
+function App() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <SequenceConnectInlineProvider config={connectConfig}>
+          <YourContent />
+        </SequenceConnectInlineProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
 }
 ```
 
@@ -247,6 +283,11 @@ The settings are described in more detailed in the Sequence Web SDK documentatio
       }
     ],
     readOnlyNetworks: [10],
+    // callback fired when wallet connects successfully
+    onConnectSuccess: (address) => {
+      console.log('Wallet connected:', address)
+      // Perform actions like redirecting, analytics tracking, etc.
+    },
   }
 
   <SequenceConnectProvider config={connectConfig}>
@@ -274,6 +315,18 @@ The React example can be used to test the library locally.
 1. `pnpm install`
 2. From the root folder, run `pnpm build` to build the packages.
 3. From the root folder, run `pnpm dev:react` or `pnpm dev:next` to run the examples.
+
+# Setting specific functionalities to dev
+
+Specific functionalities such as the APIs, credit card processors can be set to use the dev environments through the variables in `globalThis`
+
+```
+__WEB_SDK_DEV_GLOBAL__ : sets everything to dev
+__WEB_SDK_DEV_SARDINE__ : sets only sardine to dev
+__WEB_SDK_DEV_TRANSAK__ : sets only transak to dev
+__WEB_SDK_DEV_SEQUENCE_APIS__ : sets only the sequence apis to dev
+__WEB_SDK_DEV_SARDINE_PROJECT_ACCESS_KEY__ : the project access key used to query the client token for sardine. Must use a dev access key if the everything is using prod, but if sardine is using dev
+```
 
 ## What to do next?
 

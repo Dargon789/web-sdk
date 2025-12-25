@@ -1,12 +1,12 @@
-import { compareAddress, formatDisplay, NetworkBadge } from '@0xsequence/connect'
 import { networkImageUrl } from '@0xsequence/design-system'
 import { useGetCoinPrices } from '@0xsequence/hooks'
-import { ContractInfo, TokenMetadata } from '@0xsequence/metadata'
+import type { ContractInfo, TokenMetadata } from '@0xsequence/metadata'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { ReactNode } from 'react'
+import { compareAddress, formatDisplay, NetworkBadge } from '@0xsequence/web-sdk-core'
+import type { ReactNode } from 'react'
 import { formatUnits, zeroAddress } from 'viem'
 
-import { Collectible } from '../../contexts/SelectPaymentModal'
+import type { Collectible } from '../../contexts/SelectPaymentModal.js'
 
 export interface UseOrderSummaryArgs {
   chain: string | number

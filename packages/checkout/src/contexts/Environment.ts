@@ -1,6 +1,6 @@
 'use client'
 
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
 
 export interface EnvironmentOverrides {
   marketplaceApiUrl: string
@@ -8,8 +8,10 @@ export interface EnvironmentOverrides {
   transakApiKey: string
   sardineCheckoutUrl: string
   sardineOnRampUrl: string
+  fortePaymentUrl: string
+  forteWidgetUrl: string
 }
 
 const [useEnvironmentContext, EnvironmentContextProvider] = createGenericContext<EnvironmentOverrides>()
 
-export { useEnvironmentContext, EnvironmentContextProvider }
+export { EnvironmentContextProvider, useEnvironmentContext }

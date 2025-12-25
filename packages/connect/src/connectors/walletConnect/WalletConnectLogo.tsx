@@ -1,6 +1,5 @@
+import type { LogoProps } from '@0xsequence/web-sdk-core'
 import React from 'react'
-
-import { LogoProps } from '../../types'
 
 export const WalletConnectLogo: React.FunctionComponent = (props: LogoProps) => {
   return (

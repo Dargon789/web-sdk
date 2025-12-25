@@ -1,47 +1,70 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { HttpResponse, http } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
-import { ACCOUNT_ADDRESS, ZERO_ADDRESS } from '../../constants'
-import { useGetSwapQuote } from '../../hooks/Combination/useGetSwapQuote'
-import { createWrapper } from '../createWrapper'
-import { server } from '../setup'
+import { ACCOUNT_ADDRESS, ZERO_ADDRESS } from '../../constants.js'
+import { useGetSwapQuote } from '../../hooks/Combination/useGetSwapQuote.js'
+import { createWrapper } from '../createWrapper.js'
+import { server } from '../setup.js'
 
-const getSwapQuoteArgs = {
-  userAddress: ACCOUNT_ADDRESS,
-  buyCurrencyAddress: ZERO_ADDRESS,
-  sellCurrencyAddress: ZERO_ADDRESS,
-  buyAmount: '20000',
-  chainId: 1,
-  includeApprove: true
+const swapQuoteArgs = {
+  params: {
+    walletAddress: ACCOUNT_ADDRESS,
+    toTokenAddress: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
+    fromTokenAddress: ZERO_ADDRESS,
+    toTokenAmount: '10000',
+    chainId: 137,
+    includeApprove: true,
+    slippageBps: 150
+  }
 }
 
-describe('useGetSwapQuoteV2', () => {
+describe('useGetSwapQuote', () => {
   it('should return data with a balance', async () => {
-    const { result } = renderHook(() => useGetSwapQuote(getSwapQuoteArgs), {
+    server.use(
+      http.post('*/getLifiSwapQuote', async () => {
+        return HttpResponse.json(
+          {
+            quote: {
+              currencyAddress: ZERO_ADDRESS,
+              currencyBalance: '180000000000000',
+              price: '7351402238115',
+              maxPrice: '7718972350021',
+              to: '0x0000000000000000000000000000000000000000',
+              transactionData: '0x0000000000000000000000000000000000000000000000000000000000000000',
+              transactionValue: '0',
+              approveData: '0x0000000000000000000000000000000000000000000000000000000000000000',
+              amount: '10000000000000000',
+              amountMin: '9500000000000000'
+            }
+          },
+          { status: 200 }
+        )
+      })
+    )
+
+    const { result } = renderHook(() => useGetSwapQuote({ params: swapQuoteArgs.params }), {
       wrapper: createWrapper()
     })
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    await waitFor(() => expect(result.current.isSuccess).toBe(true), { timeout: 3000 })
 
     expect(result.current.data).toBeDefined()
-
     const value = BigInt(result.current.data!.currencyBalance || 0)
-
     expect(value).toBeGreaterThan(0)
   })
 
   it('should return error when fetching data fails', async () => {
     server.use(
-      http.post('*', () => {
+      http.post('*/getLifiSwapQuote', () => {
         return HttpResponse.error()
       })
     )
 
-    const { result } = renderHook(() => useGetSwapQuote(getSwapQuoteArgs, { retry: false }), {
+    const { result } = renderHook(() => useGetSwapQuote({ params: swapQuoteArgs.params }, { retry: false }), {
       wrapper: createWrapper()
     })
 
-    await waitFor(() => expect(result.current.isError).toBe(true))
+    await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 3000 })
   })
 })

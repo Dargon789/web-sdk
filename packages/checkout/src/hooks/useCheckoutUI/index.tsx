@@ -1,9 +1,9 @@
-import { useGetTokenMetadata, useGetContractInfo } from '@0xsequence/hooks'
+import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/connect'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { Hex } from 'viem'
+import type { Hex } from 'viem'
 
-import { TransakConfig } from '../../contexts/CheckoutModal'
-import { Collectible, CreditCardProviders } from '../../contexts/SelectPaymentModal'
+import type { TransakConfig } from '../../contexts/CheckoutModal'
+import type { Collectible, CreditCardProviders } from '../../contexts/SelectPaymentModal'
 
 import { useCreditCardPayment, type UseCreditCardPaymentReturn } from './useCreditCardPayment'
 import { useCryptoPayment, type UseCryptoPaymentReturn } from './useCryptoPayment'
@@ -19,6 +19,7 @@ interface UseCheckoutUIArgs {
   targetContractAddress: string
   txData: Hex
   transactionConfirmations?: number
+  slippageBps?: number
   creditCardProvider?: CreditCardProviders
   transakConfig?: TransakConfig
   onSuccess?: (txHash: string) => void
@@ -43,6 +44,7 @@ export const useCheckoutUI = ({
   transactionConfirmations,
   creditCardProvider,
   transakConfig,
+  slippageBps,
   onSuccess,
   onError
 }: UseCheckoutUIArgs): UseCheckoutUIReturn => {
@@ -138,7 +140,8 @@ export const useCheckoutUI = ({
     isLoadingTokenMetadatas,
     errorTokenMetadata,
     isLoadingCurrencyInfo,
-    errorCurrencyInfo
+    errorCurrencyInfo,
+    slippageBps
   })
 
   return {

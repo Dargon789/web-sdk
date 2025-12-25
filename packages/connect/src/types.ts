@@ -1,17 +1,15 @@
-import { ETHAuthProof } from '@0xsequence/auth'
-import { Theme } from '@0xsequence/design-system'
-import { SequenceHooksEnv } from '@0xsequence/hooks'
-import { FunctionComponent } from 'react'
-import { Connector, CreateConnectorFn } from 'wagmi'
+import type { ETHAuthProof } from '@0xsequence/auth'
+import type { Theme } from '@0xsequence/design-system'
+import type { SequenceHooksEnv } from '@0xsequence/hooks'
+import type { FunctionComponent } from 'react'
+import type { Connector, CreateConnectorFn } from 'wagmi'
 
-import { LocalStorageKey } from './constants'
+import { LocalStorageKey } from './constants/localStorage.js'
 
 export interface LogoProps {
   className?: string
   style?: React.CSSProperties
 }
-
-export type WalletType = 'waas' | 'universal'
 
 export interface WalletProperties {
   id: string
@@ -20,15 +18,19 @@ export interface WalletProperties {
   monochromeLogoDark?: FunctionComponent<LogoProps>
   monochromeLogoLight?: FunctionComponent<LogoProps>
   name: string
+  ctaText?: string
   iconBackground?: string
   hideConnectorId?: string | null
   isSequenceBased?: boolean
+  isEcosystemWallet?: boolean
   type?: 'social' | 'wallet'
 }
 
 export type Wallet = WalletProperties & {
   createConnector: (projectAccessKey: string) => CreateConnectorFn
 }
+
+export type WalletType = 'waas' | 'v3'
 
 export interface WalletField {
   _wallet: WalletProperties
@@ -65,6 +67,9 @@ export type ModalPosition =
 
 export interface ConnectConfig {
   projectAccessKey: string
+  waasConfigKey?: string
+  walletUrl?: string
+  chainIds?: number[]
   disableAnalytics?: boolean
   defaultTheme?: Theme
   position?: ModalPosition
@@ -79,6 +84,10 @@ export interface ConnectConfig {
   readOnlyNetworks?: number[]
   ethAuth?: EthAuthSettings
   env?: Partial<SequenceHooksEnv>
+  hideExternalConnectOptions?: boolean
+  hideSocialConnectOptions?: boolean
+  hideConnectedWallets?: boolean
+  customCSS?: string
 }
 
 export type StorageItem = {
@@ -92,4 +101,12 @@ export type StorageItem = {
   [LocalStorageKey.WaasAppleRedirectURI]: string
   [LocalStorageKey.WaasActiveLoginType]: string
   [LocalStorageKey.WaasSignInEmail]: string
+  [LocalStorageKey.WaasEpicAuthUrl]: string
+  [LocalStorageKey.WaasEpicIdToken]: string
+  [LocalStorageKey.WaasXAuthUrl]: string
+  [LocalStorageKey.WaasXClientID]: string
+  [LocalStorageKey.WaasXRedirectURI]: string
+  [LocalStorageKey.WaasXCodeVerifier]: string
+  [LocalStorageKey.WaasXIdToken]: string
+  [LocalStorageKey.V3ActiveLoginType]: string
 }

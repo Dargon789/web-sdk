@@ -1,21 +1,26 @@
 export const styles = String.raw`
-/*! tailwindcss v4.0.14 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */
+@layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --font-mono: "Roboto", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --color-violet-600: oklch(0.541 0.281 293.009);
+    --color-red-500: oklch(63.7% 0.237 25.331);
+    --color-violet-600: oklch(54.1% 0.281 293.009);
+    --color-gray-500: oklch(55.1% 0.027 264.364);
     --color-black: #000;
     --color-white: #fff;
     --spacing: 0.25rem;
+    --container-md: 28rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
     --text-sm--line-height: calc(1.25 / 0.875);
     --text-base: 1rem;
     --text-base--line-height: calc(1.5 / 1);
+    --text-lg: 1.125rem;
+    --text-lg--line-height: calc(1.75 / 1.125);
     --text-xl: 1.25rem;
     --text-xl--line-height: calc(1.75 / 1.25);
     --text-2xl: 1.5rem;
@@ -39,22 +44,13 @@ export const styles = String.raw`
     --radius-2xl: 1rem;
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
     --animate-spin: spin 1s linear infinite;
+    --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     --blur-xs: 4px;
     --blur-md: 12px;
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
-    --default-font-feature-settings: var(--font-sans--font-feature-settings);
-    --default-font-variation-settings: var(
-      --font-sans--font-variation-settings
-    );
-    --default-mono-font-family: var(--font-mono);
-    --default-mono-font-feature-settings: var(
-      --font-mono--font-feature-settings
-    );
-    --default-mono-font-variation-settings: var(
-      --font-mono--font-variation-settings
-    );
+    --default-mono-font-family: "Roboto", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   }
 }
 @layer base {
@@ -68,13 +64,10 @@ export const styles = String.raw`
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
     tab-size: 4;
-    font-family: var( --default-font-family, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" );
+    font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
     font-feature-settings: var(--default-font-feature-settings, normal);
-    font-variation-settings: var( --default-font-variation-settings, normal );
+    font-variation-settings: var(--default-font-variation-settings, normal);
     -webkit-tap-highlight-color: transparent;
-  }
-  body {
-    line-height: inherit;
   }
   hr {
     height: 0;
@@ -98,9 +91,9 @@ export const styles = String.raw`
     font-weight: bolder;
   }
   code, kbd, samp, pre {
-    font-family: var( --default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace );
-    font-feature-settings: var( --default-mono-font-feature-settings, normal );
-    font-variation-settings: var( --default-mono-font-variation-settings, normal );
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+    font-feature-settings: var(--default-mono-font-feature-settings, normal);
+    font-variation-settings: var(--default-mono-font-variation-settings, normal);
     font-size: 1em;
   }
   small {
@@ -164,7 +157,14 @@ export const styles = String.raw`
   }
   ::placeholder {
     opacity: 1;
-    color: color-mix(in oklab, currentColor 50%, transparent);
+  }
+  @supports (not (-webkit-appearance: -apple-pay-button))  or (contain-intrinsic-size: 1px) {
+    ::placeholder {
+      color: currentcolor;
+      @supports (color: color-mix(in lab, red, red)) {
+        color: color-mix(in oklab, currentcolor 50%, transparent);
+      }
+    }
   }
   textarea {
     resize: vertical;
@@ -184,6 +184,9 @@ export const styles = String.raw`
   }
   ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {
     padding-block: 0;
+  }
+  ::-webkit-calendar-picker-indicator {
+    line-height: 1;
   }
   :-moz-ui-invalid {
     box-shadow: none;
@@ -214,6 +217,9 @@ export const styles = String.raw`
   .relative {
     position: relative;
   }
+  .sticky {
+    position: sticky;
+  }
   .inset-0 {
     inset: calc(var(--spacing) * 0);
   }
@@ -225,6 +231,12 @@ export const styles = String.raw`
   }
   .top-4 {
     top: calc(var(--spacing) * 4);
+  }
+  .top-\[-2px\] {
+    top: -2px;
+  }
+  .top-\[50\%\] {
+    top: 50%;
   }
   .right-0 {
     right: calc(var(--spacing) * 0);
@@ -243,6 +255,9 @@ export const styles = String.raw`
   }
   .left-4 {
     left: calc(var(--spacing) * 4);
+  }
+  .left-\[50\%\] {
+    left: 50%;
   }
   .z-1 {
     z-index: 1;
@@ -283,9 +298,6 @@ export const styles = String.raw`
   .-m-\[1px\] {
     margin: calc(1px * -1);
   }
-  .m-0 {
-    margin: calc(var(--spacing) * 0);
-  }
   .m-4 {
     margin: calc(var(--spacing) * 4);
   }
@@ -306,9 +318,6 @@ export const styles = String.raw`
   }
   .my-4 {
     margin-block: calc(var(--spacing) * 4);
-  }
-  .mt-0\.5 {
-    margin-top: calc(var(--spacing) * 0.5);
   }
   .mt-1 {
     margin-top: calc(var(--spacing) * 1);
@@ -331,17 +340,20 @@ export const styles = String.raw`
   .mt-10 {
     margin-top: calc(var(--spacing) * 10);
   }
+  .-mr-\[1px\] {
+    margin-right: calc(1px * -1);
+  }
   .mr-4 {
     margin-right: calc(var(--spacing) * 4);
+  }
+  .-mb-\[1px\] {
+    margin-bottom: calc(1px * -1);
   }
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
   }
   .mb-2 {
     margin-bottom: calc(var(--spacing) * 2);
-  }
-  .mb-3 {
-    margin-bottom: calc(var(--spacing) * 3);
   }
   .mb-4 {
     margin-bottom: calc(var(--spacing) * 4);
@@ -360,6 +372,9 @@ export const styles = String.raw`
   }
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
+  }
+  .ml-\[40px\] {
+    margin-left: 40px;
   }
   .block {
     display: block;
@@ -381,6 +396,9 @@ export const styles = String.raw`
   }
   .inline-flex {
     display: inline-flex;
+  }
+  .table {
+    display: table;
   }
   .aspect-square {
     aspect-ratio: 1 / 1;
@@ -424,14 +442,20 @@ export const styles = String.raw`
   .h-16 {
     height: calc(var(--spacing) * 16);
   }
-  .h-24 {
-    height: calc(var(--spacing) * 24);
-  }
   .h-\[1px\] {
     height: 1px;
   }
+  .h-\[2px\] {
+    height: 2px;
+  }
+  .h-\[17px\] {
+    height: 17px;
+  }
   .h-\[52px\] {
     height: 52px;
+  }
+  .h-\[56px\] {
+    height: 56px;
   }
   .h-\[60px\] {
     height: 60px;
@@ -439,8 +463,17 @@ export const styles = String.raw`
   .h-\[64px\] {
     height: 64px;
   }
+  .h-\[200px\] {
+    height: 200px;
+  }
+  .h-\[206px\] {
+    height: 206px;
+  }
   .h-\[calc\(100dvh-70px\)\] {
     height: calc(100dvh - 70px);
+  }
+  .h-auto {
+    height: auto;
   }
   .h-fit {
     height: fit-content;
@@ -457,6 +490,9 @@ export const styles = String.raw`
   .max-h-\[200px\] {
     max-height: 200px;
   }
+  .max-h-\[360px\] {
+    max-height: 360px;
+  }
   .max-h-\[calc\(100dvh-80px\)\] {
     max-height: calc(100dvh - 80px);
   }
@@ -469,8 +505,14 @@ export const styles = String.raw`
   .min-h-\[100px\] {
     min-height: 100px;
   }
+  .min-h-\[128px\] {
+    min-height: 128px;
+  }
   .min-h-full {
     min-height: 100%;
+  }
+  .w-1 {
+    width: calc(var(--spacing) * 1);
   }
   .w-1\/2 {
     width: calc(1/2 * 100%);
@@ -517,11 +559,26 @@ export const styles = String.raw`
   .w-40 {
     width: calc(var(--spacing) * 40);
   }
+  .w-\[0px\] {
+    width: 0px;
+  }
   .w-\[1px\] {
     width: 1px;
   }
+  .w-\[17px\] {
+    width: 17px;
+  }
+  .w-\[44px\] {
+    width: 44px;
+  }
   .w-\[52px\] {
     width: 52px;
+  }
+  .w-\[56px\] {
+    width: 56px;
+  }
+  .w-\[80px\] {
+    width: 80px;
   }
   .w-\[100px\] {
     width: 100px;
@@ -562,24 +619,64 @@ export const styles = String.raw`
   .min-w-6 {
     min-width: calc(var(--spacing) * 6);
   }
+  .min-w-\[var\(--radix-select-trigger-width\)\] {
+    min-width: var(--radix-select-trigger-width);
+  }
   .min-w-full {
     min-width: 100%;
+  }
+  .flex-1 {
+    flex: 1;
+  }
+  .flex-shrink {
+    flex-shrink: 1;
+  }
+  .flex-shrink-0 {
+    flex-shrink: 0;
   }
   .shrink-0 {
     flex-shrink: 0;
   }
+  .flex-grow {
+    flex-grow: 1;
+  }
   .grow {
     flex-grow: 1;
   }
+  .border-collapse {
+    border-collapse: collapse;
+  }
   .origin-top {
     transform-origin: top;
+  }
+  .-translate-x-1 {
+    --tw-translate-x: calc(var(--spacing) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-x-1\/2 {
+    --tw-translate-x: calc(calc(1/2 * 100%) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .translate-x-0 {
     --tw-translate-x: calc(var(--spacing) * 0);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
+  .-translate-y-1 {
+    --tw-translate-y: calc(var(--spacing) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .-translate-y-1\/2 {
+    --tw-translate-y: calc(calc(1/2 * 100%) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
   .transform {
-    transform: var(--tw-rotate-x) var(--tw-rotate-y) var(--tw-rotate-z) var(--tw-skew-x) var(--tw-skew-y);
+    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+  }
+  .animate-pulse {
+    animation: var(--animate-pulse);
+  }
+  .animate-skeleton {
+    animation: skeleton 1s ease infinite;
   }
   .animate-spin {
     animation: var(--animate-spin);
@@ -620,6 +717,9 @@ export const styles = String.raw`
   .flex-row {
     flex-direction: row;
   }
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
   .place-items-center {
     place-items: center;
   }
@@ -653,6 +753,9 @@ export const styles = String.raw`
   .gap-0\.5 {
     gap: calc(var(--spacing) * 0.5);
   }
+  .gap-0\.25 {
+    gap: calc(var(--spacing) * 0.25);
+  }
   .gap-1 {
     gap: calc(var(--spacing) * 1);
   }
@@ -674,11 +777,19 @@ export const styles = String.raw`
   .gap-10 {
     gap: calc(var(--spacing) * 10);
   }
+  .gap-\[6px\] {
+    gap: 6px;
+  }
   .self-center {
     align-self: center;
   }
   .justify-self-center {
     justify-self: center;
+  }
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .overflow-hidden {
     overflow: hidden;
@@ -707,6 +818,9 @@ export const styles = String.raw`
   .rounded {
     border-radius: 0.25rem;
   }
+  .rounded-2xl {
+    border-radius: var(--radius-2xl);
+  }
   .rounded-full {
     border-radius: calc(infinity * 1px);
   }
@@ -732,21 +846,9 @@ export const styles = String.raw`
     border-top-left-radius: var(--radius-2xl);
     border-top-right-radius: var(--radius-2xl);
   }
-  .rounded-t-none {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
-  .rounded-t-xl {
-    border-top-left-radius: var(--radius-xl);
-    border-top-right-radius: var(--radius-xl);
-  }
   .rounded-b-none {
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
-  }
-  .rounded-b-xl {
-    border-bottom-right-radius: var(--radius-xl);
-    border-bottom-left-radius: var(--radius-xl);
   }
   .border {
     border-style: var(--tw-border-style);
@@ -779,6 +881,12 @@ export const styles = String.raw`
   .border-solid {
     --tw-border-style: solid;
     border-style: solid;
+  }
+  .border-background-primary {
+    border-color: var(--seq-color-background-primary);
+  }
+  .border-border-error {
+    border-color: var(--seq-color-border-error);
   }
   .border-border-focus {
     border-color: var(--seq-color-border-focus);
@@ -861,6 +969,9 @@ export const styles = String.raw`
   .bg-gradient-skeleton {
     background-image: var(--seq-color-gradient-skeleton);
   }
+  .\[mask-image\:radial-gradient\(circle_at_82\%_82\%\,transparent_22\%\,black_0\)\] {
+    mask-image: radial-gradient(circle at 82% 82%,transparent 22%,black 0);
+  }
   .bg-\[length\:400\%_400\%\] {
     background-size: 400% 400%;
   }
@@ -893,6 +1004,9 @@ export const styles = String.raw`
   }
   .p-6 {
     padding: calc(var(--spacing) * 6);
+  }
+  .p-8 {
+    padding: calc(var(--spacing) * 8);
   }
   .p-\[10px\] {
     padding: 10px;
@@ -930,14 +1044,20 @@ export const styles = String.raw`
   .py-4 {
     padding-block: calc(var(--spacing) * 4);
   }
-  .py-5 {
-    padding-block: calc(var(--spacing) * 5);
-  }
   .py-6 {
     padding-block: calc(var(--spacing) * 6);
   }
+  .py-8 {
+    padding-block: calc(var(--spacing) * 8);
+  }
+  .py-16 {
+    padding-block: calc(var(--spacing) * 16);
+  }
   .pt-0 {
     padding-top: calc(var(--spacing) * 0);
+  }
+  .pt-1 {
+    padding-top: calc(var(--spacing) * 1);
   }
   .pt-1\.5 {
     padding-top: calc(var(--spacing) * 1.5);
@@ -954,9 +1074,6 @@ export const styles = String.raw`
   .pt-5 {
     padding-top: calc(var(--spacing) * 5);
   }
-  .pt-6 {
-    padding-top: calc(var(--spacing) * 6);
-  }
   .pt-\[60px\] {
     padding-top: 60px;
   }
@@ -965,9 +1082,6 @@ export const styles = String.raw`
   }
   .pr-4 {
     padding-right: calc(var(--spacing) * 4);
-  }
-  .pb-0 {
-    padding-bottom: calc(var(--spacing) * 0);
   }
   .pb-2 {
     padding-bottom: calc(var(--spacing) * 2);
@@ -1023,6 +1137,10 @@ export const styles = String.raw`
   .text-base {
     font-size: var(--text-base);
     line-height: var(--tw-leading, var(--text-base--line-height));
+  }
+  .text-lg {
+    font-size: var(--text-lg);
+    line-height: var(--tw-leading, var(--text-lg--line-height));
   }
   .text-sm {
     font-size: var(--text-sm);
@@ -1158,6 +1276,9 @@ export const styles = String.raw`
   .text-primary {
     color: var(--seq-color-primary);
   }
+  .text-red-500 {
+    color: var(--color-red-500);
+  }
   .text-secondary {
     color: var(--seq-color-secondary);
   }
@@ -1196,6 +1317,9 @@ export const styles = String.raw`
   .opacity-50 {
     opacity: 50%;
   }
+  .opacity-75 {
+    opacity: 75%;
+  }
   .opacity-100 {
     opacity: 100%;
   }
@@ -1207,13 +1331,20 @@ export const styles = String.raw`
     --tw-shadow: 0 0 10px 0 var(--tw-shadow-color, rgba(0,0,0,0.5));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
+  .shadow-sm {
+    --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
   .ring-1 {
-    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentColor);
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .ring-2 {
-    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentColor);
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .ring-border-error {
+    --tw-ring-color: var(--seq-color-border-error);
   }
   .ring-border-focus {
     --tw-ring-color: var(--seq-color-border-focus);
@@ -1221,8 +1352,14 @@ export const styles = String.raw`
   .ring-border-normal {
     --tw-ring-color: var(--seq-color-border-normal);
   }
+  .ring-white {
+    --tw-ring-color: var(--color-white);
+  }
   .ring-white\/10 {
-    --tw-ring-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    --tw-ring-color: color-mix(in srgb, #fff 10%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    }
   }
   .outline-hidden {
     --tw-outline-style: none;
@@ -1256,8 +1393,17 @@ export const styles = String.raw`
     -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
     backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
   }
+  .backdrop-filter {
+    -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
+    backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
+  }
   .transition {
-    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter;
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;
+    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+    transition-duration: var(--tw-duration, var(--default-transition-duration));
+  }
+  .transition-opacity {
+    transition-property: opacity;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
   }
@@ -1284,9 +1430,6 @@ export const styles = String.raw`
   .select-none {
     -webkit-user-select: none;
     user-select: none;
-  }
-  .\[mask-image\:radial-gradient\(circle_at_82\%_82\%\,transparent_22\%\,black_0\)\] {
-    mask-image: radial-gradient(circle at 82% 82%,transparent 22%,black 0);
   }
   .ring-inset {
     --tw-ring-inset: inset;
@@ -1377,6 +1520,26 @@ export const styles = String.raw`
       width: 100%;
     }
   }
+  .before\:bg-linear-to-l {
+    &::before {
+      content: var(--tw-content);
+      --tw-gradient-position: to left;
+      @supports (background-image: linear-gradient(in lab, red, red)) {
+        --tw-gradient-position: to left in oklab;
+      }
+      background-image: linear-gradient(var(--tw-gradient-stops));
+    }
+  }
+  .before\:bg-linear-to-t {
+    &::before {
+      content: var(--tw-content);
+      --tw-gradient-position: to top;
+      @supports (background-image: linear-gradient(in lab, red, red)) {
+        --tw-gradient-position: to top in oklab;
+      }
+      background-image: linear-gradient(var(--tw-gradient-stops));
+    }
+  }
   .before\:bg-gradient-to-b {
     &::before {
       content: var(--tw-content);
@@ -1385,20 +1548,6 @@ export const styles = String.raw`
     }
   }
   .before\:bg-gradient-to-t {
-    &::before {
-      content: var(--tw-content);
-      --tw-gradient-position: to top in oklab;
-      background-image: linear-gradient(var(--tw-gradient-stops));
-    }
-  }
-  .before\:bg-linear-to-l {
-    &::before {
-      content: var(--tw-content);
-      --tw-gradient-position: to left in oklab;
-      background-image: linear-gradient(var(--tw-gradient-stops));
-    }
-  }
-  .before\:bg-linear-to-t {
     &::before {
       content: var(--tw-content);
       --tw-gradient-position: to top in oklab;
@@ -1537,20 +1686,26 @@ export const styles = String.raw`
   .after\:bg-current {
     &::after {
       content: var(--tw-content);
-      background-color: currentColor;
+      background-color: currentcolor;
     }
   }
   .after\:bg-linear-to-b {
     &::after {
       content: var(--tw-content);
-      --tw-gradient-position: to bottom in oklab;
+      --tw-gradient-position: to bottom;
+      @supports (background-image: linear-gradient(in lab, red, red)) {
+        --tw-gradient-position: to bottom in oklab;
+      }
       background-image: linear-gradient(var(--tw-gradient-stops));
     }
   }
   .after\:bg-linear-to-r {
     &::after {
       content: var(--tw-content);
-      --tw-gradient-position: to right in oklab;
+      --tw-gradient-position: to right;
+      @supports (background-image: linear-gradient(in lab, red, red)) {
+        --tw-gradient-position: to right in oklab;
+      }
       background-image: linear-gradient(var(--tw-gradient-stops));
     }
   }
@@ -1570,7 +1725,6 @@ export const styles = String.raw`
   }
   .after\:content-\[\"\"\] {
     &::after {
-      content: var(--tw-content);
       --tw-content: "";
       content: var(--tw-content);
     }
@@ -1587,8 +1741,13 @@ export const styles = String.raw`
   }
   .focus-within\:ring-2 {
     &:focus-within {
-      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentColor);
+      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+  .focus-within\:ring-border-error {
+    &:focus-within {
+      --tw-ring-color: var(--seq-color-border-error);
     }
   }
   .focus-within\:ring-border-focus {
@@ -1599,6 +1758,13 @@ export const styles = String.raw`
   .focus-within\:ring-inset {
     &:focus-within {
       --tw-ring-inset: inset;
+    }
+  }
+  .hover\:border-\[var\(--seq-color-border-normal\)\] {
+    &:hover {
+      @media (hover: hover) {
+        border-color: var(--seq-color-border-normal);
+      }
     }
   }
   .hover\:bg-button-glass {
@@ -1636,14 +1802,19 @@ export const styles = String.raw`
   }
   .focus\:ring-0 {
     &:focus {
-      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentColor);
+      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
   }
   .focus\:ring-2 {
     &:focus {
-      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentColor);
+      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+  .focus\:ring-border-error {
+    &:focus {
+      --tw-ring-color: var(--seq-color-border-error);
     }
   }
   .focus\:ring-border-focus {
@@ -1663,7 +1834,7 @@ export const styles = String.raw`
   }
   .focus-visible\:ring-2 {
     &:focus-visible {
-      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentColor);
+      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
   }
@@ -1773,6 +1944,11 @@ export const styles = String.raw`
       transition-timing-function: var(--ease-out);
     }
   }
+  .data-\[swipe\=end\]\:animate-swipe-out {
+    &[data-swipe="end"] {
+      animation: swipe-out 200ms ease-out;
+    }
+  }
   .data-\[swipe\=move\]\:translate-x-\[var\(--radix-toast-swipe-move-x\)\] {
     &[data-swipe="move"] {
       --tw-translate-x: var(--radix-toast-swipe-move-x);
@@ -1838,7 +2014,7 @@ export const styles = String.raw`
   .focus-within\:\[\&\:has\(\:focus-visible\)\]\:ring-2 {
     &:focus-within {
       &:has(:focus-visible) {
-        --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentColor);
+        --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
         box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
       }
     }
@@ -1879,6 +2055,7 @@ export const styles = String.raw`
   --seq-color-background-raised: rgba(54, 54, 54, 0.7);
   --seq-color-border-normal: rgba(255, 255, 255, 0.25);
   --seq-color-border-focus: rgba(255, 255, 255, 0.5);
+  --seq-color-border-error: rgba(255, 69, 0, 1);
   --seq-color-button-glass: rgba(255, 255, 255, 0.15);
   --seq-color-button-emphasis: rgba(0, 0, 0, 0.5);
   --seq-color-button-inverse: rgba(255, 255, 255, 0.8);
@@ -1926,6 +2103,7 @@ export const styles = String.raw`
   --seq-color-background-raised: rgba(192, 192, 192, 0.7);
   --seq-color-border-normal: rgba(0, 0, 0, 0.25);
   --seq-color-border-focus: rgba(0, 0, 0, 0.5);
+  --seq-color-border-error: rgba(255, 69, 0, 1);
   --seq-color-button-glass: rgba(0, 0, 0, 0.15);
   --seq-color-button-emphasis: rgba(255, 255, 255, 0.5);
   --seq-color-button-inverse: rgba(0, 0, 0, 0.8);
@@ -1971,27 +2149,22 @@ export const styles = String.raw`
 @property --tw-rotate-x {
   syntax: "*";
   inherits: false;
-  initial-value: rotateX(0);
 }
 @property --tw-rotate-y {
   syntax: "*";
   inherits: false;
-  initial-value: rotateY(0);
 }
 @property --tw-rotate-z {
   syntax: "*";
   inherits: false;
-  initial-value: rotateZ(0);
 }
 @property --tw-skew-x {
   syntax: "*";
   inherits: false;
-  initial-value: skewX(0);
 }
 @property --tw-skew-y {
   syntax: "*";
   inherits: false;
-  initial-value: skewY(0);
 }
 @property --tw-border-style {
   syntax: "*";
@@ -2019,6 +2192,11 @@ export const styles = String.raw`
   syntax: "*";
   inherits: false;
 }
+@property --tw-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
 @property --tw-inset-shadow {
   syntax: "*";
   inherits: false;
@@ -2027,6 +2205,11 @@ export const styles = String.raw`
 @property --tw-inset-shadow-color {
   syntax: "*";
   inherits: false;
+}
+@property --tw-inset-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
 }
 @property --tw-ring-color {
   syntax: "*";
@@ -2107,6 +2290,19 @@ export const styles = String.raw`
   inherits: false;
 }
 @property --tw-drop-shadow {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-drop-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-drop-shadow-size {
   syntax: "*";
   inherits: false;
 }
@@ -2205,4 +2401,97 @@ export const styles = String.raw`
   to {
     transform: rotate(360deg);
   }
-}`
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+@keyframes skeleton {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+@keyframes swipe-out {
+  from {
+    transform: translateX(var(--radix-toast-swipe-end-x));
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-translate-x: 0;
+      --tw-translate-y: 0;
+      --tw-translate-z: 0;
+      --tw-rotate-x: initial;
+      --tw-rotate-y: initial;
+      --tw-rotate-z: initial;
+      --tw-skew-x: initial;
+      --tw-skew-y: initial;
+      --tw-border-style: solid;
+      --tw-leading: initial;
+      --tw-font-weight: initial;
+      --tw-tracking: initial;
+      --tw-shadow: 0 0 #0000;
+      --tw-shadow-color: initial;
+      --tw-shadow-alpha: 100%;
+      --tw-inset-shadow: 0 0 #0000;
+      --tw-inset-shadow-color: initial;
+      --tw-inset-shadow-alpha: 100%;
+      --tw-ring-color: initial;
+      --tw-ring-shadow: 0 0 #0000;
+      --tw-inset-ring-color: initial;
+      --tw-inset-ring-shadow: 0 0 #0000;
+      --tw-ring-inset: initial;
+      --tw-ring-offset-width: 0px;
+      --tw-ring-offset-color: #fff;
+      --tw-ring-offset-shadow: 0 0 #0000;
+      --tw-outline-style: solid;
+      --tw-blur: initial;
+      --tw-brightness: initial;
+      --tw-contrast: initial;
+      --tw-grayscale: initial;
+      --tw-hue-rotate: initial;
+      --tw-invert: initial;
+      --tw-opacity: initial;
+      --tw-saturate: initial;
+      --tw-sepia: initial;
+      --tw-drop-shadow: initial;
+      --tw-drop-shadow-color: initial;
+      --tw-drop-shadow-alpha: 100%;
+      --tw-drop-shadow-size: initial;
+      --tw-backdrop-blur: initial;
+      --tw-backdrop-brightness: initial;
+      --tw-backdrop-contrast: initial;
+      --tw-backdrop-grayscale: initial;
+      --tw-backdrop-hue-rotate: initial;
+      --tw-backdrop-invert: initial;
+      --tw-backdrop-opacity: initial;
+      --tw-backdrop-saturate: initial;
+      --tw-backdrop-sepia: initial;
+      --tw-duration: initial;
+      --tw-ease: initial;
+      --tw-content: "";
+      --tw-gradient-position: initial;
+      --tw-gradient-from: #0000;
+      --tw-gradient-via: #0000;
+      --tw-gradient-to: #0000;
+      --tw-gradient-stops: initial;
+      --tw-gradient-via-stops: initial;
+      --tw-gradient-from-position: 0%;
+      --tw-gradient-via-position: 50%;
+      --tw-gradient-to-position: 100%;
+    }
+  }
+}
+
+`

@@ -1,49 +1,58 @@
-import { ArrowRightIcon, Card, CurrencyIcon, Text } from '@0xsequence/design-system'
-import { TransactionOnRampProvider } from '@0xsequence/marketplace'
 import { findSupportedNetwork } from '@0xsequence/network'
+import { ArrowRightIcon, Box, Card, CurrencyIcon, Text } from '@0xsequence/design-system'
+import { TransactionOnRampProvider } from '@0xsequence/marketplace'
 
 import { useSelectPaymentModal, useAddFundsModal } from '../../hooks'
 
 interface FundWithFiatProps {
-  cryptoSymbol?: string
   walletAddress: string
   provider: TransactionOnRampProvider
-  chainId: number
-  onClick: () => void
+  chainId?: number
 }
 
-export const FundWithFiat = ({ cryptoSymbol, walletAddress, provider, chainId, onClick: onClickCallback }: FundWithFiatProps) => {
+export const FundWithFiat = ({ walletAddress, provider, chainId }: FundWithFiatProps) => {
   const { triggerAddFunds } = useAddFundsModal()
   const { closeSelectPaymentModal, selectPaymentSettings } = useSelectPaymentModal()
 
   const getNetworks = (): string | undefined => {
-    const network = findSupportedNetwork(chainId)
+    const chain = selectPaymentSettings?.chain
+    if (!chain) return
+
+    const network = findSupportedNetwork(chain)
     return network?.name?.toLowerCase()
   }
 
   const onClick = () => {
-    onClickCallback()
     closeSelectPaymentModal()
     triggerAddFunds({
       walletAddress,
       provider,
-      networks: getNetworks(),
-      defaultCryptoCurrency: cryptoSymbol,
-      onClose: selectPaymentSettings?.onClose
+      networks: getNetworks()
     })
   }
 
   return (
-    <Card key="sardine" className="flex items-center justify-between p-4 cursor-pointer" onClick={onClick}>
-      <div className="flex flex-row gap-3 items-center">
+    <Card
+      key="sardine"
+      justifyContent="space-between"
+      alignItems="center"
+      padding="4"
+      onClick={onClick}
+      opacity={{
+        hover: '80',
+        base: '100'
+      }}
+      cursor="pointer"
+    >
+      <Box flexDirection="row" gap="3" alignItems="center">
         <CurrencyIcon color="white" />
         <Text color="text100" variant="normal" fontWeight="bold">
           Fund wallet with credit card
         </Text>
-      </div>
-      <div style={{ transform: 'rotate(-45deg)' }}>
+      </Box>
+      <Box style={{ transform: 'rotate(-45deg)' }}>
         <ArrowRightIcon color="white" />
-      </div>
+      </Box>
     </Card>
   )
 }

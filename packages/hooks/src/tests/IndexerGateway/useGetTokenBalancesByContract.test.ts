@@ -1,12 +1,12 @@
 import { IndexerGateway } from '@0xsequence/indexer'
 import { renderHook, waitFor } from '@testing-library/react'
-import { HttpResponse, http } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
-import { ACCOUNT_ADDRESS } from '../../constants'
-import { useGetTokenBalancesByContract } from '../../hooks/IndexerGateway/useGetTokenBalancesByContract'
-import { createWrapper } from '../createWrapper'
-import { server } from '../setup'
+import { ACCOUNT_ADDRESS } from '../../constants.js'
+import { useGetTokenBalancesByContract } from '../../hooks/IndexerGateway/useGetTokenBalancesByContract.js'
+import { createWrapper } from '../createWrapper.js'
+import { server } from '../setup.js'
 
 const getTokenBalancesByContractArgs: IndexerGateway.GetTokenBalancesByContractArgs = {
   filter: {

@@ -1,4 +1,4 @@
-import { HttpResponse, http } from 'msw'
+import { http, HttpResponse } from 'msw'
 
 export const handlers = [
   http.get('/hello', () => {
@@ -28,9 +28,6 @@ export const handlers = [
 
     return HttpResponse.json(
       {
-        page: {
-          page: 1
-        },
         balances: [
           {
             chainId: 1,
@@ -86,9 +83,6 @@ export const handlers = [
 
     return HttpResponse.json(
       {
-        page: {
-          page: 1
-        },
         balances: [
           {
             chainId: 1,
@@ -132,9 +126,6 @@ export const handlers = [
 
     return HttpResponse.json(
       {
-        page: {
-          page: 1
-        },
         balances: [
           {
             chainId: 1,
@@ -165,9 +156,6 @@ export const handlers = [
 
     return HttpResponse.json(
       {
-        page: {
-          page: 1
-        },
         tokenMetadata: [
           {
             contractType: 'ERC721',
@@ -224,7 +212,6 @@ export const handlers = [
   http.post('*/GetTransactionHistory', async () => {
     return HttpResponse.json(
       {
-        page: { page: 1 },
         transactions: [
           {
             txnHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
@@ -276,55 +263,7 @@ export const handlers = [
     })
   }),
 
-  http.post('*/GetSwapPrices', async () => {
-    return HttpResponse.json(
-      {
-        swapPrices: [
-          {
-            currencyAddress: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
-            currencyBalance: '180000000000000',
-            price: '7351402238115',
-            maxPrice: '7718972350021',
-            transactionValue: '0'
-          },
-          {
-            currencyAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-            currencyBalance: '1478702455538610019',
-            price: '64490918485610659',
-            maxPrice: '67715464409891192',
-            transactionValue: '67715464409891192'
-          }
-        ]
-      },
-      { status: 200 }
-    )
-  }),
-
-  http.post('*/GetSwapPermit2Prices', async () => {
-    return HttpResponse.json(
-      {
-        swapPermit2Prices: [
-          {
-            currencyAddress: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
-            currencyBalance: '180000000000000',
-            price: '7351402238115',
-            maxPrice: '7718972350021',
-            transactionValue: '0'
-          },
-          {
-            currencyAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-            currencyBalance: '1478702455538610019',
-            price: '64490918485610659',
-            maxPrice: '67715464409891192',
-            transactionValue: '67715464409891192'
-          }
-        ]
-      },
-      { status: 200 }
-    )
-  }),
-
-  http.post('*/GetSwapQuote', async () => {
+  http.post('*/GetLifiSwapQuote', async () => {
     return HttpResponse.json(
       {
         swapQuote: {
@@ -335,17 +274,19 @@ export const handlers = [
           to: '0x0000000000000000000000000000000000000000',
           transactionData: '0x0000000000000000000000000000000000000000000000000000000000000000',
           transactionValue: '0',
-          approveData: '0x0000000000000000000000000000000000000000000000000000000000000000'
+          approveData: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          amount: '10000000000000000',
+          amountMin: '9500000000000000'
         }
       },
       { status: 200 }
     )
   }),
 
-  http.post('*/GetSwapQuoteV2', async () => {
+  http.post('*/getLifiSwapQuote', async () => {
     return HttpResponse.json(
       {
-        swapQuote: {
+        quote: {
           currencyAddress: '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
           currencyBalance: '180000000000000',
           price: '7351402238115',
@@ -353,7 +294,9 @@ export const handlers = [
           to: '0x0000000000000000000000000000000000000000',
           transactionData: '0x0000000000000000000000000000000000000000000000000000000000000000',
           transactionValue: '0',
-          approveData: '0x0000000000000000000000000000000000000000000000000000000000000000'
+          approveData: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          amount: '10000000000000000',
+          amountMin: '9500000000000000'
         }
       },
       { status: 200 }

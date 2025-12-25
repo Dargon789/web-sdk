@@ -1,4 +1,4 @@
-import React, { RefObject, PropsWithChildren, useEffect, useRef, useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef, useState, type PropsWithChildren, type RefObject } from 'react'
 
 export const useIntersectionObserver = (ref: RefObject<Element | null>, options?: IntersectionObserverInit) => {
   const [entry, setEntry] = useState<IntersectionObserverEntry | null>(null)
@@ -55,7 +55,7 @@ export const InfiniteScroll = (props: PropsWithChildren<InfiniteScrollProps>) =>
   return (
     <>
       {children}
-      <div ref={bottomRef} />
+      <span ref={bottomRef} />
     </>
   )
 }

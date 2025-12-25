@@ -1,18 +1,18 @@
-import { formatAddress } from '@0xsequence/connect'
-import { Text, GradientAvatar } from '@0xsequence/design-system'
+import { GradientAvatar, Text } from '@0xsequence/design-system'
+import { formatAddress } from '@0xsequence/web-sdk-core'
 import { getAddress } from 'viem'
 import { useChains } from 'wagmi'
 
-import { useSettings } from '../../../hooks'
-import { formatTokenInfo } from '../../../utils/formatBalance'
-import { TokenBalanceWithPrice } from '../../../utils/tokens'
-import { TokenImageCustom } from '../../Filter/TokenImageCustom'
-import { ListCardNav } from '../../ListCard/ListCardNav'
+import { useSettings } from '../../../hooks/index.js'
+import { formatTokenInfo } from '../../../utils/formatBalance.js'
+import type { TokenBalanceWithDetails } from '../../../utils/tokens.js'
+import { TokenImageCustom } from '../../Filter/TokenImageCustom.js'
+import { ListCard } from '../../ListCard/ListCard.js'
 
 interface BalanceItemProps {
-  balance: TokenBalanceWithPrice
+  balance: TokenBalanceWithDetails
   includeUserAddress?: boolean
-  onTokenClick: (token: TokenBalanceWithPrice) => void
+  onTokenClick: (token: TokenBalanceWithDetails) => void
 }
 
 export const CoinRow = ({ balance, onTokenClick, includeUserAddress = false }: BalanceItemProps) => {
@@ -27,7 +27,7 @@ export const CoinRow = ({ balance, onTokenClick, includeUserAddress = false }: B
   }
 
   return (
-    <ListCardNav type="custom" onClick={onClick} style={{ height: '68px' }}>
+    <ListCard onClick={onClick} style={{ height: '68px' }}>
       <div className="flex flex-row justify-between items-center w-full gap-2">
         <TokenImageCustom src={logo} symbol={symbol} chainId={balance.chainId} />
         <div className="flex flex-row gap-2 items-center" style={{ flex: '1 1 0', width: 0 }}>
@@ -60,6 +60,6 @@ export const CoinRow = ({ balance, onTokenClick, includeUserAddress = false }: B
           </div>
         </div>
       </div>
-    </ListCardNav>
+    </ListCard>
   )
 }

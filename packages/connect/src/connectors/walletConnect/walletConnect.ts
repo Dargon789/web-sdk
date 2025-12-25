@@ -1,9 +1,8 @@
+import type { Wallet } from '@0xsequence/web-sdk-core'
 import { createConnector } from 'wagmi'
-import { walletConnect as walletConnectbase, WalletConnectParameters } from 'wagmi/connectors'
+import { walletConnect as walletConnectbase, type WalletConnectParameters } from 'wagmi/connectors'
 
-import { Wallet } from '../../types'
-
-import { WalletConnectLogo } from './WalletConnectLogo'
+import { WalletConnectLogo } from './WalletConnectLogo.js'
 
 interface WalletConnectOptions extends WalletConnectParameters {
   defaultNetwork?: number
