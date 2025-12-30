@@ -410,7 +410,7 @@ The React example can be used to test the library locally.
 
 1. Replace the web-sdk dependencies to the ones of the workspace in order to use hot reload:
 
-```js
+```json
 "@0xsequence/connect": "workspace:*",
 "@0xsequence/checkout": "workspace:*",
 "@0xsequence/wallet-widget": "workspace:*",
