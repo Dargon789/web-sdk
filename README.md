@@ -369,7 +369,7 @@ The settings are described in more detail in the Sequence Web SDK documentation.
     // limits the digital assets displayed on the assets summary screen
     displayedAssets: [
       {
-        contractAddress: zeroAddress,
+        contractAddress: zeroAddress, // e.g. import { zeroAddress } from 'viem'
         chainId: 137,
       },
       {
