@@ -4,8 +4,8 @@
 
 Easily integrate web3 wallets in your app with Sequence Web SDK 🧰. Based on [wagmi](https://wagmi.sh/), and supporting all wagmi features.
 
-- Connect via social logins eg: facebook, google, discord, etc...! 🔐🪪
-- Connect to popular web3 wallets eg: walletConnect, metamask ! 🦊 ⛓️
+- Connect via social logins, e.g., Facebook, Google, Discord, etc. 🔐🪪
+- Connect to popular web3 wallets, e.g., WalletConnect, MetaMask. 🦊 ⛓️
 - Full-fledged embedded wallet for coins and collectibles 👛 🖼️ 🪙
 
 View the [demo](https://web-sdk.sequence-demos.xyz/)! 👀
