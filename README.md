@@ -264,7 +264,7 @@ function App() {
   <img src="public/docs/sign-in-modal.png">
 </div>
 
-Wallet selection is done through a modal which can be called programmatically. Kit allows multiple connection, so it can be called again to connect more wallets.
+Wallet selection is done through a modal which can be called programmatically. Kit allows multiple connections, so it can be called again to connect more wallets.
 
 ```js
 import { useOpenConnectModal } from '@0xsequence/connect'
