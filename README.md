@@ -382,7 +382,7 @@ The settings are described in more detail in the Sequence Web SDK documentation.
 
   <SequenceConnectProvider config={connectConfig}>
     <App />
-  <SequenceConnectProvider>
+  </SequenceConnectProvider>
 ```
 
 ## Packages
