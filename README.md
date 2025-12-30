@@ -20,7 +20,14 @@ View the [demo](https://web-sdk.sequence-demos.xyz/)! 👀
 To install this package:
 
 ```bash
+# With npm
 npm install @0xsequence/connect @0xsequence/hooks wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+
+# With pnpm
+pnpm add @0xsequence/connect @0xsequence/hooks wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+
+# With yarn
+yarn add @0xsequence/connect @0xsequence/hooks wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
 ```
 
 ### Setting up the Library
