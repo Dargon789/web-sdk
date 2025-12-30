@@ -408,7 +408,7 @@ The settings are described in more detail in the Sequence Web SDK documentation.
 
 The React example can be used to test the library locally.
 
-1. Replace the web-sdk dependencies to the ones of the workspace in order to use hot reload.:
+1. Replace the web-sdk dependencies to the ones of the workspace in order to use hot reload:
 
 ```js
 "@0xsequence/connect": "workspace:*",
