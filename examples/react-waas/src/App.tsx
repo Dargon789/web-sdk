@@ -59,7 +59,7 @@ export const App = () => {
 
       // sign
       const sig = await walletClient.signMessage({
-        account: address || ('' as `0x${string}`),
+        account: address!,
         message
       })
       console.log('address', address)
