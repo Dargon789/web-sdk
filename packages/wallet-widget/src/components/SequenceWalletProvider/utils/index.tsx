@@ -1,30 +1,26 @@
-import { Navigation } from '../../../contexts'
+import type { Navigation } from '../../../contexts/index.js'
+import { CollectionDetails } from '../../../views/CollectionDetails/index.js'
 import {
   CoinDetails,
   CollectibleDetails,
   Home,
   Receive,
+  Search,
   SendCoin,
   SendCollectible,
-  History,
-  TransactionDetails,
-  SwapCoin,
-  SwapList,
   SendGeneral,
-  SearchTokens,
-  SearchCollectibles,
-  SettingsWallets,
   SettingsApps,
   SettingsCurrency,
   SettingsMenu,
-  SettingsNetworks,
   SettingsPreferences,
   SettingsProfiles,
+  SettingsWallets,
   // QrScan,
-  Swap
-} from '../../../views'
-import { NavigationHeader } from '../../NavigationHeader'
-import { WalletHeader } from '../../WalletHeader'
+  SwapCoin,
+  SwapList,
+  TransactionDetails
+} from '../../../views/index.js'
+import { NavigationHeader } from '../../NavigationHeader/index.js'
 
 export const getContent = (navigation: Navigation) => {
   const { location } = navigation
@@ -42,27 +38,14 @@ export const getContent = (navigation: Navigation) => {
           tokenId={navigation.params.tokenId}
         />
       )
-    case 'swap':
-      return <Swap />
     case 'receive':
       return <Receive />
-    case 'history':
-      return <History />
-    case 'search-tokens':
-      return <SearchTokens />
-    case 'search-collectibles':
-      return (
-        <SearchCollectibles
-          contractAddress={navigation.params?.selectedCollection?.contractAddress}
-          chainId={navigation.params?.selectedCollection?.chainId}
-        />
-      )
+    case 'search':
+      return <Search />
     case 'settings':
       return <SettingsMenu />
     case 'settings-wallets':
       return <SettingsWallets />
-    case 'settings-networks':
-      return <SettingsNetworks />
     case 'settings-currency':
       return <SettingsCurrency />
     case 'settings-profiles':
@@ -91,6 +74,8 @@ export const getContent = (navigation: Navigation) => {
           accountAddress={navigation.params.accountAddress}
         />
       )
+    case 'collection-details':
+      return <CollectionDetails contractAddress={navigation.params.contractAddress} chainId={navigation.params.chainId} />
     case 'transaction-details':
       return <TransactionDetails transaction={navigation.params.transaction} />
     case 'swap-coin':
@@ -112,46 +97,69 @@ export const getContent = (navigation: Navigation) => {
 export const getHeader = (navigation: Navigation) => {
   const { location } = navigation
   switch (location) {
-    case 'search-tokens':
-      return <NavigationHeader primaryText="Tokens" />
-    case 'search-collectibles':
-      return <NavigationHeader primaryText="Collectibles" />
+    case 'home':
+      return <NavigationHeader type="home" />
     case 'settings':
-      return <NavigationHeader primaryText="Settings" />
+      return <NavigationHeader label="Settings" />
     case 'settings-wallets':
-      return <NavigationHeader primaryText="Wallets" />
-    case 'settings-networks':
-      return <NavigationHeader primaryText="Networks" />
+      return <NavigationHeader label="Wallets" />
     case 'settings-currency':
-      return <NavigationHeader primaryText="Currency" />
+      return <NavigationHeader label="Currency" />
     case 'settings-profiles':
-      return <NavigationHeader primaryText="Profiles" />
+      return <NavigationHeader label="Profiles" />
     case 'settings-preferences':
-      return <NavigationHeader primaryText="Preferences" />
+      return <NavigationHeader label="Preferences" />
     case 'settings-apps':
-      return <NavigationHeader primaryText="Apps" />
+      return <NavigationHeader />
     case 'connect-dapp':
-      return <NavigationHeader primaryText="Connect an App" />
-    case 'history':
-      return <NavigationHeader primaryText="Transaction History" />
+      return <NavigationHeader />
     case 'coin-details':
-      return <WalletHeader />
+      return (
+        <NavigationHeader
+          type="token"
+          info={{
+            chainId: navigation.params.chainId,
+            contractAddress: navigation.params.contractAddress,
+            accountAddress: navigation.params.accountAddress
+          }}
+        />
+      )
     case 'collectible-details':
-      return <WalletHeader />
+      return (
+        <NavigationHeader
+          type="collectible"
+          info={{
+            chainId: navigation.params.chainId,
+            contractAddress: navigation.params.contractAddress,
+            tokenId: navigation.params.tokenId
+          }}
+        />
+      )
+    case 'collection-details':
+      return (
+        <NavigationHeader
+          type="collection"
+          info={{
+            chainId: navigation.params.chainId,
+            contractAddress: navigation.params.contractAddress
+          }}
+        />
+      )
     case 'transaction-details':
-      return <NavigationHeader secondaryText="" primaryText="" />
+      return <NavigationHeader />
     case 'send-general':
-      return <WalletHeader primaryText="Send" enableAccountSelector />
     case 'send-coin':
-      return <WalletHeader primaryText="Send Coin" />
     case 'send-collectible':
-      return <WalletHeader primaryText="Send Collectible" />
+      return <NavigationHeader label="Send" />
     case 'swap':
-      return <WalletHeader primaryText="Swap" enableAccountSelector />
     case 'swap-coin':
     case 'swap-coin-list':
-      return <NavigationHeader secondaryText="Wallet / " primaryText="Buy" />
+      return <NavigationHeader label="Swap" />
     case 'receive':
-      return <WalletHeader primaryText="Receive" enableAccountSelector />
+      return <NavigationHeader label="Receive" />
+    case 'buy':
+      return <NavigationHeader label="Buy" />
+    case 'search':
+      return <NavigationHeader type="search" />
   }
 }

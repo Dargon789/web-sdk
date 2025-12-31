@@ -1,9 +1,9 @@
-import { GetLifiSwapRoutesArgs, type LifiSwapRoute, SequenceAPIClient } from '@0xsequence/api'
+import { GetLifiSwapRouteDirection, SequenceAPIClient, type LifiSwapRoute } from '@0xsequence/api'
 import { useQuery } from '@tanstack/react-query'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
-import { useAPIClient } from '../API/useAPIClient'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
+import { useAPIClient } from '../API/useAPIClient.js'
 
 /**
  * Arguments for the useGetSwapRoutes hook
@@ -20,19 +20,26 @@ export interface UseGetSwapRoutesArgs {
   toTokenAmount: string
 }
 
-const getSwapRoutes = async (
-  apiClient: SequenceAPIClient,
-  args: GetLifiSwapRoutesArgs & { walletAddress: string }
-): Promise<LifiSwapRoute[]> => {
+interface GetSwapRoutesArgs {
+  chainId: number
+  walletAddress: string
+  toTokenAddress: string
+  toTokenAmount: string
+}
+
+const getSwapRoutes = async (apiClient: SequenceAPIClient, args: GetSwapRoutesArgs): Promise<LifiSwapRoute[]> => {
   if (!args.chainId || !args.toTokenAddress) {
     return []
   }
 
   const res = await apiClient.getLifiSwapRoutes({
-    chainId: args.chainId,
-    walletAddress: args.walletAddress,
-    toTokenAddress: args.toTokenAddress,
-    toTokenAmount: args.toTokenAmount
+    params: {
+      direction: GetLifiSwapRouteDirection.to,
+      chainId: args.chainId,
+      walletAddress: args.walletAddress,
+      tokenAddress: args.toTokenAddress,
+      tokenAmount: args.toTokenAmount
+    }
   })
 
   if (res.routes.length === 0) {
@@ -46,9 +53,11 @@ const getSwapRoutes = async (
  * Hook to fetch available swap routes for a given token.
  *
  * This hook uses React Query to fetch and cache swap routes from the Sequence API.
- * Stale time is set to one hour by default
+ * Stale time is set to one hour by default.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetSwapRoutes} for more detailed documentation.
+ * This hook replaces useGetSwapPrices hook which has been removed in v5.2.3.
+ *
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetSwapRoutes} for more detailed documentation.
  *
  * @param args - Arguments for fetching swap routes:
  *   - walletAddress: The address of the user's wallet
@@ -57,7 +66,7 @@ const getSwapRoutes = async (
  *   - toTokenAmount: The amount of the token to buy
  *
  * @param options - Optional configuration options:
- *   - retry: Whether to retry failed requests (defaults to true)
+ *   - retry: Whether to retry failed requests (defaults to false)
  *   - disabled: Whether to disable the query
  *
  * @returns React Query result object containing:
@@ -93,7 +102,7 @@ export const useGetSwapRoutes = (args: UseGetSwapRoutesArgs, options?: HooksOpti
   return useQuery({
     queryKey: [QUERY_KEYS.useGetSwapRoutes, args, options],
     queryFn: () => getSwapRoutes(apiClient, args),
-    retry: options?.retry ?? true,
+    retry: options?.retry ?? false,
     // We must keep a long staletime to avoid the list of quotes being refreshed while the user is doing the transactions
     // Instead, we will invalidate the query manually
     staleTime: time.oneHour,

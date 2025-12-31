@@ -1,26 +1,21 @@
-import { compareAddress, formatDisplay, getNativeTokenInfoByChainId, useWallets } from '@0xsequence/connect'
-import { Button, SendIcon, SwapIcon, Text, TokenImage } from '@0xsequence/design-system'
-import { useGetCoinPrices, useGetExchangeRate, useGetTransactionHistory, useGetSingleTokenBalance } from '@0xsequence/hooks'
+import { useWallets } from '@0xsequence/connect'
+import { AddIcon, Button, SendIcon, Text, TokenImage } from '@0xsequence/design-system'
+import { useGetCoinPrices, useGetExchangeRate, useGetSingleTokenBalance, useGetTransactionHistory } from '@0xsequence/hooks'
+import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/web-sdk-core'
 import { useEffect } from 'react'
 import { formatUnits, zeroAddress } from 'viem'
 import { useConfig } from 'wagmi'
 
-import { InfiniteScroll } from '../../components/InfiniteScroll'
-import { NetworkBadge } from '../../components/NetworkBadge'
-import { TransactionHistoryList } from '../../components/TransactionHistoryList'
-import { HEADER_HEIGHT } from '../../constants'
-import { useSettings, useNavigation } from '../../hooks'
-import { computeBalanceFiat, flattenPaginatedTransactionHistory } from '../../utils'
+import { InfiniteScroll } from '../../components/InfiniteScroll.js'
+import type { TokenInfo } from '../../components/NavigationHeader/index.js'
+import { NetworkBadge } from '../../components/NetworkBadge.js'
+import { TransactionHistoryList } from '../../components/TransactionHistoryList/index.js'
+import { useNavigation, useSettings } from '../../hooks/index.js'
+import { computeBalanceFiat, flattenPaginatedTransactionHistory } from '../../utils/index.js'
 
-import { CoinDetailsSkeleton } from './Skeleton'
+import { CoinDetailsSkeleton } from './Skeleton.js'
 
-export interface CoinDetailsProps {
-  contractAddress: string
-  chainId: number
-  accountAddress: string
-}
-
-export const CoinDetails = ({ contractAddress, chainId, accountAddress }: CoinDetailsProps) => {
+export const CoinDetails = ({ contractAddress, chainId, accountAddress = '' }: TokenInfo) => {
   const { chains } = useConfig()
   const { setNavigation } = useNavigation()
   const { fiatCurrency } = useSettings()
@@ -94,7 +89,7 @@ export const CoinDetails = ({ contractAddress, chainId, accountAddress }: CoinDe
     })
   }
 
-  const onClickSwap = () => {
+  const onClickAdd = () => {
     setNavigation({
       location: 'swap-coin',
       params: {
@@ -104,8 +99,8 @@ export const CoinDetails = ({ contractAddress, chainId, accountAddress }: CoinDe
     })
   }
   return (
-    <div style={{ paddingTop: HEADER_HEIGHT }}>
-      <div className="flex flex-col gap-10 pb-5 px-4 pt-0" style={{ marginTop: '-20px' }}>
+    <div>
+      <div className="flex flex-col gap-10 pb-5 px-4 pt-0">
         <div className="flex mb-10 gap-2 items-center justify-center flex-col">
           <TokenImage src={logo} size="xl" />
           <Text variant="large" color="primary" fontWeight="bold">
@@ -124,8 +119,13 @@ export const CoinDetails = ({ contractAddress, chainId, accountAddress }: CoinDe
         </div>
         {!isReadOnly && (
           <div className="flex gap-2">
-            <Button className="w-full text-primary" variant="primary" leftIcon={SendIcon} label="Send" onClick={onClickSend} />
-            <Button className="w-full text-primary" variant="primary" leftIcon={SwapIcon} label="Swap" onClick={onClickSwap} />
+            <Button
+              className="w-full text-primary bg-background-secondary"
+              leftIcon={SendIcon}
+              label="Send"
+              onClick={onClickSend}
+            />
+            <Button className="w-full text-primary bg-background-secondary" leftIcon={AddIcon} label="Add" onClick={onClickAdd} />
           </div>
         )}
         <div>

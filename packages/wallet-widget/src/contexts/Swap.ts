@@ -1,27 +1,11 @@
-import { TokenBalanceWithPrice } from '../utils'
-
-import { createGenericContext } from './genericContext'
+import type { Token } from '@0xsequence/api'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
 
 export interface SwapContext {
-  fromCoin: TokenBalanceWithPrice | undefined
-  toCoin: TokenBalanceWithPrice | undefined
-  amount: number
-  nonRecentAmount: number
-  recentInput: 'from' | 'to'
-  isSwapReady: boolean
-  isSwapQuotePending: boolean
-  hasInsufficientFunds: boolean
-  isErrorSwapQuote: boolean
-  isTxnPending: boolean
-  isErrorTxn: boolean
-  setFromCoin: (coin: TokenBalanceWithPrice | undefined) => void
-  setToCoin: (coin: TokenBalanceWithPrice | undefined) => void
-  setAmount: (amount: number, type: 'from' | 'to') => void
-  switchCoinOrder: () => void
-  onSubmitSwap: () => void
-  resetSwapStates: () => void
+  lifiChains: number[]
+  lifiTokens: Token[]
 }
 
 const [useSwapContext, SwapContextProvider] = createGenericContext<SwapContext>()
 
-export { useSwapContext, SwapContextProvider }
+export { SwapContextProvider, useSwapContext }

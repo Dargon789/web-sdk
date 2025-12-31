@@ -1,10 +1,10 @@
-import { IndexerGateway, Page, SequenceIndexerGateway } from '@0xsequence/indexer'
+import { SequenceIndexerGateway, type IndexerGateway, type Page } from '@0xsequence/indexer'
 import { useInfiniteQuery } from '@tanstack/react-query'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
 
-import { useIndexerGatewayClient } from './useIndexerGatewayClient'
+import { useIndexerGatewayClient } from './useIndexerGatewayClient.js'
 
 const getTokenBalancesByContract = async (
   indexerGatewayClient: SequenceIndexerGateway,
@@ -48,7 +48,7 @@ const getTokenBalancesByContract = async (
  *   - `decimals`: Number of decimals (for ERC20)
  *   - `logoURI`: URL of the token logo
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetTokenBalancesByContract} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetTokenBalancesByContract} for more detailed documentation.
  *
  * @example
  * ```tsx
@@ -83,8 +83,8 @@ export const useGetTokenBalancesByContract = (args: IndexerGateway.GetTokenBalan
     getNextPageParam: ({ page }) => {
       return page?.more ? page : undefined
     },
-    initialPageParam: { pageSize: args.page?.pageSize } as Page,
-    retry: options?.retry ?? true,
+    initialPageParam: { ...args?.page } as Page,
+    retry: options?.retry ?? false,
     staleTime: time.oneSecond * 30,
     enabled: args.filter.contractAddresses.length > 0 && !options?.disabled
   })

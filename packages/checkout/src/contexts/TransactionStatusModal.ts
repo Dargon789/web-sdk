@@ -1,4 +1,4 @@
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from './genericContext.js'
 
 interface Item {
   tokenId: string
@@ -6,6 +6,8 @@ interface Item {
   decimals?: number
   price: string
 }
+
+export type TxStatus = 'pending' | 'success' | 'error'
 
 export interface TransactionStatusSettings {
   collectionAddress?: string
@@ -17,6 +19,7 @@ export interface TransactionStatusSettings {
   onError?: (error: Error) => void
   onClose?: () => void
   txHash: string
+  statusOverride?: TxStatus
 }
 
 type TransactionStatusContext = {
@@ -27,4 +30,4 @@ type TransactionStatusContext = {
 
 const [useTransactionStatusContext, TransactionStatusModalContextProvider] = createGenericContext<TransactionStatusContext>()
 
-export { useTransactionStatusContext, TransactionStatusModalContextProvider }
+export { TransactionStatusModalContextProvider, useTransactionStatusContext }

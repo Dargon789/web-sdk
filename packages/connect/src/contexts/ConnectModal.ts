@@ -1,15 +1,14 @@
 'use client'
 
-import React from 'react'
-
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
+import type { Dispatch, SetStateAction } from 'react'
 
 type ConnectModalContext = {
   isConnectModalOpen: boolean
-  setOpenConnectModal: React.Dispatch<React.SetStateAction<boolean>>
+  setOpenConnectModal: Dispatch<SetStateAction<boolean>>
   openConnectModalState: boolean
 }
 
 const [useConnectModalContext, ConnectModalContextProvider] = createGenericContext<ConnectModalContext>()
 
-export { useConnectModalContext, ConnectModalContextProvider }
+export { ConnectModalContextProvider, useConnectModalContext }

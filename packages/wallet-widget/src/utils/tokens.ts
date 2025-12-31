@@ -1,11 +1,12 @@
-import { Price, TokenPrice } from '@0xsequence/api'
-import { compareAddress } from '@0xsequence/connect'
-import { TokenBalance, GetTransactionHistoryReturn, Transaction } from '@0xsequence/indexer'
-import { InfiniteData } from '@tanstack/react-query'
+import type { Price, TokenPrice } from '@0xsequence/api'
+import type { GetTransactionHistoryReturn, TokenBalance, Transaction } from '@0xsequence/indexer'
+import { compareAddress } from '@0xsequence/web-sdk-core'
+import type { InfiniteData } from '@tanstack/react-query'
 import { formatUnits, zeroAddress } from 'viem'
 
-export interface TokenBalanceWithPrice extends TokenBalance {
-  price: Price
+export interface TokenBalanceWithDetails extends TokenBalance {
+  price?: Price
+  _type?: 'coin' | 'collectible' | 'collection'
 }
 
 export const getPercentageColor = (value: number) => {

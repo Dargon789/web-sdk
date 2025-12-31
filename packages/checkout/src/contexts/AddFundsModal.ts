@@ -1,7 +1,6 @@
 import { TransactionOnRampProvider } from '@0xsequence/marketplace'
-import { Hex } from 'viem'
-
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
+import type { Hex } from 'viem'
 
 export interface AddFundsSettings {
   walletAddress: string | Hex
@@ -28,4 +27,4 @@ type AddFundsModalContext = {
 
 const [useAddFundsModalContext, AddFundsContextProvider] = createGenericContext<AddFundsModalContext>()
 
-export { useAddFundsModalContext, AddFundsContextProvider }
+export { AddFundsContextProvider, useAddFundsModalContext }

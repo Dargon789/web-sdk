@@ -1,7 +1,7 @@
 import { SequenceAPIClient } from '@0xsequence/api'
 import { useMemo } from 'react'
 
-import { useConfig } from '../useConfig'
+import { useConfig } from '../useConfig.js'
 
 /**
  * Hook to access the Sequence API client instance.
@@ -19,7 +19,6 @@ import { useConfig } from '../useConfig'
  * The client instance is memoized based on the project access key, meaning a new
  * instance is only created when the access key changes.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useAPIClient} for more detailed documentation.
  *
  * @returns {SequenceAPIClient} A configured instance of the Sequence API client
  *

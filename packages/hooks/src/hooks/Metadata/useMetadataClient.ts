@@ -1,7 +1,7 @@
 import { SequenceMetadata } from '@0xsequence/metadata'
 import { useMemo } from 'react'
 
-import { useConfig } from '../useConfig'
+import { useConfig } from '../useConfig.js'
 
 /**
  * Hook that provides a memoized instance of the Sequence Metadata client.
@@ -18,7 +18,7 @@ import { useConfig } from '../useConfig'
  * - {@link useGetContractInfo} for fetching contract information
  * - {@link useGetMultipleContractsInfo} for batch fetching contract information
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useMetadataClient} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useMetadataClient} for more detailed documentation.
  *
  * @returns A configured instance of SequenceMetadata client
  *

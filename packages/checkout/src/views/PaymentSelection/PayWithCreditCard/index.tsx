@@ -4,9 +4,9 @@ import { findSupportedNetwork } from '@0xsequence/network'
 import { useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 
-import { SelectPaymentSettings } from '../../../contexts'
-import { CheckoutSettings } from '../../../contexts/CheckoutModal'
-import { useCheckoutModal, useSelectPaymentModal } from '../../../hooks'
+import type { CheckoutSettings } from '../../../contexts/CheckoutModal.js'
+import type { SelectPaymentSettings } from '../../../contexts/SelectPaymentModal.js'
+import { useCheckoutModal, useSelectPaymentModal } from '../../../hooks/index.js'
 
 interface PayWithCreditCardProps {
   settings: SelectPaymentSettings
@@ -14,7 +14,7 @@ interface PayWithCreditCardProps {
   skipOnCloseCallback: () => void
 }
 
-type BasePaymentProviderOptions = 'sardine' | 'transak'
+type BasePaymentProviderOptions = 'sardine' | 'transak' | 'forte'
 type CustomPaymentProviderOptions = 'custom'
 type PaymentProviderOptions = BasePaymentProviderOptions | CustomPaymentProviderOptions
 
@@ -32,8 +32,9 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
     onError = () => {},
     onClose = () => {},
     creditCardProviders = [],
+    supplementaryAnalyticsInfo = {},
     transakConfig,
-    supplementaryAnalyticsInfo = {}
+    forteConfig
   } = settings
 
   const { address: userAddress } = useAccount()
@@ -64,6 +65,7 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
         return
       case 'sardine':
       case 'transak':
+      case 'forte':
         onPurchase()
         return
       default:
@@ -87,7 +89,7 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
 
     const checkoutSettings: CheckoutSettings = {
       creditCardCheckout: {
-        onSuccess: (txHash: string) => {
+        onSuccess: (txHash?: string) => {
           clearCachedBalances()
           onSuccess(txHash)
         },
@@ -100,15 +102,16 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
         currencySymbol: currencyInfoData.symbol,
         currencyAddress,
         currencyDecimals: String(currencyInfoData?.decimals || 0),
-        nftId: collectible.tokenId,
+        nftId: collectible.tokenId ?? '',
         nftAddress: collectionAddress,
         nftQuantity: collectible.quantity,
         nftDecimals: collectible.decimals === undefined ? undefined : String(collectible.decimals),
         provider: selectedPaymentProvider as BasePaymentProviderOptions,
         calldata: txData,
+        approvedSpenderAddress: sardineConfig?.approvedSpenderAddress || settings.approvedSpenderAddress,
+        supplementaryAnalyticsInfo,
         transakConfig,
-        approvedSpenderAddress: sardineConfig?.approvedSpenderAddress || targetContractAddress,
-        supplementaryAnalyticsInfo
+        forteConfig
       }
     }
 
@@ -134,6 +137,7 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
             switch (creditCardProvider) {
               case 'sardine':
               case 'transak':
+              case 'forte':
               case 'custom':
                 return (
                   <Card

@@ -1,6 +1,6 @@
-import { useCheckoutUI, CreditCardProviders } from '@0xsequence/checkout'
-import { CryptoOption } from '@0xsequence/connect'
-import { Text, Button, Spinner, NetworkImage, Image } from '@0xsequence/design-system'
+import { CreditCardProviders, useCheckoutUI } from '@0xsequence/checkout'
+import { Button, Image, NetworkImage, Spinner, Text } from '@0xsequence/design-system'
+import { CryptoOption } from '@0xsequence/web-sdk-core'
 import { useState } from 'react'
 import { encodeFunctionData, toHex } from 'viem'
 import { useAccount } from 'wagmi'
@@ -59,7 +59,7 @@ export const CustomCheckout = () => {
       contractId,
       apiKey: '5911d9ec-46b5-48fa-a755-d59a715ff0cf'
     },
-    onSuccess: (txnHash: string) => {
+    onSuccess: (txnHash?: string) => {
       console.log('success!', txnHash)
     },
     onError: (error: Error) => {

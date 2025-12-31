@@ -1,23 +1,23 @@
-import { LifiToken } from '@0xsequence/api'
-import { useAnalyticsContext, compareAddress, TRANSACTION_CONFIRMATIONS_DEFAULT, sendTransactions } from '@0xsequence/connect'
-import { Button, Divider, Text, Spinner } from '@0xsequence/design-system'
+import type { LifiToken } from '@0xsequence/api'
+import { compareAddress, sendTransactions, TRANSACTION_CONFIRMATIONS_DEFAULT, useAnalyticsContext } from '@0xsequence/connect'
+import { Button, Divider, Spinner, Text } from '@0xsequence/design-system'
 import {
   useClearCachedBalances,
   useGetContractInfo,
   useGetSwapQuote,
-  useIndexerClient,
-  useGetSwapRoutes
+  useGetSwapRoutes,
+  useIndexerClient
 } from '@0xsequence/hooks'
 import { findSupportedNetwork } from '@0xsequence/network'
-import { useState, useEffect } from 'react'
-import { encodeFunctionData, Hex, zeroAddress } from 'viem'
-import { usePublicClient, useWalletClient, useReadContract, useAccount } from 'wagmi'
+import { useEffect, useState } from 'react'
+import { encodeFunctionData, zeroAddress, type Hex } from 'viem'
+import { useAccount, usePublicClient, useReadContract, useWalletClient } from 'wagmi'
 
 import { NavigationHeader } from '../../components/NavigationHeader'
-import { HEADER_HEIGHT, NFT_CHECKOUT_SOURCE } from '../../constants'
+import { HEADER_HEIGHT, EVENT_SOURCE } from '../../constants'
 import { ERC_20_CONTRACT_ABI } from '../../constants/abi'
-import { SelectPaymentSettings } from '../../contexts/SelectPaymentModal'
-import { useSelectPaymentModal, useTransactionStatusModal, useSkipOnCloseCallback } from '../../hooks'
+import type { SelectPaymentSettings } from '../../contexts/SelectPaymentModal'
+import { useSelectPaymentModal, useSkipOnCloseCallback, useTransactionStatusModal } from '../../hooks'
 
 import { Footer } from './Footer'
 import { FundWithFiat } from './FundWithFiat'
@@ -46,6 +46,7 @@ export const PaymentSelectionContent = () => {
 
   const [disableButtons, setDisableButtons] = useState(false)
   const [isError, setIsError] = useState<boolean>(false)
+  const [isSendingTransaction, setIsSendingTransaction] = useState<boolean>(false)
 
   const {
     chain,
@@ -142,13 +143,13 @@ export const PaymentSelectionContent = () => {
   }, [])
 
   const onPurchaseMainCurrency = async () => {
-    if (!walletClient || !userAddress || !publicClient || !userAddress || !connector) {
+    if (!walletClient || !userAddress || !publicClient || !connector) {
       return
     }
-
     setIsError(false)
     setDisableButtons(true)
 
+    setIsSendingTransaction(true)
     try {
       const walletClientChainId = await walletClient.getChainId()
       if (walletClientChainId !== chainId) {
@@ -200,7 +201,7 @@ export const PaymentSelectionContent = () => {
         props: {
           ...supplementaryAnalyticsInfo,
           type: 'crypto',
-          source: NFT_CHECKOUT_SOURCE,
+          source: EVENT_SOURCE,
           chainId: String(chainId),
           listedCurrency: currencyAddress,
           purchasedCurrency: currencyAddress,
@@ -213,6 +214,7 @@ export const PaymentSelectionContent = () => {
         }
       })
 
+      setIsSendingTransaction(false)
       closeSelectPaymentModal()
 
       skipOnCloseCallback()
@@ -232,10 +234,12 @@ export const PaymentSelectionContent = () => {
           clearCachedBalances()
           onSuccess(txHash)
         },
-        onClose
+        onClose,
+        statusOverride: 'success'
       })
     } catch (e) {
       console.error('Failed to purchase...', e)
+      setIsSendingTransaction(false)
       onError(e as Error)
       setIsError(true)
     }
@@ -244,13 +248,13 @@ export const PaymentSelectionContent = () => {
   }
 
   const onClickPurchaseSwap = async (swapTokenOption: LifiToken) => {
-    if (!walletClient || !userAddress || !publicClient || !userAddress || !connector || !swapQuote) {
+    if (!walletClient || !userAddress || !publicClient || !connector || !swapQuote) {
       return
     }
 
     setIsError(false)
     setDisableButtons(true)
-
+    setIsSendingTransaction(true)
     try {
       const walletClientChainId = await walletClient.getChainId()
       if (walletClientChainId !== chainId) {
@@ -327,7 +331,7 @@ export const PaymentSelectionContent = () => {
         props: {
           ...supplementaryAnalyticsInfo,
           type: 'crypto',
-          source: NFT_CHECKOUT_SOURCE,
+          source: EVENT_SOURCE,
           chainId: String(chainId),
           listedCurrency: swapTokenOption.address,
           purchasedCurrency: currencyAddress,
@@ -340,6 +344,7 @@ export const PaymentSelectionContent = () => {
         }
       })
 
+      setIsSendingTransaction(false)
       closeSelectPaymentModal()
 
       skipOnCloseCallback()
@@ -359,10 +364,12 @@ export const PaymentSelectionContent = () => {
           clearCachedBalances()
           onSuccess(txHash)
         },
-        onClose
+        onClose,
+        statusOverride: 'success'
       })
     } catch (e) {
       console.error('Failed to purchase...', e)
+      setIsSendingTransaction(false)
       onError(e as Error)
       setIsError(true)
     }
@@ -370,15 +377,15 @@ export const PaymentSelectionContent = () => {
     setDisableButtons(false)
   }
 
-  const onClickPurchase = () => {
+  const onClickPurchase = async () => {
     if (compareAddress(selectedCurrency || '', currencyAddress)) {
-      onPurchaseMainCurrency()
+      await onPurchaseMainCurrency()
     } else {
       const foundSwap = swapRoutes
         .flatMap(route => route.fromTokens)
         .find(fromToken => fromToken.address.toLowerCase() === selectedCurrency?.toLowerCase())
       if (foundSwap) {
-        onClickPurchaseSwap(foundSwap)
+        await onClickPurchaseSwap(foundSwap)
       }
     }
   }
@@ -473,7 +480,15 @@ export const PaymentSelectionContent = () => {
                 }
                 shape="square"
                 variant="primary"
-                label="Complete Purchase"
+                label={
+                  isSendingTransaction ? (
+                    <div className="flex items-center justify-center w-full h-full">
+                      <span>Sending transaction ...</span>
+                    </div>
+                  ) : (
+                    'Complete Purchase'
+                  )
+                }
               />
               <div className="flex w-full justify-center items-center gap-0.5 my-2">
                 {/* Replace by icon from design-system once new release is out */}

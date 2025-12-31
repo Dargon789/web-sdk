@@ -1,10 +1,10 @@
-import { ContractInfo, SequenceMetadata, GetContractInfoArgs } from '@0xsequence/metadata'
+import { SequenceMetadata, type ContractInfo, type GetContractInfoArgs } from '@0xsequence/metadata'
 import { useQuery } from '@tanstack/react-query'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
 
-import { useMetadataClient } from './useMetadataClient'
+import { useMetadataClient } from './useMetadataClient.js'
 
 const getMultipleContractsInfo = async (
   metadataClient: SequenceMetadata,
@@ -28,14 +28,14 @@ const getMultipleContractsInfo = async (
  * for cross-chain applications. Can fetch any combination of NFTs (ERC721/ERC1155) and
  * tokens (ERC20) across different chains simultaneously.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetMultipleContractsInfo} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetMultipleContractsInfo} for more detailed documentation.
  *
  * @param useGetMultipleContractsInfoArgs - Array of contract info arguments
  * @param useGetMultipleContractsInfoArgs[].chainID - Chain ID as string (e.g., "1" for Ethereum mainnet)
  * @param useGetMultipleContractsInfoArgs[].contractAddress - Contract address to fetch info for
  * @param options - Optional configuration for the query behavior
  * @param options.disabled - If true, disables the query from automatically running
- * @param options.retry - If true (default), retries failed queries
+ * @param options.retry - If true, retries failed queries
  *
  * Query configuration:
  * - Uses a 1 hour stale time (compared to 10 minutes for single contract info)
@@ -116,7 +116,7 @@ export const useGetMultipleContractsInfo = (args: GetContractInfoArgs[], options
   return useQuery({
     queryKey: [QUERY_KEYS.useGetMultipleContractInfo, args, options],
     queryFn: async () => await getMultipleContractsInfo(metadataClient, args),
-    retry: options?.retry ?? true,
+    retry: options?.retry ?? false,
     staleTime: time.oneHour,
     enabled: !options?.disabled
   })

@@ -1,56 +1,45 @@
-import { Spinner, Skeleton, Text } from '@0xsequence/design-system'
-import React from 'react'
+import { Skeleton, Spinner } from '@0xsequence/design-system'
+import type { FC } from 'react'
 
-import { TokenBalanceWithPrice } from '../../../utils'
-import { InfiniteScroll } from '../../InfiniteScroll'
+import type { TokenBalanceWithDetails } from '../../../utils/index.js'
+import { InfiniteScroll } from '../../InfiniteScroll.js'
+import { NoResults } from '../../NoResults.js'
 
-import { CollectibleTile } from './CollectibleTile'
+import { CollectibleTile } from './CollectibleTile.js'
 
 interface CollectiblesTabProps {
-  displayedCollectibleBalances: TokenBalanceWithPrice[] | undefined
+  displayedCollectibleBalances: TokenBalanceWithDetails[] | undefined
   fetchMoreCollectibleBalances: () => Promise<any>
   hasMoreCollectibleBalances: boolean
   isFetchingMoreCollectibleBalances: boolean
   isFetchingInitialBalances: boolean
-  onTokenClick: (token: TokenBalanceWithPrice) => void
-  gridColumns?: number
+  onTokenClick: (token: TokenBalanceWithDetails) => void
 }
 
-export const CollectiblesTab: React.FC<CollectiblesTabProps> = ({
+export const CollectiblesTab: FC<CollectiblesTabProps> = ({
   displayedCollectibleBalances,
   fetchMoreCollectibleBalances,
   hasMoreCollectibleBalances,
   isFetchingMoreCollectibleBalances,
   isFetchingInitialBalances,
-  onTokenClick,
-  gridColumns
+  onTokenClick
 }) => {
+  const hasBalances = displayedCollectibleBalances && displayedCollectibleBalances.length > 0
+
   return (
-    <div>
-      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, width: '100%' }}>
-        {isFetchingInitialBalances ? (
-          <>
-            {Array(6)
-              .fill(null)
-              .map((_, i) => (
-                <Skeleton className="w-full" key={i} style={{ height: '180px' }} />
-              ))}
-          </>
-        ) : (
-          <>
-            {displayedCollectibleBalances && displayedCollectibleBalances.length > 0 && (
-              <InfiniteScroll onLoad={() => fetchMoreCollectibleBalances()} hasMore={hasMoreCollectibleBalances}>
-                {displayedCollectibleBalances?.map((balance, index) => {
-                  return <CollectibleTile key={index} balance={balance} onTokenClick={onTokenClick} />
-                })}
+    <div className="flex flex-col">
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(3, 1fr)`, width: '100%' }}>
+        {isFetchingInitialBalances
+          ? Array.from({ length: 6 }).map((_, i) => <Skeleton className="w-full aspect-square rounded-lg" key={i} />)
+          : hasBalances && (
+              <InfiniteScroll onLoad={fetchMoreCollectibleBalances} hasMore={hasMoreCollectibleBalances}>
+                {displayedCollectibleBalances!.map((balance, index) => (
+                  <CollectibleTile key={index} balance={balance} onTokenClick={onTokenClick} />
+                ))}
               </InfiniteScroll>
             )}
-          </>
-        )}
       </div>
-      {(!displayedCollectibleBalances || displayedCollectibleBalances.length === 0) && !isFetchingMoreCollectibleBalances && (
-        <Text color="primary">No Collectibles Found</Text>
-      )}
+      {!isFetchingInitialBalances && !hasBalances && !isFetchingMoreCollectibleBalances && <NoResults hasInstructions />}
       {isFetchingMoreCollectibleBalances && <Spinner className="flex justify-self-center mt-3" />}
     </div>
   )

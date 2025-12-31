@@ -1,5 +1,5 @@
-import { Page, SequenceIndexer } from '@0xsequence/indexer'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { GetTransactionHistoryReturn, Page, SequenceIndexer } from '@0xsequence/indexer'
+import { InfiniteData, useInfiniteQuery, UseInfiniteQueryResult } from '@tanstack/react-query'
 import { getAddress } from 'viem'
 
 import { QUERY_KEYS, time } from '../../constants'
@@ -8,18 +8,15 @@ import { HooksOptions } from '../../types'
 import { useIndexerClient } from './useIndexerClient'
 
 interface GetTransactionHistoryArgs {
-  accountAddresses: string[]
-  contractAddresses?: string[]
+  accountAddress: string
+  contractAddress?: string
   tokenId?: string
   page?: Page
 }
 
-export interface UseGetTransactionHistoryArgs extends GetTransactionHistoryArgs {
-  chainId: number
-}
-
 /**
  * Return type for the useGetTransactionHistory hook.
+ * Extends React Query's UseInfiniteQueryResult with transaction history data.
  *
  * @property data - The paginated transaction history data
  * @property data.pages - Array of page results, each containing:
@@ -32,22 +29,28 @@ export interface UseGetTransactionHistoryArgs extends GetTransactionHistoryArgs 
  *     - transfers: Optional array of transaction transfers
  *     - timestamp: Transaction timestamp
  *   - page: Pagination information:
- *     - after: Cursor for the next page
+ *     - after: Next page cursor
  *     - more: Whether more results exist in the next page
  *     - pageSize: Number of results per page
+ * @property everything else that react query returns {@link UseInfiniteQueryResult}
  *
  */
+export type UseGetTransactionHistoryReturnType = UseInfiniteQueryResult<InfiniteData<GetTransactionHistoryReturn, unknown>, Error>
+
+export interface UseGetTransactionHistoryArgs extends GetTransactionHistoryArgs {
+  chainId: number
+}
 
 const getTransactionHistory = async (
   indexerClient: SequenceIndexer,
-  { accountAddresses, contractAddresses, tokenId, page }: GetTransactionHistoryArgs
+  { contractAddress, accountAddress, tokenId, page }: GetTransactionHistoryArgs
 ) => {
   const res = await indexerClient.getTransactionHistory({
     includeMetadata: true,
     page,
     filter: {
-      accountAddresses,
-      contractAddresses,
+      accountAddress,
+      contractAddress,
       tokenID: tokenId
     }
   })
@@ -95,9 +98,9 @@ const getTransactionHistory = async (
  *     isFetchingNextPage
  *   } = useGetTransactionHistory({
  *     chainId: 1,
- *     accountAddresses: ['0x123...'],
+ *     accountAddress: '0x123...',
  *     // Optional filters:
- *     // contractAddresses: ['0x456...'],
+ *     // contractAddress: '0x456...',
  *     // tokenId: '1'
  *   })
  *
@@ -128,7 +131,10 @@ const getTransactionHistory = async (
  * }
  * ```
  */
-export const useGetTransactionHistory = (args: UseGetTransactionHistoryArgs, options?: HooksOptions) => {
+export const useGetTransactionHistory = (
+  args: UseGetTransactionHistoryArgs,
+  options?: HooksOptions
+): UseGetTransactionHistoryReturnType => {
   const indexerClient = useIndexerClient(args.chainId)
 
   return useInfiniteQuery({
@@ -140,11 +146,12 @@ export const useGetTransactionHistory = (args: UseGetTransactionHistoryArgs, opt
       })
     },
     getNextPageParam: ({ page }) => {
+      // Note: must return undefined instead of null to stop the infinite scroll
       return page?.more ? page : undefined
     },
     initialPageParam: { pageSize: args.page?.pageSize } as Page,
     retry: options?.retry ?? true,
     staleTime: time.oneSecond * 30,
-    enabled: !!args.chainId && args.accountAddresses.length > 0 && !options?.disabled
+    enabled: !!args.chainId && !!args.accountAddress && !options?.disabled
   })
 }

@@ -1,10 +1,10 @@
-import { GetLifiSwapQuoteArgs } from '@0xsequence/api'
+import type { GetLifiSwapQuoteRequest } from '@0xsequence/api'
 import { useQuery } from '@tanstack/react-query'
 
-import { QUERY_KEYS, ZERO_ADDRESS, time } from '../../constants'
-import { HooksOptions } from '../../types'
-import { compareAddress } from '../../utils/helpers'
-import { useAPIClient } from '../API/useAPIClient'
+import { QUERY_KEYS, time, ZERO_ADDRESS } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
+import { compareAddress } from '../../utils/helpers.js'
+import { useAPIClient } from '../API/useAPIClient.js'
 
 /**
  * Hook to fetch a swap quote for exchanging between two currencies.
@@ -20,7 +20,7 @@ import { useAPIClient } from '../API/useAPIClient'
  * - Transaction data generation for the swap
  * - Error handling for failed API calls
  *
- * Go to {@link https://docs.sequence.xyz/sdk/web/hooks/useGetSwapQuote} for more detailed documentation.
+ * Go to {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetSwapQuote} for more detailed documentation.
  *
  * @param getSwapQuoteArgs - Configuration object for the swap quote query:
  * - params: The parameters for the swap quote query
@@ -69,7 +69,7 @@ import { useAPIClient } from '../API/useAPIClient'
  *       toTokenAddress: '0x789...',
  *       fromTokenAmount: '1000000000000000000', // 1 token in base units
  *       includeApprove: true,
- *       slippageBps: 100,
+ *       slippageBps: 150,
  *       chainId: 1
  *     }
  *   })
@@ -88,7 +88,7 @@ import { useAPIClient } from '../API/useAPIClient'
  * }
  * ```
  */
-export const useGetSwapQuote = (getSwapQuoteArgs: GetLifiSwapQuoteArgs, options?: HooksOptions) => {
+export const useGetSwapQuote = (getSwapQuoteArgs: GetLifiSwapQuoteRequest, options?: HooksOptions) => {
   const apiClient = useAPIClient()
 
   return useQuery({
@@ -111,7 +111,7 @@ export const useGetSwapQuote = (getSwapQuoteArgs: GetLifiSwapQuoteArgs, options?
         currencyAddress: compareAddress(res.quote.currencyAddress, ZERO_ADDRESS) ? ZERO_ADDRESS : res.quote.currencyAddress
       }
     },
-    retry: options?.retry ?? true,
+    retry: options?.retry ?? false,
     staleTime: time.oneMinute * 1,
     enabled:
       !options?.disabled &&

@@ -1,11 +1,11 @@
-import { formatDisplay } from '@0xsequence/connect'
 import { NetworkImage, Skeleton, Text, TokenImage } from '@0xsequence/design-system'
+import { formatDisplay } from '@0xsequence/web-sdk-core'
 import React from 'react'
 import { formatUnits } from 'viem'
 
-import { useSettings } from '../hooks'
+import { useSettings } from '../hooks/index.js'
 
-import { CollectibleTileImage } from './CollectibleTileImage'
+import { TokenTileImage } from './TokenTileImage.js'
 
 interface SendItemInfoProps {
   name: string
@@ -57,7 +57,7 @@ export const SendItemInfo = ({
       <div className="flex justify-between items-center gap-2">
         {showSquareImage ? (
           <div style={{ width: '40px' }}>
-            <CollectibleTileImage imageUrl={imageUrl} />
+            <TokenTileImage src={imageUrl} symbol={name} />
           </div>
         ) : (
           <TokenImage src={imageUrl} size="lg" />

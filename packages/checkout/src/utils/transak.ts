@@ -1,4 +1,6 @@
-import { AddFundsSettings } from '../contexts'
+import type { AddFundsSettings } from '../contexts/AddFundsModal.js'
+
+export const TRANSAK_ONRAMP_URL = 'https://global.transak.com'
 
 export const TRANSAK_PROXY_ADDRESS = '0x4a598b7ec77b1562ad0df7dc64a162695ce4c78a'
 
@@ -6,9 +8,6 @@ export const getTransakLink = (
   addFundsSettings: AddFundsSettings,
   { transakApiUrl, transakApiKey }: { transakApiUrl: string; transakApiKey: string }
 ) => {
-  const defaultNetworks =
-    'ethereum,mainnet,arbitrum,optimism,polygon,polygonzkevm,zksync,base,bnb,oasys,astar,avaxcchain,immutablezkevm'
-
   interface Options {
     [index: string]: string | undefined
   }
@@ -26,7 +25,7 @@ export const getTransakLink = (
     defaultFiatAmount: addFundsSettings?.defaultFiatAmount || '50',
     defaultCryptoCurrency: addFundsSettings?.defaultCryptoCurrency || 'USDC',
     cryptoCurrencyList: addFundsSettings?.cryptoCurrencyList,
-    networks: addFundsSettings?.networks || defaultNetworks
+    networks: addFundsSettings?.networks
   }
 
   Object.keys(options).forEach(k => {

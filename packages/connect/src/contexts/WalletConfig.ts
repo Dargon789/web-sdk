@@ -1,8 +1,8 @@
 'use client'
 
-import { DisplayedAsset } from '../types'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
 
-import { createGenericContext } from './genericContext'
+import type { DisplayedAsset } from '../types.js'
 
 type WalletConfigContext = {
   setDisplayedAssets: React.Dispatch<React.SetStateAction<DisplayedAsset[]>>

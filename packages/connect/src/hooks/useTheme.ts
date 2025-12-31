@@ -1,4 +1,4 @@
-import { useThemeContext } from '../contexts/Theme'
+import { useThemeContext } from '../contexts/Theme.js'
 
 /**
  * Hook to access and modify the theme and modal position settings.
@@ -7,7 +7,7 @@ import { useThemeContext } from '../contexts/Theme'
  * along with functions to update these values. The modal position can be set to various
  * predefined positions on the screen.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useTheme} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/wallet-sdk/ecosystem/hooks/useTheme} for more detailed documentation.
  *
  * @returns {Object} An object containing:
  * - `theme` - The current theme setting

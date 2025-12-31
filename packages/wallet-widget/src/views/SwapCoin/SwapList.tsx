@@ -1,26 +1,26 @@
+import { Button, Spinner, Text } from '@0xsequence/design-system'
 import {
-  CryptoOption,
+  useClearCachedBalances,
+  useGetContractInfo,
+  useGetSwapQuote,
+  useGetSwapRoutes,
+  useGetTokenBalancesSummary,
+  useIndexerClient
+} from '@0xsequence/hooks'
+import {
   compareAddress,
+  ContractVerificationStatus,
+  CryptoOption,
   formatDisplay,
   sendTransactions,
   useAnalyticsContext,
-  ExtendedConnector,
-  ContractVerificationStatus
-} from '@0xsequence/connect'
-import { Button, Spinner, Text } from '@0xsequence/design-system'
-import {
-  useGetSwapQuote,
-  useClearCachedBalances,
-  useGetContractInfo,
-  useIndexerClient,
-  useGetSwapRoutes,
-  useGetTokenBalancesSummary
-} from '@0xsequence/hooks'
-import { useState, useMemo } from 'react'
-import { zeroAddress, formatUnits, Hex } from 'viem'
+  type ExtendedConnector
+} from '@0xsequence/web-sdk-core'
+import { useMemo, useState } from 'react'
+import { formatUnits, zeroAddress, type Hex } from 'viem'
 import { useAccount, useChainId, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
 
-import { HEADER_HEIGHT } from '../../constants'
+import { HEADER_HEIGHT, EVENT_SOURCE, EVENT_TYPES } from '../../constants'
 import { useNavigation } from '../../hooks'
 
 interface SwapListProps {
@@ -178,12 +178,22 @@ export const SwapList = ({ chainId, contractAddress, amount, slippageBps }: Swap
       analytics?.track({
         event: 'SEND_TRANSACTION_REQUEST',
         props: {
-          type: 'crypto',
           walletClient: (connector as ExtendedConnector | undefined)?._wallet?.id || 'unknown',
-          source: 'sequence-kit/wallet',
+          source: EVENT_SOURCE,
           chainId: String(chainId),
           origin: window.location.origin,
-          txHash
+          txHash,
+          type: EVENT_TYPES.SWAP_CURRENCY,
+          buyCurrencyAddress: buyCurrencyAddress,
+          sellCurrencyAddress: sellCurrencyAddress,
+          buyCurrencySymbol: currencyInfo?.symbol || '',
+          sellCurrencySymbol: swapOption?.symbol || ''
+        },
+        nums: {
+          buyCurrencyValue: Number(amount),
+          buyCurrencyValueDecimal: Number(formatUnits(BigInt(amount), currencyInfo?.decimals || 18)),
+          sellCurrencyValue: Number(swapOption?.price || 0),
+          sellCurrencyValueDecimal: Number(formatUnits(BigInt(swapOption?.price || 0), swapOption?.decimals || 18))
         }
       })
 

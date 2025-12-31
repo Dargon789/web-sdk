@@ -1,6 +1,5 @@
-import { Chain } from 'viem'
-
-import { chains } from '../chains'
+import { chains } from '@0xsequence/web-sdk-core'
+import type { Chain } from 'viem'
 
 // Sequence supported Chain configs
 // you may filter list of chains by passing chainIdsFilter

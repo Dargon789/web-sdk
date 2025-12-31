@@ -1,35 +1,39 @@
-import { allNetworks, EIP1193Provider } from '@0xsequence/network'
+import { allNetworks, type EIP1193Provider } from '@0xsequence/network'
 import {
   SequenceWaaS,
-  SequenceConfig,
-  ExtendedSequenceConfig,
-  Transaction,
-  FeeOption,
-  WebrpcEndpointError
+  WebrpcEndpointError,
+  type ExtendedSequenceConfig,
+  type FeeOption,
+  type SequenceConfig,
+  type SignInResponse,
+  type Transaction
 } from '@0xsequence/waas'
-import { ethers } from 'ethers'
 import { v4 as uuidv4 } from 'uuid'
 import {
+  getAddress,
   InternalRpcError,
   ProviderDisconnectedError,
+  toHex,
   TransactionRejectedRpcError,
   UserRejectedRequestError,
-  getAddress,
-  zeroAddress,
-  toHex
+  zeroAddress
 } from 'viem'
 import { createConnector } from 'wagmi'
 
-import { LocalStorageKey } from '../../constants/localStorage'
-import { normalizeChainId } from '../../utils/helpers'
+import { LocalStorageKey } from '../../constants/localStorage.js'
+import { normalizeChainId } from '../../utils/helpers.js'
+import { getPkcePair, getXOauthUrl } from '../X/XAuth.js'
 
 export interface SequenceWaasConnectConfig {
   googleClientId?: string
   appleClientId?: string
+  XClientId?: string
+  XRedirectURI?: string
+  epicAuthUrl?: string
   appleRedirectURI?: string
   enableConfirmationModal?: boolean
   nodesUrl?: string
-  loginType: 'email' | 'google' | 'apple'
+  loginType: 'email' | 'google' | 'apple' | 'epic' | 'X' | 'guest'
 }
 
 export type BaseSequenceWaasConnectorOptions = SequenceConfig & SequenceWaasConnectConfig & Partial<ExtendedSequenceConfig>
@@ -48,9 +52,16 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
     [LocalStorageKey.WaasGoogleIdToken]: string
     [LocalStorageKey.WaasEmailIdToken]: string
     [LocalStorageKey.WaasAppleIdToken]: string
+    [LocalStorageKey.WaasXAuthUrl]: string
+    [LocalStorageKey.WaasXClientID]: string
+    [LocalStorageKey.WaasXRedirectURI]: string
+    [LocalStorageKey.WaasXCodeVerifier]: string
+    [LocalStorageKey.WaasXIdToken]: string
     [LocalStorageKey.WaasGoogleClientID]: string
     [LocalStorageKey.WaasAppleClientID]: string
     [LocalStorageKey.WaasAppleRedirectURI]: string
+    [LocalStorageKey.WaasEpicAuthUrl]: string
+    [LocalStorageKey.WaasEpicIdToken]: string
     [LocalStorageKey.WaasSignInEmail]: string
   }
 
@@ -76,7 +87,6 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
 
     async setup() {
       if (typeof window !== 'object') {
-        // (for SSR) only run in browser client
         return
       }
 
@@ -88,6 +98,17 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       }
       if (params.appleRedirectURI) {
         await config.storage?.setItem(LocalStorageKey.WaasAppleRedirectURI, params.appleRedirectURI)
+      }
+      if (params.epicAuthUrl) {
+        await config.storage?.setItem(LocalStorageKey.WaasEpicAuthUrl, params.epicAuthUrl)
+      }
+      if (params.XClientId && params.XRedirectURI) {
+        const { code_challenge, code_verifier } = await getPkcePair()
+        const authUrl = await getXOauthUrl(params.XClientId, params.XRedirectURI, code_challenge)
+        await config.storage?.setItem(LocalStorageKey.WaasXAuthUrl, authUrl)
+        await config.storage?.setItem(LocalStorageKey.WaasXClientID, params.XClientId)
+        await config.storage?.setItem(LocalStorageKey.WaasXRedirectURI, params.XRedirectURI)
+        await config.storage?.setItem(LocalStorageKey.WaasXCodeVerifier, code_verifier)
       }
 
       sequenceWaasProvider.on('error', error => {
@@ -105,6 +126,8 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
         const googleIdToken = await config.storage?.getItem(LocalStorageKey.WaasGoogleIdToken)
         const emailIdToken = await config.storage?.getItem(LocalStorageKey.WaasEmailIdToken)
         const appleIdToken = await config.storage?.getItem(LocalStorageKey.WaasAppleIdToken)
+        const epicIdToken = await config.storage?.getItem(LocalStorageKey.WaasEpicIdToken)
+        const xIdToken = await config.storage?.getItem(LocalStorageKey.WaasXIdToken)
 
         let idToken: string | undefined
 
@@ -114,15 +137,28 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
           idToken = emailIdToken
         } else if (params.loginType === 'apple' && appleIdToken) {
           idToken = appleIdToken
+        } else if (params.loginType === 'epic' && epicIdToken) {
+          idToken = epicIdToken
+        } else if (params.loginType === 'X' && xIdToken) {
+          idToken = xIdToken
         }
 
         await config.storage?.removeItem(LocalStorageKey.WaasGoogleIdToken)
         await config.storage?.removeItem(LocalStorageKey.WaasEmailIdToken)
         await config.storage?.removeItem(LocalStorageKey.WaasAppleIdToken)
+        await config.storage?.removeItem(LocalStorageKey.WaasEpicIdToken)
+        await config.storage?.removeItem(LocalStorageKey.WaasXIdToken)
 
         if (idToken) {
           try {
-            const signInResponse = await provider.sequenceWaas.signIn({ idToken }, randomName())
+            let signInResponse: SignInResponse | undefined
+
+            if (params.loginType === 'X') {
+              signInResponse = await provider.sequenceWaas.signIn({ xAccessToken: idToken }, randomName())
+            } else {
+              signInResponse = await provider.sequenceWaas.signIn({ idToken }, randomName())
+            }
+
             if (signInResponse?.email) {
               await config.storage?.setItem(LocalStorageKey.WaasSignInEmail, signInResponse.email)
             }
@@ -233,27 +269,22 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
   }))
 }
 
-export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP1193Provider {
-  jsonRpcProvider: ethers.JsonRpcProvider
+export class SequenceWaasProvider implements EIP1193Provider {
+  private rpcUrl: string
+  private emitter = new SimpleEmitter()
   requestConfirmationHandler: WaasRequestConfirmationHandler | undefined
   feeConfirmationHandler: WaasFeeOptionConfirmationHandler | undefined
-  currentNetwork: ethers.Network
+  currentNetwork: number
 
   constructor(
     public sequenceWaas: SequenceWaaS,
     public showConfirmation: boolean,
     public nodesUrl: string
   ) {
-    super(sequenceWaas.config.network)
-
     const initialChain = sequenceWaas.config.network
     const initialChainName = allNetworks.find(n => n.chainId === initialChain || n.name === initialChain)?.name
-    const initialJsonRpcProvider = new ethers.JsonRpcProvider(
-      `${nodesUrl}/${initialChainName}/${sequenceWaas.config.projectAccessKey}`
-    )
-
-    this.jsonRpcProvider = initialJsonRpcProvider
-    this.currentNetwork = ethers.Network.from(sequenceWaas.config.network)
+    this.rpcUrl = this.buildRpcUrl(initialChainName ?? initialChain)
+    this.currentNetwork = Number(sequenceWaas.config.network)
   }
 
   async request({ method, params }: { method: string; params?: any[] }) {
@@ -261,18 +292,14 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
       const chainId = normalizeChainId(params?.[0].chainId)
 
       const networkName = allNetworks.find(n => n.chainId === chainId)?.name
-      const jsonRpcProvider = new ethers.JsonRpcProvider(
-        `${this.nodesUrl}/${networkName}/${this.sequenceWaas.config.projectAccessKey}`
-      )
-
-      this.jsonRpcProvider = jsonRpcProvider
-      this.currentNetwork = ethers.Network.from(chainId)
+      this.rpcUrl = this.buildRpcUrl(networkName ?? chainId)
+      this.currentNetwork = Number(chainId)
 
       return null
     }
 
     if (method === 'eth_chainId') {
-      return toHex(this.currentNetwork.chainId)
+      return toHex(this.currentNetwork)
     }
 
     if (method === 'eth_accounts') {
@@ -282,17 +309,16 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
     }
 
     if (method === 'eth_sendTransaction') {
-      const txns: ethers.Transaction[] = await ethers.resolveProperties(params?.[0])
-
+      const txns = params?.[0] as Transaction
       const chainId = this.getChainId()
 
       let feeOptionsResponse
 
       try {
-        feeOptionsResponse = await this.checkTransactionFeeOptions({ transactions: [txns] as Transaction[], chainId })
+        feeOptionsResponse = await this.checkTransactionFeeOptions({ transactions: [txns], chainId })
       } catch (error: unknown) {
         if (isSessionInvalidOrNotFoundError(error)) {
-          await this.emit('error', error)
+          this.emit('error', error)
           throw new ProviderDisconnectedError(new Error('Provider is not connected'))
         } else {
           const message =
@@ -314,7 +340,7 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
         }
 
         const id = uuidv4()
-        const confirmation = await this.feeConfirmationHandler.confirmFeeOption(id, feeOptions, txns, chainId)
+        const confirmation = await this.feeConfirmationHandler.confirmFeeOption(id, feeOptions, [txns], chainId)
 
         if (!confirmation.confirmed) {
           throw new UserRejectedRequestError(new Error('User rejected send transaction request'))
@@ -325,7 +351,6 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
         }
 
         selectedFeeOption = feeOptions.find(feeOption => {
-          // Handle the case where feeTokenAddress is ZeroAddress and contractAddress is null
           if (confirmation.feeTokenAddress === zeroAddress && feeOption.token.contractAddress === null) {
             return true
           }
@@ -335,7 +360,7 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
 
       if (this.requestConfirmationHandler && this.showConfirmation) {
         const id = uuidv4()
-        const confirmation = await this.requestConfirmationHandler.confirmSignTransactionRequest(id, txns, chainId)
+        const confirmation = await this.requestConfirmationHandler.confirmSignTransactionRequest(id, [txns], chainId)
 
         if (!confirmation.confirmed) {
           throw new UserRejectedRequestError(new Error('User rejected send transaction request'))
@@ -350,14 +375,14 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
 
       try {
         response = await this.sequenceWaas.sendTransaction({
-          transactions: [await ethers.resolveProperties(params?.[0])],
+          transactions: [txns],
           network: chainId,
           transactionsFeeOption: selectedFeeOption,
           transactionsFeeQuote: feeOptionsResponse?.feeQuote
         })
       } catch (error) {
         if (isSessionInvalidOrNotFoundError(error)) {
-          await this.emit('error', error)
+          this.emit('error', error)
           throw new ProviderDisconnectedError(new Error('Provider is not connected'))
         } else {
           const message =
@@ -369,12 +394,10 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
       }
 
       if (response.code === 'transactionFailed') {
-        // Failed
         throw new TransactionRejectedRpcError(new Error(`Unable to send transaction: ${response.data.error}`))
       }
 
       if (response.code === 'transactionReceipt') {
-        // Success
         const { txHash } = response.data
         return txHash
       }
@@ -386,7 +409,7 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
         const confirmation = await this.requestConfirmationHandler.confirmSignMessageRequest(
           id,
           params?.[0],
-          Number(this.currentNetwork.chainId)
+          Number(this.currentNetwork)
         )
 
         if (!confirmation.confirmed) {
@@ -401,10 +424,10 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
       let sig
 
       try {
-        sig = await this.sequenceWaas.signMessage({ message: params?.[0], network: Number(this.currentNetwork.chainId) })
+        sig = await this.sequenceWaas.signMessage({ message: params?.[0], network: Number(this.currentNetwork) })
       } catch (error) {
         if (isSessionInvalidOrNotFoundError(error)) {
-          await this.emit('error', error)
+          this.emit('error', error)
           throw new ProviderDisconnectedError(new Error('Provider is not connected'))
         } else {
           const message =
@@ -423,8 +446,8 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
         const id = uuidv4()
         const confirmation = await this.requestConfirmationHandler.confirmSignMessageRequest(
           id,
-          JSON.stringify(JSON.parse(params?.[1]), null, 2), // Pretty print the typed data for confirmation
-          Number(this.currentNetwork.chainId)
+          JSON.stringify(JSON.parse(params?.[1]), null, 2),
+          Number(this.currentNetwork)
         )
 
         if (!confirmation.confirmed) {
@@ -441,11 +464,11 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
       try {
         sig = await this.sequenceWaas.signTypedData({
           typedData: JSON.parse(params?.[1]),
-          network: Number(this.currentNetwork.chainId)
+          network: Number(this.currentNetwork)
         })
       } catch (error) {
         if (isSessionInvalidOrNotFoundError(error)) {
-          await this.emit('error', error)
+          this.emit('error', error)
           throw new ProviderDisconnectedError(new Error('Provider is not connected'))
         } else {
           const message =
@@ -459,19 +482,19 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
       return sig.data.signature
     }
 
-    return await this.jsonRpcProvider.send(method, params ?? [])
+    return await this.rpcRequest(method, params ?? [])
   }
 
   async getTransaction(txHash: string) {
-    return await this.jsonRpcProvider.getTransaction(txHash)
+    return await this.rpcRequest('eth_getTransactionByHash', [txHash])
   }
 
-  detectNetwork(): Promise<ethers.Network> {
-    return Promise.resolve(this.currentNetwork)
+  detectNetwork(): Promise<{ chainId: number }> {
+    return Promise.resolve({ chainId: this.currentNetwork })
   }
 
   getChainId() {
-    return Number(this.currentNetwork.chainId)
+    return Number(this.currentNetwork)
   }
 
   async checkTransactionFeeOptions({
@@ -491,14 +514,61 @@ export class SequenceWaasProvider extends ethers.AbstractProvider implements EIP
     }
     return { feeQuote: resp.data.feeQuote, feeOptions: resp.data.feeOptions, isSponsored: true }
   }
+
+  private buildRpcUrl(networkName: string | number) {
+    return `${this.nodesUrl}/${networkName}/${this.sequenceWaas.config.projectAccessKey}`
+  }
+
+  private async rpcRequest(method: string, params: any[] = []) {
+    const response = await fetch(this.rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params })
+    })
+
+    const json = await response.json()
+    if (json.error) {
+      throw new Error(json.error?.message || 'RPC request failed')
+    }
+    return json.result
+  }
+
+  on(event: string, listener: (...args: any[]) => void) {
+    this.emitter.on(event, listener)
+    return this
+  }
+
+  removeListener(event: string, listener: (...args: any[]) => void) {
+    this.emitter.removeListener(event, listener)
+    return this
+  }
+
+  emit(event: string, ...args: any[]) {
+    this.emitter.emit(event, ...args)
+  }
+}
+
+class SimpleEmitter {
+  private listeners = new Map<string, Set<(...args: any[]) => void>>()
+
+  on(event: string, listener: (...args: any[]) => void) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set())
+    }
+    this.listeners.get(event)!.add(listener)
+  }
+
+  removeListener(event: string, listener: (...args: any[]) => void) {
+    this.listeners.get(event)?.delete(listener)
+  }
+
+  emit(event: string, ...args: any[]) {
+    this.listeners.get(event)?.forEach(listener => listener(...args))
+  }
 }
 
 export interface WaasRequestConfirmationHandler {
-  confirmSignTransactionRequest(
-    id: string,
-    txs: ethers.Transaction[],
-    chainId: number
-  ): Promise<{ id: string; confirmed: boolean }>
+  confirmSignTransactionRequest(id: string, txs: Transaction[], chainId: number): Promise<{ id: string; confirmed: boolean }>
   confirmSignMessageRequest(id: string, message: string, chainId: number): Promise<{ id: string; confirmed: boolean }>
 }
 
@@ -506,28 +576,104 @@ export interface WaasFeeOptionConfirmationHandler {
   confirmFeeOption(
     id: string,
     options: FeeOption[],
-    txs: ethers.Transaction[],
+    txs: Transaction[],
     chainId: number
   ): Promise<{ id: string; feeTokenAddress?: string | null; confirmed: boolean }>
 }
 
 const DEVICE_EMOJIS = [
-  // 256 emojis for unsigned byte range 0 - 255
   ...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷🕸🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐓🦃🦚🦜🦢🦩🕊🐇🦝🦨🦡🦦🦥🐁🐀🐿🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿🍀🎍🎋🍃👣🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🥭🍍🥥🥝🍅🥑🥦🥬🥒🌶🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🥪🥙🧆🌮🌯🥗🥘🥫🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜👀👂👃👄👅👆👇👈👉👊👋👌👍👎👏👐👑👒👓🎯🎰🎱🎲🎳👾👯👺👻👽🏂🏃🏄'
 ]
 
-// Generate a random name for the session, using a single random emoji and 2 random words
-// from the list of words of ethers
 export function randomName() {
-  const wordlistSize = 2048
-  const words = ethers.wordlists.en
-
   const randomEmoji = DEVICE_EMOJIS[Math.floor(Math.random() * DEVICE_EMOJIS.length)]
-  const randomWord1 = words.getWord(Math.floor(Math.random() * wordlistSize))
-  const randomWord2 = words.getWord(Math.floor(Math.random() * wordlistSize))
+  const randomWord1 = WORDS[Math.floor(Math.random() * WORDS.length)]
+  const randomWord2 = WORDS[Math.floor(Math.random() * WORDS.length)]
 
   return `${randomEmoji} ${randomWord1} ${randomWord2}`
 }
+
+const WORDS = [
+  'alpha',
+  'bravo',
+  'charlie',
+  'delta',
+  'echo',
+  'foxtrot',
+  'golf',
+  'hotel',
+  'india',
+  'juliet',
+  'kilo',
+  'lima',
+  'mike',
+  'november',
+  'oscar',
+  'papa',
+  'quebec',
+  'romeo',
+  'sierra',
+  'tango',
+  'uniform',
+  'victor',
+  'whiskey',
+  'xray',
+  'yankee',
+  'zulu',
+  'falcon',
+  'eagle',
+  'hawk',
+  'sparrow',
+  'raven',
+  'lynx',
+  'tiger',
+  'leopard',
+  'panther',
+  'wolf',
+  'fox',
+  'otter',
+  'beaver',
+  'bear',
+  'bison',
+  'coyote',
+  'badger',
+  'cougar',
+  'jaguar',
+  'orca',
+  'narwhal',
+  'dolphin',
+  'whale',
+  'shark',
+  'salmon',
+  'trout',
+  'pike',
+  'perch',
+  'heron',
+  'stork',
+  'crane',
+  'pelican',
+  'gannet',
+  'swan',
+  'goose',
+  'duck',
+  'owl',
+  'vulture',
+  'condor',
+  'ibis',
+  'lark',
+  'robin',
+  'finch',
+  'wren',
+  'sparrowhawk',
+  'buzzard',
+  'harrier',
+  'kite',
+  'osprey',
+  'falconer',
+  'gyrfalcon',
+  'merlin',
+  'kestrel'
+]
 
 function isSessionInvalidOrNotFoundError(error: unknown) {
   return error instanceof WebrpcEndpointError && error.cause === 'session invalid or not found'

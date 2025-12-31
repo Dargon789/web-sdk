@@ -1,13 +1,13 @@
 import {
-  Image,
-  Text,
-  GradientAvatar,
-  truncateAddress,
-  NetworkImage,
-  Card,
   Button,
+  Card,
   ChevronDownIcon,
-  SignoutIcon
+  GradientAvatar,
+  Image,
+  NetworkImage,
+  SignoutIcon,
+  Text,
+  truncateAddress
 } from '@0xsequence/design-system'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import { useState } from 'react'
@@ -98,6 +98,12 @@ const NetworkSelect = () => {
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
   const [isOpen, toggleOpen] = useState(false)
+
+  chains.map(chain => {
+    if (chain.id === 8453) {
+      chain.name = 'Base'
+    }
+  })
 
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={toggleOpen}>

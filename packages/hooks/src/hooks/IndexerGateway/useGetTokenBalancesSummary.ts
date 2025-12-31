@@ -1,11 +1,11 @@
-import { IndexerGateway, Page, SequenceIndexerGateway, TokenBalance } from '@0xsequence/indexer'
+import { SequenceIndexerGateway, type IndexerGateway, type Page, type TokenBalance } from '@0xsequence/indexer'
 import { useInfiniteQuery } from '@tanstack/react-query'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
-import { createNativeTokenBalance, sortBalancesByType } from '../../utils/helpers'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
+import { createNativeTokenBalance, sortBalancesByType } from '../../utils/helpers.js'
 
-import { useIndexerGatewayClient } from './useIndexerGatewayClient'
+import { useIndexerGatewayClient } from './useIndexerGatewayClient.js'
 
 const getTokenBalancesSummary = async (
   indexerGatewayClient: SequenceIndexerGateway,
@@ -73,7 +73,7 @@ const getTokenBalancesSummary = async (
  *   - `decimals`: Number of decimals
  *   - `logoURI`: URL of the token logo
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetTokenBalancesSummary} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetTokenBalancesSummary} for more detailed documentation.
  *
  * @example
  * ```tsx
@@ -115,7 +115,7 @@ export const useGetTokenBalancesSummary = (args: IndexerGateway.GetTokenBalances
     getNextPageParam: ({ page }) => {
       return page?.more ? page : undefined
     },
-    initialPageParam: { pageSize: args.page?.pageSize } as Page,
+    initialPageParam: { ...args?.page } as Page,
     retry: options?.retry ?? true,
     staleTime: time.oneSecond * 30,
     enabled: args.filter.accountAddresses.length > 0 && !options?.disabled

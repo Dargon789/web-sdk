@@ -1,21 +1,40 @@
-import { formatDisplay } from '@0xsequence/connect'
-import { getNativeTokenInfoByChainId } from '@0xsequence/connect'
 import { compareAddress } from '@0xsequence/design-system'
-import { TokenBalance } from '@0xsequence/indexer'
-import { Chain, formatUnits } from 'viem'
+import type { TokenBalance } from '@0xsequence/indexer'
+import { formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/web-sdk-core'
+import { formatUnits, type Chain } from 'viem'
 import { zeroAddress } from 'viem'
 
-import { TokenBalanceWithPrice } from './tokens'
+import type { TokenBalanceWithDetails } from './tokens.js'
 
 //TODO: rename these and maybe do a refactor
 
+interface NativeTokenInfo {
+  chainId: number
+  name: string
+  symbol: string
+  logoURI: string
+  decimals: number
+  blockExplorerUrl?: string
+  blockExplorerName?: string
+}
+
+interface TokenInfo {
+  name: string
+  logo?: string
+  symbol?: string
+  isNativeToken: boolean
+  nativeTokenInfo?: NativeTokenInfo
+  displayBalance: string
+  fiatBalance: string
+}
+
 export const formatTokenInfo = (
-  balance: TokenBalanceWithPrice | undefined,
+  balance: TokenBalanceWithDetails | undefined,
   fiatSign: string,
   chains: readonly [Chain, ...Chain[]]
-) => {
+): TokenInfo => {
   if (!balance) {
-    return { logo: '', name: '', symbol: '', displayBalance: '', fiatBalance: '' }
+    return { isNativeToken: false, logo: '', name: '', symbol: '', displayBalance: '', fiatBalance: '' }
   }
 
   const isNativeToken = compareAddress(balance?.contractAddress || '', zeroAddress)
@@ -29,6 +48,7 @@ export const formatTokenInfo = (
   const bal = formatUnits(BigInt(balance?.balance || 0), decimals || 18)
   const displayBalance = formatDisplay(bal)
   const symbol = isNativeToken ? nativeTokenInfo.symbol : balance?.contractInfo?.symbol
+  const fiatBalance = (balance?.price?.value || 0) * Number(bal)
 
   return {
     isNativeToken,
@@ -37,7 +57,7 @@ export const formatTokenInfo = (
     name: selectedCoinName,
     symbol: selectedCoinSymbol,
     displayBalance: `${displayBalance} ${symbol}`,
-    fiatBalance: `${fiatSign}${(balance.price.value * Number(bal)).toFixed(2)}`
+    fiatBalance: `${fiatSign}${fiatBalance.toFixed(2)}`
   }
 }
 

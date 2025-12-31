@@ -1,84 +1,192 @@
 'use client'
 
-import { ArrowRightIcon, Divider, Text, TextInput, Spinner, Image, IconButton, ModalPrimitive } from '@0xsequence/design-system'
+import {
+  ArrowRightIcon,
+  Button,
+  Card,
+  Divider,
+  IconButton,
+  Image,
+  ModalPrimitive,
+  Spinner,
+  Text,
+  TextInput,
+  useTheme
+} from '@0xsequence/design-system'
+import { useGetWaasStatus } from '@0xsequence/hooks'
+import { SequenceWaaS } from '@0xsequence/waas'
 import { genUserId } from '@databeat/tracker'
 import { clsx } from 'clsx'
-import React, { useState, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ChangeEventHandler, type ReactNode } from 'react'
 import { appleAuthHelpers, useScript } from 'react-apple-signin-auth'
 import { useConnect, useConnections, useSignMessage } from 'wagmi'
 
-import { LocalStorageKey } from '../../constants'
-import { CHAIN_ID_FOR_SIGNATURE } from '../../constants/walletLinking'
-import { useAnalyticsContext } from '../../contexts/Analytics'
-import { useStorage } from '../../hooks/useStorage'
-import { useEmailAuth } from '../../hooks/useWaasEmailAuth'
-import { FormattedEmailConflictInfo } from '../../hooks/useWaasEmailConflict'
-import { useWaasLinkWallet } from '../../hooks/useWaasLinkWallet'
-import { useWallets } from '../../hooks/useWallets'
-import { useWalletSettings } from '../../hooks/useWalletSettings'
-import { ExtendedConnector, ConnectConfig, LogoProps } from '../../types'
-import { isEmailValid } from '../../utils/helpers'
-import { AppleWaasConnectButton, ConnectButton, GoogleWaasConnectButton, ShowAllWalletsButton } from '../ConnectButton'
-import { SequenceConnectProviderProps } from '../SequenceConnectProvider'
-import { PoweredBySequence } from '../SequenceLogo'
+import type { SequenceV3Connector } from '../../connectors/wagmiConnectors/sequenceV3Connector.js'
+import { EVENT_SOURCE } from '../../constants/analytics.js'
+import { LocalStorageKey } from '../../constants/localStorage.js'
+import { CHAIN_ID_FOR_SIGNATURE } from '../../constants/walletLinking.js'
+import { useAnalyticsContext } from '../../contexts/Analytics.js'
+import { useStorage } from '../../hooks/useStorage.js'
+import { useEmailAuth } from '../../hooks/useWaasEmailAuth.js'
+import type { FormattedEmailConflictInfo } from '../../hooks/useWaasEmailConflict.js'
+import { useWaasLinkWallet } from '../../hooks/useWaasLinkWallet.js'
+import { useWallets } from '../../hooks/useWallets.js'
+import { useWalletSettings } from '../../hooks/useWalletSettings.js'
+import type { ConnectConfig, ExtendedConnector, LogoProps } from '../../types.js'
+import { formatAddress, isEmailValid } from '../../utils/helpers.js'
+import type { WalletConfigurationOverrides, WalletConfigurationProvider } from '../../utils/walletConfiguration.js'
+import {
+  AppleWaasConnectButton,
+  ConnectButton,
+  EpicWaasConnectButton,
+  getLogo,
+  GoogleWaasConnectButton,
+  GuestWaasConnectButton,
+  ShowAllWalletsButton,
+  XWaasConnectButton
+} from '../ConnectButton/index.js'
+import type { SequenceConnectProviderProps } from '../SequenceConnectProvider/index.js'
+import { PoweredBySequence } from '../SequenceLogo/index.js'
 
-import { Banner } from './Banner'
-import { ConnectedWallets } from './ConnectedWallets'
-import { EmailWaasVerify } from './EmailWaasVerify'
-import { ExtendedWalletList } from './ExtendedWalletList'
+import { Banner } from './Banner.js'
+import { ConnectedWallets } from './ConnectedWallets.js'
+import { EmailWaasVerify } from './EmailWaasVerify.js'
+import { ExtendedWalletList } from './ExtendedWalletList.js'
 
 const MAX_ITEM_PER_ROW = 4
-export const SEQUENCE_UNIVERSAL_CONNECTOR_NAME = 'Sequence'
+const SEQUENCE_V3_CONNECTOR_TYPE = 'sequence-v3-wallet'
+
+const getConnectorProvider = (connector: ExtendedConnector): WalletConfigurationProvider | null => {
+  const walletId = connector._wallet?.id?.toLowerCase() || ''
+
+  if (walletId.includes('email')) {
+    return 'EMAIL'
+  }
+  if (walletId.includes('google')) {
+    return 'GOOGLE'
+  }
+  if (walletId.includes('apple')) {
+    return 'APPLE'
+  }
+  if (walletId.includes('passkey')) {
+    return 'PASSKEY'
+  }
+
+  return null
+}
+
+interface RestorableSessionState {
+  connector: ExtendedConnector & SequenceV3Connector
+  walletAddress?: string
+  loginMethod?: string
+}
 
 interface ConnectProps extends SequenceConnectProviderProps {
   emailConflictInfo?: FormattedEmailConflictInfo | null
   onClose: () => void
-  isPreview?: boolean
+  isInline?: boolean
+  enabledProviders?: WalletConfigurationProvider[]
+  isV3WalletSignedIn?: boolean | null
+  isAuthStatusLoading?: boolean
+  resolvedConfig?: ConnectConfig
+  walletConfigurationSignIn?: WalletConfigurationOverrides['signIn']
 }
 
 export const Connect = (props: ConnectProps) => {
   useScript(appleAuthHelpers.APPLE_SCRIPT_SRC)
 
+  const { theme } = useTheme()
+
   const { analytics } = useAnalyticsContext()
   const { hideExternalConnectOptions, hideConnectedWallets, hideSocialConnectOptions } = useWalletSettings()
 
-  const { onClose, emailConflictInfo, config = {} as ConnectConfig, isPreview = false } = props
+  const { onClose, emailConflictInfo, config: baseConfig = {} as ConnectConfig, isInline = false } = props
+  const config = props.resolvedConfig ?? baseConfig
+  const isV3WalletSignedIn = props.isV3WalletSignedIn ?? null
+  const isAuthStatusLoading = props.isAuthStatusLoading ?? false
+  const walletConfigurationSignIn = props.walletConfigurationSignIn
   const { signIn = {} } = config
+  const baseSignIn = baseConfig.signIn ?? {}
   const storage = useStorage()
 
   const descriptiveSocials = !!config?.signIn?.descriptiveSocials
+  const showWalletAuthOptionsFirst = config?.signIn?.showWalletAuthOptionsFirst ?? false
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const projectName = config?.signIn?.projectName
+  const projectName = baseSignIn?.projectName
+  const ecosystemProjectName = walletConfigurationSignIn?.projectName ?? baseSignIn?.projectName
+  const ecosystemLogoUrl = walletConfigurationSignIn?.logoUrl ?? baseSignIn?.logoUrl
 
   const [email, setEmail] = useState('')
   const [showEmailWaasPinInput, setShowEmailWaasPinInput] = useState(false)
 
   const [showExtendedList, setShowExtendedList] = useState<null | 'social' | 'wallet'>(null)
   const { status, connectors, connect } = useConnect()
-  const connections = useConnections()
   const { signMessageAsync } = useSignMessage()
+
+  const enabledProviderSet = useMemo(() => {
+    if (!props.enabledProviders) {
+      return undefined
+    }
+
+    return new Set(props.enabledProviders.map(provider => provider.toUpperCase() as WalletConfigurationProvider))
+  }, [props.enabledProviders])
+
+  const allowedChainIds = useMemo(() => {
+    if (!config?.chainIds || config.chainIds.length === 0) {
+      return undefined
+    }
+
+    return new Set(config.chainIds)
+  }, [config?.chainIds])
+
+  const filteredConnectors = useMemo(
+    () =>
+      (connectors as ExtendedConnector[]).filter(connector => {
+        const connectorChains = Array.isArray((connector as any).chains)
+          ? ((connector as any).chains as { id: number }[])
+          : undefined
+
+        if (allowedChainIds && connectorChains?.length) {
+          const connectorSupportsAllowedChain = connectorChains.some(chain => allowedChainIds.has(chain.id))
+          if (!connectorSupportsAllowedChain) {
+            return false
+          }
+        }
+
+        if (!enabledProviderSet) {
+          return true
+        }
+
+        const provider = getConnectorProvider(connector)
+        if (!provider) {
+          return true
+        }
+
+        return enabledProviderSet.has(provider)
+      }),
+    [connectors, enabledProviderSet, allowedChainIds]
+  )
+
+  const connections = useConnections()
+  const { data: waasStatusData } = useGetWaasStatus()
   const { wallets, linkedWallets, disconnectWallet, refetchLinkedWallets } = useWallets()
+  const waasConnection = useMemo(
+    () => connections.find(c => (c.connector as ExtendedConnector)?.type === 'sequence-waas'),
+    [connections]
+  )
 
-  const hasInjectedSequenceConnector = connectors.some(c => c.id === 'app.sequence')
-
-  const hasConnectedSequenceUniversal = connections.some(c => c.connector.name === SEQUENCE_UNIVERSAL_CONNECTOR_NAME)
-  const hasConnectedSocialOrSequenceUniversal =
-    connections.some(c => (c.connector as ExtendedConnector)?._wallet?.type === 'social') || hasConnectedSequenceUniversal
-
-  const waasConnection = connections.find(c => (c.connector as ExtendedConnector)?.type === 'sequence-waas')
-
-  // Setup wallet linking
   const { linkWallet, removeLinkedWallet } = useWaasLinkWallet(waasConnection?.connector)
 
   const [lastConnectedWallet, setLastConnectedWallet] = useState<`0x${string}` | undefined>(undefined)
   const [isSigningLinkMessage, setIsSigningLinkMessage] = useState(false)
+  const [isRestoringSession, setIsRestoringSession] = useState(false)
+  const [restorableSessionDismissed, setRestorableSessionDismissed] = useState(false)
+  const [restorableSession, setRestorableSession] = useState<RestorableSessionState | null>(null)
 
   const handleUnlinkWallet = async (address: string) => {
     try {
       await removeLinkedWallet(address)
-
       const parentWallet = wallets.find(w => w.isEmbedded)?.address
-
       try {
         analytics?.track({
           event: 'UNLINK_WALLET',
@@ -86,13 +194,12 @@ export const Connect = (props: ConnectProps) => {
             parentWalletAddress: parentWallet ? getUserIdForEvent(parentWallet) : '',
             linkedWalletAddress: getUserIdForEvent(address),
             linkedWalletType: linkedWallets?.find(lw => lw.linkedWalletAddress === address)?.walletType || '',
-            source: 'sequence-kit/core'
+            source: EVENT_SOURCE
           }
         })
       } catch (e) {
         console.warn('unlink analytics error:', e)
       }
-
       refetchLinkedWallets()
     } catch (e) {
       console.warn('unlink error:', e)
@@ -103,11 +210,12 @@ export const Connect = (props: ConnectProps) => {
     if (!lastConnectedWallet) {
       return
     }
+
     const tryLinkWallet = async () => {
       const nonWaasWallets = connections.filter(c => (c.connector as ExtendedConnector)?.type !== 'sequence-waas')
 
       const nonLinkedWallets = nonWaasWallets.filter(
-        c => !linkedWallets?.find(lw => lw.linkedWalletAddress === c.accounts[0].toLowerCase())
+        c => !linkedWallets?.find(lw => lw.linkedWalletAddress.toLowerCase() === c.accounts[0].toLowerCase())
       )
 
       if (nonLinkedWallets.map(w => w.accounts[0]).includes(lastConnectedWallet as `0x${string}`)) {
@@ -144,7 +252,7 @@ export const Connect = (props: ConnectProps) => {
                 parentWalletAddress: getUserIdForEvent(waasWalletAddress),
                 linkedWalletAddress: getUserIdForEvent(childWalletAddress),
                 linkedWalletType: connections.find(c => c.accounts[0] === lastConnectedWallet)?.connector?.name || '',
-                source: 'sequence-kit/core'
+                source: EVENT_SOURCE
               }
             })
           } catch (e) {
@@ -169,37 +277,196 @@ export const Connect = (props: ConnectProps) => {
     }
   }, [connections, lastConnectedWallet])
 
-  const baseWalletConnectors = (connectors as ExtendedConnector[])
+  const hasV3Wallet = wallets.some(w => w.id.includes('-v3'))
+  const hasWaasWallet = !!waasConnection
+  const hasSequenceWalletConnection = hasV3Wallet || hasWaasWallet
+  const hasSocialConnection = connections.some(c => (c.connector as ExtendedConnector)?._wallet?.type === 'social')
+  const hasPrimarySequenceConnection = hasSequenceWalletConnection || hasSocialConnection
+  const hasAnyConnection = connections.length > 0
+
+  const extendedConnectors = filteredConnectors as ExtendedConnector[]
+
+  const isSequenceV3Connector = (connector: ExtendedConnector): connector is ExtendedConnector & SequenceV3Connector => {
+    return connector.type === SEQUENCE_V3_CONNECTOR_TYPE
+  }
+
+  // Safari aggressively blocks popups if window.open is not triggered directly from the click handler.
+  // Pre-open the Sequence popup in the same gesture before we kick off the async wagmi connect flow.
+  const preopenSequenceV3Popup = useCallback((connector: ExtendedConnector & SequenceV3Connector) => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    try {
+      const client: any = connector.client
+      const transport = typeof client?.ensureTransport === 'function' ? client.ensureTransport() : client?.transport
+      const isPopupMode = (transport?.mode ?? client?.transportMode) === 'popup'
+
+      if (isPopupMode && typeof transport?.openWallet === 'function') {
+        // Use the same path used by connect requests so the opened window is reused.
+        transport.openWallet('/request/connect').catch(() => {
+          /* Ignore preopen failures; the main connect flow will try again */
+        })
+      }
+    } catch (error) {
+      console.warn('Failed to pre-open Sequence popup', error)
+    }
+  }, [])
+
+  const sequenceConnectors = useMemo(
+    () =>
+      extendedConnectors.filter(
+        (connector): connector is ExtendedConnector & SequenceV3Connector => connector.type === SEQUENCE_V3_CONNECTOR_TYPE
+      ),
+    [extendedConnectors]
+  )
+
+  const findSequenceConnectorByLoginMethod = useCallback(
+    (loginMethod?: string | null) => {
+      if (!loginMethod) {
+        return undefined
+      }
+      const normalizedMethod = loginMethod.trim().toLowerCase()
+      if (!normalizedMethod) {
+        return undefined
+      }
+
+      return sequenceConnectors.find(connector => {
+        const loginStorageKey = connector.loginOptions?.loginStorageKey?.toLowerCase()
+        const loginType = connector.loginOptions?.loginType?.toLowerCase()
+        const walletId = connector._wallet?.id?.toLowerCase()
+
+        if (loginStorageKey && loginStorageKey === normalizedMethod) {
+          return true
+        }
+        if (loginType && loginType === normalizedMethod) {
+          return true
+        }
+        if (walletId && (walletId === normalizedMethod || walletId.startsWith(`${normalizedMethod}-`))) {
+          return true
+        }
+
+        return false
+      })
+    },
+    [sequenceConnectors]
+  )
+
+  useEffect(() => {
+    if (restorableSessionDismissed) {
+      return
+    }
+
+    let cancelled = false
+
+    const checkRestorableSession = async () => {
+      // disabled for now
+      return
+      for (const connector of sequenceConnectors) {
+        const client = connector.client
+        if (!client?.hasRestorableSessionlessConnection) {
+          continue
+        }
+
+        try {
+          const hasSession = await client.hasRestorableSessionlessConnection()
+          if (!hasSession) {
+            continue
+          }
+
+          const info = await client.getSessionlessConnectionInfo()
+          const resolvedConnector = findSequenceConnectorByLoginMethod(info?.loginMethod) || connector
+
+          if (resolvedConnector !== connector) {
+            const resolvedClient = resolvedConnector.client
+            if (!resolvedClient?.hasRestorableSessionlessConnection) {
+              continue
+            }
+            const resolvedHasSession = await resolvedClient.hasRestorableSessionlessConnection()
+            if (!resolvedHasSession) {
+              continue
+            }
+          }
+
+          if (!cancelled) {
+            setRestorableSession({
+              connector: resolvedConnector,
+              walletAddress: info?.walletAddress,
+              loginMethod: info?.loginMethod
+            })
+          }
+          return
+        } catch (error) {
+          console.warn('Failed to check restorable Sequence session', error)
+        }
+      }
+
+      if (!cancelled) {
+        setRestorableSession(null)
+      }
+    }
+
+    if (sequenceConnectors.length > 0) {
+      checkRestorableSession()
+    } else {
+      setRestorableSession(null)
+    }
+
+    return () => {
+      cancelled = true
+    }
+  }, [sequenceConnectors, restorableSessionDismissed, findSequenceConnectorByLoginMethod])
+
+  const baseWalletConnectors = extendedConnectors
     .filter(c => {
       return c._wallet && (c._wallet.type === 'wallet' || c._wallet.type === undefined)
     })
-    // Remove sequence if wallet extension detected
     .filter(c => {
-      if (c._wallet?.id === 'sequence' && hasInjectedSequenceConnector) {
+      const isMetamaskInjected = typeof window !== 'undefined' && (window as any)?.ethereum?.isMetaMask
+      if (c._wallet?.id === 'metamask-wallet' && isMetamaskInjected) {
+        return false
+      }
+
+      const isCoinbaseInjected = typeof window !== 'undefined' && (window as any)?.ethereum?.isCoinbaseWallet
+      if (c._wallet?.id === 'coinbase-wallet' && isCoinbaseInjected) {
         return false
       }
 
       return true
     })
+
   const mockConnector = baseWalletConnectors.find(connector => {
     return connector._wallet.id === 'mock'
   })
 
   // EIP-6963 connectors will not have the _wallet property
-  const injectedConnectors: ExtendedConnector[] = connectors
-    .filter(c => c.type === 'injected')
-    // Remove the injected connectors when another connector is already in the base connectors
+  const injectedConnectors: ExtendedConnector[] = filteredConnectors
     .filter(connector => {
-      if (connector.id === 'com.coinbase.wallet') {
-        return !connectors.find(connector => (connector as ExtendedConnector)?._wallet?.id === 'coinbase-wallet')
-      }
-      if (connector.id === 'io.metamask') {
-        return !connectors.find(connector => (connector as ExtendedConnector)?._wallet?.id === 'metamask-wallet')
+      // Keep the connector when it is an EIP-6963 connector
+      if (connector.type === 'injected') {
+        return true
       }
 
-      return true
+      // We check if SDK-generated connectors is actually an injected connector
+      const isMetamaskInjected = window.ethereum?.isMetaMask
+
+      if ((connector as ExtendedConnector)._wallet?.id === 'metamask-wallet' && isMetamaskInjected) {
+        return true
+      }
+
+      const isCoinbaseInjected = window.ethereum?.isCoinbaseWallet
+
+      if ((connector as ExtendedConnector)._wallet?.id === 'coinbase-wallet' && isCoinbaseInjected) {
+        return true
+      }
+
+      return false
     })
     .map(connector => {
+      if (connector?._wallet) {
+        return connector as ExtendedConnector
+      }
+
       const Logo = (props: LogoProps) => {
         return <Image src={connector.icon} alt={connector.name} disableAnimation {...props} />
       }
@@ -216,26 +483,177 @@ export const Connect = (props: ConnectProps) => {
       }
     })
 
-  const socialAuthConnectors = (connectors as ExtendedConnector[])
-    .filter(c => c._wallet?.type === 'social')
-    .filter(c => !c._wallet.id.includes('email'))
-  const walletConnectors = [...baseWalletConnectors, ...injectedConnectors].filter(c =>
-    hasConnectedSequenceUniversal ? c.name !== SEQUENCE_UNIVERSAL_CONNECTOR_NAME : true
-  )
-  const emailConnector = (connectors as ExtendedConnector[]).find(c => c._wallet?.id.includes('email'))
+  const ecosystemConnector = extendedConnectors.find(c => c._wallet?.isEcosystemWallet)
 
-  const onChangeEmail: React.ChangeEventHandler<HTMLInputElement> = ev => {
+  // Filter v3 connectors based on login status from status.js endpoint
+  // If logged in: only show ecosystem connector
+  // If not logged in: show regular v3 connectors (apple, passkey, google, etc.) but NOT ecosystem
+  // This logic only applies to v3 connectors (type === SEQUENCE_V3_CONNECTOR_TYPE)
+  const v3SocialConnectors = useMemo(
+    () => sequenceConnectors.filter(c => c._wallet?.type === 'social' && !c._wallet?.id.includes('email')),
+    [sequenceConnectors]
+  )
+  const regularV3Connectors = useMemo(() => v3SocialConnectors.filter(c => !c._wallet?.isEcosystemWallet), [v3SocialConnectors])
+
+  // For v3 connectors: show ecosystem if logged in (from status.js check), otherwise show regular v3 connectors
+  // Only apply this filtering if we have v3 connectors and auth status has been checked
+  const visibleV3ConnectorIds = useMemo(() => {
+    // While loading, show regular v3 socials to keep layout stable
+    if (isAuthStatusLoading || isV3WalletSignedIn === null) {
+      return new Set(regularV3Connectors.map(c => c.uid))
+    }
+
+    // Only apply auth-based filtering if we have v3 connectors
+    if (sequenceConnectors.length === 0) {
+      // No v3 connectors, return empty set (will be filtered out anyway)
+      return new Set<string>()
+    }
+
+    if (isV3WalletSignedIn === true) {
+      // Logged in (status.js returned authState === 'signed-in'): only show ecosystem connector
+      return ecosystemConnector ? new Set([ecosystemConnector.uid]) : new Set<string>()
+    } else if (isV3WalletSignedIn === false) {
+      // Not logged in (status.js returned authState !== 'signed-in'): show regular v3 connectors (not ecosystem)
+      return new Set(regularV3Connectors.map(c => c.uid))
+    }
+    // Fallback: default to showing standard v3 socials to avoid empty space
+    return new Set(regularV3Connectors.map(c => c.uid))
+  }, [isAuthStatusLoading, isV3WalletSignedIn, ecosystemConnector, regularV3Connectors, sequenceConnectors.length])
+
+  const socialAuthConnectors = extendedConnectors
+    .filter(c => c._wallet?.type === 'social')
+    .filter(c => !c._wallet?.id.includes('email'))
+    .filter(c => {
+      // For v3 connectors, use the filtered list based on login status
+      const isV3Connector = c.type === SEQUENCE_V3_CONNECTOR_TYPE
+      if (isV3Connector) {
+        return visibleV3ConnectorIds.has(c.uid)
+      }
+      // For non-v3 connectors, exclude ecosystem wallets
+      return !c._wallet?.isEcosystemWallet
+    })
+    .sort((a, b) => {
+      const isPasskey = (wallet?: ExtendedConnector['_wallet']) => wallet?.id === 'passkey-v3'
+      if (isPasskey(a._wallet) && !isPasskey(b._wallet)) {
+        return -1
+      }
+      if (!isPasskey(a._wallet) && isPasskey(b._wallet)) {
+        return 1
+      }
+      return 0
+    })
+
+  const walletConnectors = [...injectedConnectors, ...baseWalletConnectors].filter(connector => {
+    // Avoid duplicating ecosystem wallets in the main wallet list until the user already has a primary connection
+    return hasPrimarySequenceConnection ? true : !connector._wallet?.isEcosystemWallet
+  })
+
+  // For v3: hide standard social only if logged in and ecosystem connector exists
+  // For non-v3: hide standard social if ecosystem connector exists
+  const shouldHideStandardSocial = isV3WalletSignedIn === true ? !!ecosystemConnector : false
+
+  const emailConnector =
+    !hideSocialConnectOptions && !shouldHideStandardSocial
+      ? extendedConnectors.find(c => c._wallet?.id.includes('email'))
+      : undefined
+
+  const renderConnectorButton = (
+    connector: ExtendedConnector,
+    options?: { isDescriptive?: boolean; disableTooltip?: boolean }
+  ) => {
+    const commonProps = {
+      connector,
+      onConnect,
+      isDescriptive: options?.isDescriptive,
+      disableTooltip: options?.disableTooltip
+    }
+
+    // Special handling for ecosystem connector - use config data for display
+    if (connector._wallet?.isEcosystemWallet) {
+      const projectName = ecosystemProjectName || connector._wallet.name
+      const logoUrl = ecosystemLogoUrl
+
+      const renderEcosystemLogo = (logoProps: LogoProps) => (
+        <Image
+          src={logoUrl || ''}
+          alt={projectName}
+          disableAnimation
+          {...logoProps}
+          style={{
+            objectFit: 'contain',
+            width: 'auto',
+            minWidth: '30px',
+            height: '100%',
+            minHeight: '30px',
+            maxWidth: '60px',
+            maxHeight: '100%',
+            ...logoProps.style
+          }}
+        />
+      )
+
+      // Create a modified connector with config-based display properties
+      const displayConnector: ExtendedConnector = {
+        ...connector,
+        _wallet: {
+          ...connector._wallet,
+          name: projectName,
+          ctaText: ecosystemProjectName ? `Connect with ${ecosystemProjectName}` : connector._wallet.ctaText,
+          // Override logos if logoUrl is available
+          ...(logoUrl && {
+            logoDark: renderEcosystemLogo,
+            logoLight: renderEcosystemLogo
+          })
+        }
+      }
+
+      return <ConnectButton {...commonProps} connector={displayConnector} />
+    }
+
+    switch (connector._wallet?.id) {
+      case 'guest-waas':
+        return <GuestWaasConnectButton {...commonProps} setIsLoading={setIsLoading} />
+      case 'google-waas':
+        return <GoogleWaasConnectButton {...commonProps} />
+      case 'apple-waas':
+        return <AppleWaasConnectButton {...commonProps} />
+      case 'epic-waas':
+        return <EpicWaasConnectButton {...commonProps} />
+      case 'X-waas':
+        return <XWaasConnectButton {...commonProps} />
+      default:
+        return <ConnectButton {...commonProps} />
+    }
+  }
+
+  const shouldShowRestorableSessionView = !!restorableSession && !restorableSessionDismissed
+
+  const onChangeEmail: ChangeEventHandler<HTMLInputElement> = ev => {
     setEmail(ev.target.value)
   }
 
   useEffect(() => {
-    setIsLoading(status === 'pending' || status === 'success')
-  }, [status])
+    setIsLoading(status === 'pending' || status === 'success' || isRestoringSession)
+  }, [status, isRestoringSession])
 
   const handleConnect = async (connector: ExtendedConnector) => {
-    connect(
+    if (connector._wallet.id === 'guest-waas') {
+      const sequenceWaaS = new SequenceWaaS({
+        projectAccessKey: config.projectAccessKey,
+        waasConfigKey: config.waasConfigKey ?? ''
+      })
+
+      await sequenceWaaS.signIn({ guest: true }, 'Guest')
+    }
+
+    return connect(
       { connector },
       {
+        onSuccess: result => {
+          if (result?.accounts[0]) {
+            config.onConnectSuccess?.(result.accounts[0])
+          }
+        },
         onSettled: result => {
           setLastConnectedWallet(result?.accounts[0])
         }
@@ -243,10 +661,47 @@ export const Connect = (props: ConnectProps) => {
     )
   }
 
+  const onDismissRestorableSession = () => {
+    setRestorableSession(null)
+    setRestorableSessionDismissed(true)
+  }
+
+  const onRestoreSession = async () => {
+    if (!restorableSession) {
+      return
+    }
+    const connector = restorableSession.connector
+    const client = connector.client
+    if (!client?.restoreSessionlessConnection) {
+      onDismissRestorableSession()
+      return
+    }
+
+    setIsRestoringSession(true)
+    try {
+      const restored = await client.restoreSessionlessConnection()
+      if (!restored) {
+        onDismissRestorableSession()
+        return
+      }
+      onDismissRestorableSession()
+      handleConnect(connector)
+    } catch (error) {
+      console.warn('Failed to restore Sequence session', error)
+      onDismissRestorableSession()
+    } finally {
+      setIsRestoringSession(false)
+    }
+  }
+
   const onConnect = (connector: ExtendedConnector) => {
     if (signIn.useMock && mockConnector) {
       handleConnect(mockConnector)
       return
+    }
+
+    if (isSequenceV3Connector(connector)) {
+      preopenSequenceV3Popup(connector)
     }
 
     if (connector._wallet.id === 'email') {
@@ -326,43 +781,154 @@ export const Connect = (props: ConnectProps) => {
     }
   }, [emailConflictInfo])
 
-  const showSocialConnectorSection = socialAuthConnectors.length > 0
-  const showEmailInputSection = !!emailConnector
+  // For v3: only show ecosystem connector section if logged in
+  // For non-v3: show ecosystem connector section if it exists
+  const showEcosystemConnectorSection = !hideSocialConnectOptions && !!ecosystemConnector && isV3WalletSignedIn === true
+  const showSocialConnectorSection = !hideSocialConnectOptions && !shouldHideStandardSocial && socialAuthConnectors.length > 0
+  const showEmailInputSection = !hideSocialConnectOptions && !shouldHideStandardSocial && !!emailConnector
 
   const showMoreSocialOptions = socialAuthConnectors.length > MAX_ITEM_PER_ROW
   const showMoreWalletOptions = walletConnectors.length > MAX_ITEM_PER_ROW
   const socialConnectorsPerRow = showMoreSocialOptions && !descriptiveSocials ? MAX_ITEM_PER_ROW - 1 : socialAuthConnectors.length
   const walletConnectorsPerRow = showMoreWalletOptions ? MAX_ITEM_PER_ROW - 1 : walletConnectors.length
 
+  const WalletConnectorsSection = () => {
+    return (
+      <div className={clsx('flex gap-2 flex-row justify-center items-center', hasPrimarySequenceConnection ? 'mt-4' : 'mt-6')}>
+        {walletConnectors.slice(0, walletConnectorsPerRow).map(connector => {
+          return (
+            <div key={connector.uid} className="flex-1 min-w-0">
+              {renderConnectorButton(connector, {
+                isDescriptive: false,
+                disableTooltip: false
+              })}
+            </div>
+          )
+        })}
+        {showMoreWalletOptions && (
+          <div className="flex-1 min-w-0">
+            <ShowAllWalletsButton onClick={() => setShowExtendedList('wallet')} />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (shouldShowRestorableSessionView && restorableSession) {
+    const walletProps = restorableSession.connector._wallet
+    const Logo = walletProps ? getLogo(theme, walletProps) : undefined
+    const continueTarget =
+      walletProps?.isEcosystemWallet && walletProps?.name
+        ? walletProps.name
+        : restorableSession.walletAddress
+          ? formatAddress(restorableSession.walletAddress)
+          : walletProps?.name || 'your wallet'
+    const continueLabel = `Continue with ${continueTarget}`
+
+    return (
+      <div className={isInline ? 'p-0' : 'p-4'}>
+        <div
+          className="flex flex-col justify-center text-primary items-center font-medium"
+          style={{
+            marginTop: isInline ? '0' : '2px'
+          }}
+        >
+          <TitleWrapper isInline={isInline}>
+            <Text color="secondary">{isRestoringSession ? 'Connecting...' : 'Continue your session'}</Text>
+          </TitleWrapper>
+        </div>
+        <div className="flex flex-col gap-4 mt-6">
+          <Card
+            className={clsx('flex gap-3 items-center justify-start w-full h-14 px-4', isRestoringSession && 'opacity-50')}
+            clickable={!isRestoringSession}
+            onClick={onRestoreSession}
+            aria-disabled={isRestoringSession}
+          >
+            {Logo && <Logo className="w-6 h-6" />}
+            <div className="flex flex-col">
+              <Text variant="small" color="muted">
+                Previous session
+              </Text>
+              <Text variant="normal" fontWeight="bold" color="primary">
+                {continueLabel}
+              </Text>
+            </div>
+          </Card>
+          <Button label="Cancel" variant="glass" onClick={onDismissRestorableSession} disabled={isRestoringSession} />
+        </div>
+        <div className="mt-6">
+          <PoweredBySequence />
+        </div>
+      </div>
+    )
+  }
+
   if (showExtendedList) {
     const SEARCHABLE_TRESHOLD = 8
-    const connectors = showExtendedList === 'social' ? socialAuthConnectors : walletConnectors
-    const searchable = connectors.length > SEARCHABLE_TRESHOLD
+    const connectorsForModal = showExtendedList === 'social' ? socialAuthConnectors : walletConnectors
+    const searchable = connectorsForModal.length > SEARCHABLE_TRESHOLD
+    const title = showExtendedList === 'social' ? 'Continue with a social account' : 'Choose a wallet'
 
     return (
       <ExtendedWalletList
         searchable={searchable}
         onGoBack={() => setShowExtendedList(null)}
         onConnect={onConnect}
-        connectors={connectors}
-        title={showExtendedList === 'social' ? 'Continue with a social account' : 'Choose a wallet'}
+        connectors={connectorsForModal}
+        isInline={isInline}
+        title={title}
       />
     )
   }
 
+  if (waasStatusData?.errorResponse) {
+    const errorMessage =
+      waasStatusData.errorResponse.status === 451
+        ? 'Service unavailable due to legal and geographic restrictions'
+        : `Something went wrong. (${waasStatusData.errorResponse.msg})`
+
+    return (
+      <div className={isInline ? 'p-0' : 'p-4'}>
+        <div
+          className="flex flex-col justify-center text-primary items-center font-medium"
+          style={{
+            marginTop: isInline ? '0' : '2px'
+          }}
+        >
+          <TitleWrapper isInline={isInline}>
+            <Text color="secondary">
+              {isLoading
+                ? `Connecting...`
+                : hasPrimarySequenceConnection
+                  ? 'Wallets'
+                  : `Connect ${projectName ? `to ${projectName}` : ''}`}
+            </Text>
+          </TitleWrapper>
+          <div className="relative flex flex-col items-center justify-center p-8">
+            <div className="flex flex-col items-center gap-4 mt-2 mb-2">
+              <Text color="secondary" className="text-center text-lg font-medium text-negative">
+                {errorMessage}
+              </Text>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-4">
+    <div className={isInline ? 'p-0' : 'p-4'}>
       <div
         className="flex flex-col justify-center text-primary items-center font-medium"
         style={{
-          marginTop: '2px'
+          marginTop: isInline ? '0' : '2px'
         }}
       >
-        <TitleWrapper isPreview={isPreview}>
+        <TitleWrapper isInline={isInline}>
           <Text color="secondary">
             {isLoading
               ? `Connecting...`
-              : hasConnectedSocialOrSequenceUniversal
+              : hasPrimarySequenceConnection
                 ? 'Wallets'
                 : `Connect ${projectName ? `to ${projectName}` : ''}`}
           </Text>
@@ -389,6 +955,9 @@ export const Connect = (props: ConnectProps) => {
                 linkedWallets={linkedWallets}
                 disconnectWallet={disconnectWallet}
                 unlinkWallet={handleUnlinkWallet}
+                connectWallet={handleConnect}
+                connectors={walletConnectors}
+                embeddedWalletTitle={config.embeddedWalletTitle}
               />
 
               <>
@@ -397,7 +966,7 @@ export const Connect = (props: ConnectProps) => {
                     <Divider className="text-background-raised w-full" />
                     <div className="flex justify-center">
                       <Text variant="small" color="muted">
-                        {!hasConnectedSocialOrSequenceUniversal ? 'Connect with a social account' : 'Connect another wallet'}
+                        {!hasPrimarySequenceConnection ? 'Connect with a social account' : 'Connect another wallet'}
                       </Text>
                     </div>
                   </>
@@ -405,47 +974,50 @@ export const Connect = (props: ConnectProps) => {
               </>
             </>
           )}
-          {showEmailWaasPinInput ? (
-            <EmailWaasVerify
-              sendEmailCode={sendEmailCode}
-              error={emailAuthError}
-              isLoading={emailAuthLoading}
-              onConfirm={sendChallengeAnswer}
-              resetError={resetError}
-            />
-          ) : (
-            <>
-              {!hasConnectedSocialOrSequenceUniversal && (
-                <>
-                  <Banner config={config as ConnectConfig} />
 
-                  <div className="flex mt-6 gap-6 flex-col">
+          <>
+            {showEmailWaasPinInput ? (
+              <EmailWaasVerify
+                sendEmailCode={sendEmailCode}
+                error={emailAuthError}
+                isLoading={emailAuthLoading}
+                onConfirm={sendChallengeAnswer}
+                resetError={resetError}
+              />
+            ) : (
+              <>
+                {!hasAnyConnection && <Banner config={baseConfig as ConnectConfig} />}
+
+                {showWalletAuthOptionsFirst && !hideExternalConnectOptions && walletConnectors.length > 0 && (
+                  <WalletConnectorsSection />
+                )}
+
+                {!hasPrimarySequenceConnection && (
+                  <div className="flex mt-4 gap-6 flex-col">
                     <>
+                      {showEcosystemConnectorSection && ecosystemConnector && (
+                        <div
+                          className={`flex gap-2 ${descriptiveSocials ? 'flex-col items-start justify-start' : 'flex-row items-center justify-center'}`}
+                        >
+                          <div className="w-full">
+                            {renderConnectorButton(ecosystemConnector, {
+                              isDescriptive: descriptiveSocials,
+                              disableTooltip: config?.signIn?.disableTooltipForDescriptiveSocials
+                            })}
+                          </div>
+                        </div>
+                      )}
                       {!hideSocialConnectOptions && showSocialConnectorSection && (
-                        <div className={`flex gap-2 justify-center items-center ${descriptiveSocials ? 'flex-col' : 'flex-row'}`}>
+                        <div
+                          className={`flex gap-2 ${descriptiveSocials ? 'flex-col items-start justify-start' : 'flex-row items-center justify-center'}`}
+                        >
                           {socialAuthConnectors.slice(0, socialConnectorsPerRow).map(connector => {
                             return (
                               <div className="w-full" key={connector.uid}>
-                                {connector._wallet.id === 'google-waas' ? (
-                                  <GoogleWaasConnectButton
-                                    isDescriptive={descriptiveSocials}
-                                    connector={connector}
-                                    onConnect={onConnect}
-                                  />
-                                ) : connector._wallet.id === 'apple-waas' ? (
-                                  <AppleWaasConnectButton
-                                    isDescriptive={descriptiveSocials}
-                                    connector={connector}
-                                    onConnect={onConnect}
-                                  />
-                                ) : (
-                                  <ConnectButton
-                                    disableTooltip={config?.signIn?.disableTooltipForDescriptiveSocials}
-                                    isDescriptive={descriptiveSocials}
-                                    connector={connector}
-                                    onConnect={onConnect}
-                                  />
-                                )}
+                                {renderConnectorButton(connector, {
+                                  isDescriptive: descriptiveSocials,
+                                  disableTooltip: config?.signIn?.disableTooltipForDescriptiveSocials
+                                })}
                               </div>
                             )
                           })}
@@ -490,36 +1062,25 @@ export const Connect = (props: ConnectProps) => {
                       )}
                     </>
                   </div>
-                </>
-              )}
-              {!hideExternalConnectOptions && walletConnectors.length > 0 && (
-                <>
-                  <div
-                    className={clsx(
-                      'flex gap-2 flex-row justify-center items-center',
-                      hasConnectedSequenceUniversal ? 'mt-4' : 'mt-6'
-                    )}
-                  >
-                    {walletConnectors.slice(0, walletConnectorsPerRow).map(connector => {
-                      return <ConnectButton key={connector.uid} connector={connector} onConnect={onConnect} />
-                    })}
-                    {showMoreWalletOptions && <ShowAllWalletsButton onClick={() => setShowExtendedList('wallet')} />}
-                  </div>
-                </>
-              )}
-              <div className="mt-6">
-                <PoweredBySequence />
-              </div>
-            </>
-          )}
+                )}
+
+                {!showWalletAuthOptionsFirst && !hideExternalConnectOptions && walletConnectors.length > 0 && (
+                  <WalletConnectorsSection />
+                )}
+                <div className="mt-6">
+                  <PoweredBySequence />
+                </div>
+              </>
+            )}
+          </>
         </>
       )}
     </div>
   )
 }
 
-const TitleWrapper = ({ children, isPreview }: { children: React.ReactNode; isPreview: boolean }) => {
-  if (isPreview) {
+const TitleWrapper = ({ children, isInline }: { children: ReactNode; isInline: boolean }) => {
+  if (isInline) {
     return <>{children}</>
   }
 
