@@ -30,11 +30,7 @@ export const useInitialBalanceCheck = ({
 
   const isInitialBalanceChecked = (navigation.params as PaymentMethodSelectionParams).isInitialBalanceChecked
 
-  const {
-    data: swapRoutes = [],
-    isLoading: swapRoutesIsLoading,
-    isError: isErrorSwapRoutes
-  } = useGetSwapRoutes(
+  const { data: swapRoutes = [], isLoading: swapRoutesIsLoading } = useGetSwapRoutes(
     {
       walletAddress: userAddress ?? '',
       toTokenAddress: buyCurrencyAddress,
@@ -46,11 +42,7 @@ export const useInitialBalanceCheck = ({
     }
   )
 
-  const {
-    data: swapRoutesTokenBalancesData,
-    isLoading: swapRoutesTokenBalancesIsLoading,
-    isError: isErrorSwapRoutesTokenBalances
-  } = useGetTokenBalancesSummary(
+  const { data: swapRoutesTokenBalancesData, isLoading: swapRoutesTokenBalancesIsLoading } = useGetTokenBalancesSummary(
     {
       chainIds: [chainId],
       filter: {
@@ -88,18 +80,6 @@ export const useInitialBalanceCheck = ({
       }
     }
 
-    if (!validSwapRoute) {
-      setNavigation({
-        location: 'payment-method-selection',
-        params: {
-          ...navigation.params,
-          isInitialBalanceChecked: true
-        }
-      })
-
-      return
-    }
-
     setNavigation({
       location: 'payment-method-selection',
       params: {
@@ -115,15 +95,7 @@ export const useInitialBalanceCheck = ({
 
   useEffect(() => {
     if (!isInitialBalanceChecked && !tokenBalancesIsLoading && !swapRoutesIsLoading && !swapRoutesTokenBalancesIsLoading) {
-      if (isErrorSwapRoutes || isErrorSwapRoutesTokenBalances) {
-        setNavigation({
-          location: 'payment-method-selection',
-          params: {
-            ...navigation.params,
-            isInitialBalanceChecked: true
-          }
-        })
-      } else if (isInsufficientBalance) {
+      if (isInsufficientBalance) {
         findSwapQuote()
       } else {
         setNavigation({
@@ -140,8 +112,6 @@ export const useInitialBalanceCheck = ({
     isInsufficientBalance,
     tokenBalancesIsLoading,
     swapRoutesIsLoading,
-    swapRoutesTokenBalancesIsLoading,
-    isErrorSwapRoutes,
-    isErrorSwapRoutesTokenBalances
+    swapRoutesTokenBalancesIsLoading
   ])
 }
