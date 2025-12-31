@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.0.4",
+    "next": "14.2.35",
     "0xsequence": "^1.4.9",
     "@0xsequence/kit": "workspace:*",
     "@0xsequence/kit-checkout": "workspace:*",

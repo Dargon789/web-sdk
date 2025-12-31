@@ -59,7 +59,7 @@ export const App = () => {
 
       // sign
       const sig = await walletClient.signMessage({
-        account: address!,
+        account: address || ('' as `0x${string}`),
         message
       })
       console.log('address', address)
@@ -96,7 +96,7 @@ export const App = () => {
 
     const [account] = await walletClient.getAddresses()
 
-    sendTransaction({ to: account, value: 0n, gas: null })
+    sendTransaction({ to: account, value: '0', gas: null })
   }
 
   useEffect(() => {
