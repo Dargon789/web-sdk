@@ -96,7 +96,7 @@ export const App = () => {
 
     const [account] = await walletClient.getAddresses()
 
-    sendTransaction({ to: account, value: '0', gas: null })
+    sendTransaction({ to: account, value: 0n, gas: null })
   }
 
   useEffect(() => {
