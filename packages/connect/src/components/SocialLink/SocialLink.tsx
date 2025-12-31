@@ -278,13 +278,20 @@ const DEVICE_EMOJIS = [
   ...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷🕸🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐓🦃🦚🦜🦢🦩🕊🐇🦝🦨🦡🦦🦥🐁🐀🐿🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿🍀🎍🎋🍃👣🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🥭🍍🥥🥝🍅🥑🥦🥬🥒🌶🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🥪🥙🧆🌮🌯🥗🥘🥫🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜👀👂👃👄👅👆👇👈👉👊👋👌👍👎👏👐👑👒👓🎯🎰🎱🎲🎳👾👯👺👻👽🏂🏃🏄'
 ]
 
+function getSecureRandomInt(max: number): number {
+  if (max <= 0) return 0
+  const array = new Uint32Array(1)
+  crypto.getRandomValues(array)
+  return array[0] % max
+}
+
 function randomName() {
   const wordlistSize = english.length
   const words = english
 
-  const randomEmoji = DEVICE_EMOJIS[Math.floor(Math.random() * DEVICE_EMOJIS.length)]
-  const randomWord1 = words[Math.floor(Math.random() * wordlistSize)]
-  const randomWord2 = words[Math.floor(Math.random() * wordlistSize)]
+  const randomEmoji = DEVICE_EMOJIS[getSecureRandomInt(DEVICE_EMOJIS.length)]
+  const randomWord1 = words[getSecureRandomInt(wordlistSize)]
+  const randomWord2 = words[getSecureRandomInt(wordlistSize)]
 
   return `${randomEmoji} ${randomWord1} ${randomWord2}`
 }
