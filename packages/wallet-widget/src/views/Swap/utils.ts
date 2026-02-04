@@ -1,5 +1,4 @@
 import { stringTemplate } from '@0xsequence/network'
-
 import { SERVICES } from './consts.js'
 
 export type Environment = 'development' | 'production' | 'next'

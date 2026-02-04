@@ -93,6 +93,8 @@ export const TRAILS_CUSTOM_CSS = `
   --trails-shadow: 0 4px 6px -1px rgba(0 0 0 / 0.1), 0 2px 4px -1px rgba(0 0 0 / 0.06) !important;
   
   /* Primary Button */
+  --trails-primary: rgb(255 255 255) !important;
+  --trails-primary-hover: rgba(255 255 255 / 0.9) !important;
   --trails-primary-disabled: rgb(63 63 70) !important;
   --trails-primary-disabled-text: rgb(113 113 122) !important;
   
@@ -178,23 +180,17 @@ export const TRAILS_CUSTOM_CSS = `
 }
 `
 
-export const TRAILS_CUSTOM_CSS_LIGHT = `
-  --trails-bg-primary: bg-background-primary !important; 
-
-  .shadow-xl {
-    --tw-shadow: 0 0 #0000 !important;
-    --tw-shadow-colored: 0 0 #0000 !important;
-    box-shadow: none !important;
-  }
-`
-
 /**
  * Sequence API service endpoints with template placeholders
  * for environment-specific prefixes and postfixes
  */
 export const SERVICES = {
   sequenceApi: 'https://${prefix}api.sequence.app',
+  metadata: 'https://${prefix}metadata.sequence.app',
+  indexer: 'https://${prefix}${network}-indexer.sequence.app',
   indexerGateway: 'https://${prefix}indexer.sequence.app',
   nodeGateway: 'https://${prefix}nodes.sequence.app',
+  marketplaceApi: 'https://${prefix}marketplace-api.sequence.app',
+  builderRpcApi: 'https://${prefix}api.sequence.build',
   trailsApi: 'https://${prefix}trails-api.sequence${postfix}.app'
 }
