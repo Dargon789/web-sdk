@@ -99,11 +99,12 @@ const NetworkSelect = () => {
   const { switchChain } = useSwitchChain()
   const [isOpen, toggleOpen] = useState(false)
 
-  chains.map(chain => {
+  const modifiedChains = chains.map(chain => {
     if (chain.id === 8453) {
-      chain.name = 'Base'
+      return { ...chain, name: 'Base' };
     }
-  })
+    return chain;
+  });
 
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={toggleOpen}>
