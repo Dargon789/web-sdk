@@ -1,50 +1,21 @@
-import { ConnectConfig, createConfig } from '@0xsequence/connect'
+import { SequenceCheckoutConfig } from '@0xsequence/checkout'
+import { ConnectConfig, createConfig, createContractPermission } from '@0xsequence/connect'
 import { ChainId } from '@0xsequence/network'
-import { zeroAddress } from 'viem'
+import { Environment } from '@imtbl/config'
+import { passport } from '@imtbl/sdk'
+import { parseEther, zeroAddress } from 'viem'
 import { cookieStorage, createStorage } from 'wagmi'
 
-  export function App() {
-    const projectAccessKey = "AQAAAAAAAJbd_5JOcE50AqglZCtvu51YlGI"
-    const waasConfigKey = "eyJwcm9qZWN0SWQiOjM4NjIxLCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0=" // Pass in your waasConfigKey
-    const enableConfirmationModal = true // change to your preference
-    const googleClientId = 'YOUR_GOOGLE_CLIENT_ID' // Google Client ID
-    const appleClientId = 'YOUR_APPLE_CLIENT_ID' // Apple Client ID
-    const appleRedirectURI = 'YOUR_APP_SCHEME://auth' // Apple Redirect URI
-    const walletConnectProjectId = 'walletConnectProjectId' // Pass in your WalletConnect Project ID
+import { getEmitterContractAddress } from './constants/permissions'
 
-    const config = createConfig('waas', {
-      projectAccessKey,
-      position: "center",
-      defaultTheme: "dark",
-      signIn: {
-        projectName: "sequence.app",
-      },
-      defaultChainId: 421614,
-      chainIds: [1, 10, 40, 41, 56, 97, 100, 137, 143, 1101, 1284, 1287, 1868, 1946, 1993, 5031, 6252, 8333, 8453, 10143, 19011, 24101, 28802, 33111, 33139, 40875, 42161, 42170, 42793, 43113, 43114, 50312, 80002, 81457, 84532, 127823, 128123, 421614, 660279, 747474, 5042002, 11155111, 11155420, 21000000, 37084624, 168587773, 1482601649, 37714555429],
-      appName: "sequence.app",
-      email: true,
-      waasConfigKey,
-      google: {
-        clientId: googleClientId
-      },
-      apple: {
-        clientId: appleClientId,
-        redirectURI: appleRedirectURI
-      },
-      walletConnect: {
-        projectId: walletConnectProjectId
-      },
-      coinbase: true,
-      metaMask: true,
-      wagmiConfig: {
-        multiInjectedProviderDiscovery: true,
-      },
-      enableConfirmationModal
-    })
+const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
 
-export const isDebugMode = false
-
-const projectAccessKey = 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
+// append ?debug to url to enable debug mode
+const isDebugMode = searchParams.has('debug')
+const isDev = true
+const projectAccessKey = isDev ? 'AQAAAAAAAAVBcvNU0sTXiBQmgnL-uVm929Y' : 'AQAAAAAAAKqC8tV0Mgsd0BGlI2bzanNTdEE'
+const walletConnectProjectId = 'c65a6cb1aa83c4e24500130f23a437d8'
+const defaultOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
 
 export const sponsoredContractAddresses: Record<number, `0x${string}`> = {
   [ChainId.ARBITRUM_NOVA]: '0x37470dac8a0255141745906c972e414b1409b470'
@@ -52,11 +23,18 @@ export const sponsoredContractAddresses: Record<number, `0x${string}`> = {
 
 export const connectConfig: ConnectConfig = {
   projectAccessKey,
+  walletUrl: 'https://v3.sequence-dev.app',
   defaultTheme: 'dark',
   signIn: {
     projectName: 'Sequence Web SDK Demo',
     useMock: isDebugMode
   },
+  // Custom css injected into shadow dom
+  // customCSS: `
+  //   span {
+  //     color: red !important;
+  //   }
+  // `,
   displayedAssets: [
     // Native token
     {
@@ -84,51 +62,111 @@ export const connectConfig: ConnectConfig = {
       chainId: ChainId.POLYGON
     }
   ],
-  readOnlyNetworks: [ChainId.OPTIMISM]
+  readOnlyNetworks: [ChainId.OPTIMISM],
+  env: isDev
+    ? {
+        indexerGatewayUrl: 'https://dev-indexer.sequence.app',
+        metadataUrl: 'https://dev-metadata.sequence.app',
+        apiUrl: 'https://dev-api.sequence.app',
+        indexerUrl: 'https://dev-indexer.sequence.app',
+        builderUrl: 'https://dev-api.sequence.build'
+      }
+    : undefined
 }
 
-export const config = createConfig('waas', {
+let passportInstance: passport.Passport | undefined
+
+export const getPassportInstance = () => {
+  if (typeof window === 'undefined') {
+    return undefined
+  }
+
+  if (!passportInstance) {
+    passportInstance = new passport.Passport({
+      baseConfig: {
+        environment: Environment.SANDBOX,
+        publishableKey: 'pk_imapik-test-VEMeW7wUX7hE7LHg3FxY'
+      },
+      forceScwDeployBeforeMessageSignature: true,
+      clientId: 'ap8Gv3188GLFROiBFBNFz77DojRpqxnS',
+      redirectUri: `${defaultOrigin}/auth-callback`,
+      logoutRedirectUri: `${defaultOrigin}`,
+      audience: 'platform_api',
+      scope: 'openid offline_access email transact'
+    })
+  }
+
+  return passportInstance
+}
+
+export const config = createConfig({
   ...connectConfig,
+  walletUrl: 'https://v3.sequence-dev.app',
+  dappOrigin: defaultOrigin,
   appName: 'Sequence Web SDK Demo',
-  chainIds: [
-    ChainId.ARBITRUM_NOVA,
-    ChainId.ARBITRUM_SEPOLIA,
-    ChainId.POLYGON,
-    ChainId.IMMUTABLE_ZKEVM,
-    ChainId.IMMUTABLE_ZKEVM_TESTNET,
-    ChainId.BASE_SEPOLIA,
-    ChainId.BASE
-  ],
-  defaultChainId: ChainId.ARBITRUM_NOVA,
-
-  // Waas specific config options
-  waasConfigKey: 'eyJwcm9qZWN0SWQiOjE2ODE1LCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0=',
-  enableConfirmationModal: false,
-
-  guest: true,
+  chainIds: [ChainId.ARBITRUM_SEPOLIA, ChainId.OPTIMISM],
+  defaultChainId: ChainId.OPTIMISM,
+  google: true,
+  apple: true,
   email: true,
-  google: {
-    clientId: '970987756660-35a6tc48hvi8cev9cnknp0iugv9poa23.apps.googleusercontent.com'
-  },
-  epic: {
-    authUrl: 'http://localhost:8787/login'
-  },
-  apple: {
-    clientId: 'com.horizon.sequence.waas',
-    redirectURI: 'http://localhost:3000'
-  },
+  passkey: true,
+  // ecosystemWallets: [
+  //   {
+  //     id: 'sequence-ecosystem',
+  //     name: 'Sequence',
+  //     ctaText: 'Continue with Sequence',
+  //     logoDark: SequenceEcosystemLogo,
+  //     logoLight: SequenceEcosystemLogo,
+  //     monochromeLogoDark: SequenceEcosystemLogo,
+  //     monochromeLogoLight: SequenceEcosystemLogo
+  //   }
+  // ],
   walletConnect: {
-    projectId: 'c65a6cb1aa83c4e24500130f23a437d8'
+    projectId: walletConnectProjectId
   },
-
+  nodesUrl: 'https://dev-nodes.sequence.app/{network}',
+  relayerUrl: 'https://dev-{network}-relayer.sequence.app',
+  enableImplicitSession: true,
+  includeFeeOptionPermissions: true,
+  explicitSessionParams: {
+    chainId: ChainId.OPTIMISM,
+    nativeTokenSpending: {
+      valueLimit: parseEther('0.1')
+    },
+    expiresIn: {
+      days: 1
+    },
+    permissions: [
+      createContractPermission({
+        address: getEmitterContractAddress(defaultOrigin),
+        functionSignature: 'function explicitEmit()'
+      })
+    ]
+  },
   wagmiConfig: {
-    // Next.js doesn't support localStorage in SSR
     storage: createStorage({ storage: cookieStorage }),
     ssr: true
   }
-   return (
-      <SequenceConnect config={config}>
-        <MyPage />
-      </SequenceConnect>
-    );
-}
+})
+
+export const getErc1155SaleContractConfig = (walletAddress: string) => ({
+  chain: 137,
+  // ERC20 token sale
+  contractAddress: '0xe65b75eb7c58ffc0bf0e671d64d0e1c6cd0d3e5b',
+  collectionAddress: '0xdeb398f41ccd290ee5114df7e498cf04fac916cb',
+  // Native token sale
+  // contractAddress: '0xf0056139095224f4eec53c578ab4de1e227b9597',
+  // collectionAddress: '0x92473261f2c26f2264429c451f70b0192f858795',
+  wallet: walletAddress,
+  items: [
+    {
+      tokenId: '1',
+      quantity: '1'
+    }
+  ],
+  onSuccess: () => {
+    console.log('success')
+  }
+})
+
+export const checkoutConfig: SequenceCheckoutConfig = {}

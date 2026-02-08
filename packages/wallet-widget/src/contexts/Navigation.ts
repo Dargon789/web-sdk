@@ -1,31 +1,8 @@
 'use client'
 
-import type { Transaction } from '@0xsequence/indexer'
+import { Transaction } from '@0xsequence/indexer'
 
-import { createGenericContext } from './genericContext.js'
-
-export interface CoinDetailsParams {
-  contractAddress: string
-  chainId: number
-  accountAddress: string
-}
-
-export interface CoinDetailsNavigation {
-  location: 'coin-details'
-  params: CoinDetailsParams
-}
-
-export interface CollectibleDetailsParams {
-  contractAddress: string
-  chainId: number
-  tokenId: string
-  accountAddress: string
-}
-
-export interface CollectibleDetailsNavigation {
-  location: 'collectible-details'
-  params: CollectibleDetailsParams
-}
+import { createGenericContext } from './genericContext'
 
 export interface CollectionDetailsParams {
   contractAddress: string
@@ -37,6 +14,27 @@ export interface CollectionDetailsNavigation {
   params: CollectionDetailsParams
 }
 
+export interface CoinDetailsParams {
+  contractAddress: string
+  chainId: number
+}
+
+export interface CoinDetailsNavigation {
+  location: 'coin-details'
+  params: CoinDetailsParams
+}
+
+export interface CollectibleDetailsParams {
+  contractAddress: string
+  chainId: number
+  tokenId: string
+}
+
+export interface CollectibleDetailsNavigation {
+  location: 'collectible-details'
+  params: CollectibleDetailsParams
+}
+
 export interface TransactionDetailsParams {
   transaction: Transaction
 }
@@ -44,6 +42,15 @@ export interface TransactionDetailsParams {
 export interface TransactionDetailsNavigation {
   location: 'transaction-details'
   params: TransactionDetailsParams
+}
+
+export interface SearchViewAllParams {
+  defaultTab: 'coins' | 'collections'
+}
+
+export interface SearchViewAllNavigation {
+  location: 'search-view-all'
+  params: SearchViewAllParams
 }
 
 export interface SendCoinParams {
@@ -91,19 +98,23 @@ export interface SendCollectibleNavigation {
 export interface BasicNavigation {
   location:
     | 'home'
-    | 'send-general'
+    | 'send'
     | 'swap'
     | 'receive'
     | 'buy'
+    | 'receive'
     | 'history'
+    | 'legacy-settings'
+    | 'legacy-settings-general'
+    | 'legacy-settings-currency'
+    | 'legacy-settings-networks'
     | 'settings'
     | 'settings-wallets'
-    | 'settings-currency'
     | 'settings-profiles'
     | 'settings-apps'
-    | 'settings-preferences'
-    | 'connect-dapp'
     | 'search'
+    | 'search-tokens'
+    | 'search-collectibles'
 }
 
 export type Navigation =
@@ -112,6 +123,7 @@ export type Navigation =
   | CollectibleDetailsNavigation
   | CollectionDetailsNavigation
   | TransactionDetailsNavigation
+  | SearchViewAllNavigation
   | SendCoinNavigation
   | SendCollectibleNavigation
   | SwapCoinNavigation
@@ -126,6 +138,4 @@ type NavigationContext = {
   setIsBackButtonEnabled: (enabled: boolean) => void
 }
 
-const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
-
-export { NavigationContextProvider, useNavigationContext }
+export const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()

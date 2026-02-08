@@ -1,23 +1,36 @@
-# Sequence Web SDK Next Example
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-This demo showcases the sign in flow, the embedded wallet and the checkout component of Sequence Web SDK.
+## Getting Started
 
-View the [demo here](https://0xsequence.github.io/web-sdk)! 👀
+First, run the development server:
 
-## Run Demo Locally
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-<div align="center">
-  <img src="../../public/docs/web-sdk-demo.png">
-</div>
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-The React example can be used to test the library locally.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-1. `pnpm install`
-2. From the root folder, run `pnpm build` to build the packages.
-3. From the root folder, run `pnpm dev:next` to run the next example.
+This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
-## LICENSE
+## Learn More
 
-Apache-2.0
+To learn more about Next.js, take a look at the following resources:
 
-Copyright (c) 2017-present Horizon Blockchain Games Inc. / https://horizon.io
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
