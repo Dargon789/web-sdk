@@ -152,7 +152,7 @@ export function XAuthCallback() {
     }
 
     if (window.opener) {
-      window.opener.postMessage({ type: 'OAUTH_RETURN', data: payload }, '*')
+      window.opener.postMessage({ type: 'OAUTH_RETURN', data: payload }, window.location.origin)
     }
 
     window.close()
