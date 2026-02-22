@@ -6,6 +6,7 @@ import { configureChains, createConfig, WagmiConfig } from 'wagmi'
 import { publicProvider } from 'wagmi/providers/public'
 import { mainnet, polygon } from 'wagmi/chains'
 import { getDefaultConnectors } from '@0xsequence/kit-connectors'
+import { Analytics } from '@vercel/analytics/next'
 
 // eslint-disable-next-line import/no-default-export
 export default function App({ Component, pageProps }: AppProps) {
@@ -14,6 +15,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <Providers>
       <Component {...pageProps} />
+      <Analytics />
     </Providers>
   )
 }

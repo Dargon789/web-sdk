@@ -12,7 +12,6 @@
   "dependencies": {
     "0xsequence": "^1.9.19",
     "@0xsequence/kit": "workspace:*",
-    "@0xsequence/kit-checkout": "workspace:*",
     "@tanstack/react-query": "^5.32.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
