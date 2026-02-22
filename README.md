@@ -348,7 +348,7 @@ setTheme('light')
 
 The `SequenceConnectProvider` wrapper can accept an optional config object.
 
-The settings are described in more detailed in the Sequence Web SDK documentation.
+The settings are described in more detail in the Sequence Web SDK documentation.
 
 ```js
 
