@@ -4,8 +4,8 @@
 
 Easily integrate web3 wallets in your app with Sequence Web SDK 🧰. Based on [wagmi](https://wagmi.sh/), and supporting all wagmi features.
 
-- Connect via social logins, e.g., Facebook, Google, Discord, etc. 🔐🪪
-- Connect to popular web3 wallets, e.g., WalletConnect, MetaMask. 🦊 ⛓️
+- Connect via social logins eg: facebook, google, discord, etc...! 🔐🪪
+- Connect to popular web3 wallets eg: walletConnect, metamask ! 🦊 ⛓️
 - Full-fledged embedded wallet for coins and collectibles 👛 🖼️ 🪙
 
 View the [demo](https://web-sdk.sequence-demos.xyz/)! 👀
@@ -138,8 +138,8 @@ function App() {
 }
 ```
 
-#### Note about X (formerly Twitter) authentication: X authentication specifically needs a callback route; either a frontend page or a backend endpoint. A frontend example callback page is below:
-Please ensure that the redirect URI and the callback page route are identical or X will refuse the authentication
+#### Note about X (formerly Twitter) authentication. X authentication specifically needs a callback route; either a frontend page or a backend endpoint. An frontend example callback page is below:
+Please ensure that the redirect uri and the callback page route is identical or X will refuse the authentication
 
 ```js
 export function XAuthCallback() {
@@ -152,7 +152,7 @@ export function XAuthCallback() {
     }
 
     if (window.opener) {
-      window.opener.postMessage({ type: 'OAUTH_RETURN', data: payload }, window.location.origin)
+      window.opener.postMessage({ type: 'OAUTH_RETURN', data: payload }, '*')
     }
 
     window.close()
@@ -264,7 +264,7 @@ function App() {
   <img src="public/docs/sign-in-modal.png">
 </div>
 
-Wallet selection is done through a modal which can be called programmatically. Kit allows multiple connections, so it can be called again to connect more wallets.
+Wallet selection is done through a modal which can be called programmatically. Kit allows multiple connection, so it can be called again to connect more wallets.
 
 ```js
 import { useOpenConnectModal } from '@0xsequence/connect'
@@ -348,7 +348,7 @@ setTheme('light')
 
 The `SequenceConnectProvider` wrapper can accept an optional config object.
 
-The settings are described in more detail in the Sequence Web SDK documentation.
+The settings are described in more detailed in the Sequence Web SDK documentation.
 
 ```js
 
@@ -362,7 +362,7 @@ The settings are described in more detail in the Sequence Web SDK documentation.
     // limits the digital assets displayed on the assets summary screen
     displayedAssets: [
       {
-        contractAddress: zeroAddress, // e.g. import { zeroAddress } from 'viem'
+        contractAddress: zeroAddress,
         chainId: 137,
       },
       {
@@ -375,7 +375,7 @@ The settings are described in more detail in the Sequence Web SDK documentation.
 
   <SequenceConnectProvider config={connectConfig}>
     <App />
-  </SequenceConnectProvider>
+  <SequenceConnectProvider>
 ```
 
 ## Packages
@@ -401,9 +401,9 @@ The settings are described in more detail in the Sequence Web SDK documentation.
 
 The React example can be used to test the library locally.
 
-1. Replace the web-sdk dependencies to the ones of the workspace in order to use hot reload:
+1. Replace the web-sdk dependencies to the ones of the workspace in order to use hot reload.:
 
-```json
+```js
 "@0xsequence/connect": "workspace:*",
 "@0xsequence/checkout": "workspace:*",
 "@0xsequence/wallet-widget": "workspace:*",
