@@ -1,6 +1,7 @@
 import type { Navigation } from '../../../contexts/index.js'
 import { CollectionDetails } from '../../../views/CollectionDetails/index.js'
 import {
+  Buy,
   CoinDetails,
   CollectibleDetails,
   Home,
@@ -16,8 +17,7 @@ import {
   SettingsProfiles,
   SettingsWallets,
   // QrScan,
-  SwapCoin,
-  SwapList,
+  Swap,
   TransactionDetails
 } from '../../../views/index.js'
 import { NavigationHeader } from '../../NavigationHeader/index.js'
@@ -38,8 +38,12 @@ export const getContent = (navigation: Navigation) => {
           tokenId={navigation.params.tokenId}
         />
       )
+    case 'swap':
+      return <Swap />
     case 'receive':
       return <Receive />
+    case 'buy':
+      return <Buy />
     case 'search':
       return <Search />
     case 'settings':
@@ -78,16 +82,6 @@ export const getContent = (navigation: Navigation) => {
       return <CollectionDetails contractAddress={navigation.params.contractAddress} chainId={navigation.params.chainId} />
     case 'transaction-details':
       return <TransactionDetails transaction={navigation.params.transaction} />
-    case 'swap-coin':
-      return <SwapCoin contractAddress={navigation.params.contractAddress} chainId={navigation.params.chainId} />
-    case 'swap-coin-list':
-      return (
-        <SwapList
-          contractAddress={navigation.params.contractAddress}
-          chainId={navigation.params.chainId}
-          amount={navigation.params.amount}
-        />
-      )
     case 'home':
     default:
       return <Home />
@@ -152,8 +146,6 @@ export const getHeader = (navigation: Navigation) => {
     case 'send-collectible':
       return <NavigationHeader label="Send" />
     case 'swap':
-    case 'swap-coin':
-    case 'swap-coin-list':
       return <NavigationHeader label="Swap" />
     case 'receive':
       return <NavigationHeader label="Receive" />
