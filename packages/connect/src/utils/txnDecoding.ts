@@ -1,8 +1,7 @@
-import { ContractCall, SequenceAPIClient } from '@0xsequence/api'
+import { SequenceAPIClient, type ContractCall } from '@0xsequence/api'
 import { commons } from '@0xsequence/core'
 import { ContractType, TxnTransferType } from '@0xsequence/indexer'
-import { BigNumber, BigNumberish, BytesLike, ethers } from 'ethers'
-import { getAddress } from 'ethers/lib/utils'
+import { encodeFunctionData, getAddress, slice, toHex, zeroAddress, type Hex } from 'viem'
 
 interface TransactionEncodedWithCall extends commons.transaction.TransactionEncoded {
   call?: ContractCall
@@ -84,29 +83,32 @@ const transformArgs = (args: ContractCallArg[]): any => {
   )
 }
 
-const createTxnData = (to: string, call: ContractCall, value: BigNumberish, data: BytesLike): TxnData => {
+const createTxnData = (to: string, call: ContractCall, value: string | number | bigint, data: Hex): TxnData => {
   const args = transformArgs(call.args)
-  const byteSignature = ethers.utils.hexDataSlice(data, 0, 4)
+  const byteSignature = slice(data, 0, 4)
 
   let objs: TxnData['objs'] = []
   switch (call.signature) {
     case 'execute((bool,bool,uint256,address,uint256,bytes)[],uint256,bytes)':
     case 'selfExecute((bool,bool,uint256,address,uint256,bytes)[])': {
       const txns: TransactionEncodedWithCall[] = call.args[0].value
-      objs = txns.map(txn =>
-        txn.call
-          ? createTxnData(txn.target, txn.call, txn.value, txn.data)
+      objs = txns.map(txn => {
+        const data = toHex(txn.data)
+        const value = toHex(BigInt(txn.value))
+
+        return txn.call
+          ? createTxnData(txn.target, txn.call, value, data)
           : {
               to: txn.target,
               signature: '',
-              byteSignature: ethers.utils.hexDataSlice(txn.data, 0, 4),
+              byteSignature: slice(data, 0, 4),
               methodName: '',
               args: {},
               objs: [],
-              value: BigNumber.from(txn.value).toString(),
-              data: ethers.utils.hexlify(txn.data)
+              value,
+              data
             }
-      )
+      })
     }
   }
 
@@ -117,8 +119,8 @@ const createTxnData = (to: string, call: ContractCall, value: BigNumberish, data
     methodName: call.function,
     args,
     objs,
-    value: BigNumber.from(value).toString(),
-    data: ethers.utils.hexlify(data)
+    value: toHex(BigInt(value)),
+    data: data
   }
 }
 
@@ -242,8 +244,7 @@ type DecodedTxnData =
   | AwardItemTxnData
 
 const decodeTxnData = async (apiClient: SequenceAPIClient, txns: commons.transaction.TransactionEncoded[]): Promise<TxnData> => {
-  const mainModule = new ethers.utils.Interface(mainModuleAbi)
-  const callData = mainModule.encodeFunctionData('selfExecute', [txns])
+  const callData = encodeFunctionData({ abi: mainModuleAbi, functionName: 'selfExecute', args: [txns] })
 
   try {
     const { call } = await apiClient.decodeContractCall({ callData })
@@ -267,7 +268,7 @@ export const decodeTransactions = async (
   const txnProps = encodedTxns.map((txn, i): TxnProps | undefined => {
     const decodedTxnData = decodedTxnDatas[i] as DecodedTxnData
     const data = txn.data.toString()
-    const value = BigNumber.from(txn.value).toString()
+    const value = BigInt(txn.value).toString()
     const target = txn.target
 
     if (data === '0x' || !data) {
@@ -278,7 +279,7 @@ export const decodeTransactions = async (
         type: DecodingType.TRANSFER,
         methodName: 'nativeTokenTransfer',
         transferType: TxnTransferType.SEND,
-        contractAddress: ethers.constants.AddressZero,
+        contractAddress: zeroAddress,
         contractType: ContractType.UNKNOWN,
         from,
         to: getAddress(txn.target),
@@ -376,8 +377,7 @@ export const decodeTransactions = async (
           ...baseDecoding,
           type: DecodingType.AWARD_ITEM,
           contractAddress,
-          // @ts-ignore-next-line
-          to: getAddress(args._0),
+          to: getAddress((args as any)._0),
           amount: '1'
         }
       }

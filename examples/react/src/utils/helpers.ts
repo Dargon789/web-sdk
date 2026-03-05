@@ -1,4 +1,4 @@
-import { CreditCardCheckoutSettings } from '@0xsequence/checkout'
+import { CheckoutSettings } from '@0xsequence/checkout'
 import { encodeFunctionData, Hex } from 'viem'
 
 import { orderbookAbi } from '../constants/orderbook-abi'
@@ -24,14 +24,24 @@ export interface GetCheckoutSettings {
 }
 
 export const getCheckoutSettings = (args: GetCheckoutSettings) => {
-  const checkoutSettings: CreditCardCheckoutSettings = {
-    onSuccess: hash => {
-      console.log('credit card checkout success', hash)
-    },
-    onError: e => {
-      console.log('credit card checkout error', e)
-    },
-    ...args
+  const checkoutSettings: CheckoutSettings = {
+    creditCardCheckout: {
+      onSuccess: hash => {
+        console.log('credit card checkout success', hash)
+      },
+      onError: e => {
+        console.log('credit card checkout error', e)
+      },
+      ...args
+    }
+    // orderSummaryItems: [
+    //   {
+    //     chainId: args.chainId,
+    //     contractAddress: args.nftAddress,
+    //     tokenId: args.nftId,
+    //     quantityRaw: String(args.nftQuantity)
+    //   }
+    // ]
   }
 
   return checkoutSettings

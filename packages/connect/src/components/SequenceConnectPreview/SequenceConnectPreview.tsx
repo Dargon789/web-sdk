@@ -16,6 +16,7 @@ interface SequenceConnectPreviewProps {
 }
 
 /**
+ * @internal
  * Preview version of SequenceConnect component.
  * This component should only be used for testing purposes.
  * It provides the same functionality as SequenceConnect but only for preview purposes.

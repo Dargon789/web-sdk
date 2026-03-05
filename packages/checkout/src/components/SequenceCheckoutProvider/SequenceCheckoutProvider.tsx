@@ -1,8 +1,7 @@
 'use client'
 
-import { ShadowRoot, useConnectConfigContext, useTheme } from '@0xsequence/connect'
+import { getModalPositionCss, ShadowRoot, useConnectConfigContext, useTheme } from '@0xsequence/connect'
 import { Modal } from '@0xsequence/design-system'
-import { getModalPositionCss } from '@0xsequence/web-sdk-core'
 import { AnimatePresence } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
 
@@ -26,8 +25,7 @@ import {
   type SelectPaymentSettings,
   type SwapModalSettings,
   type TransactionStatusSettings,
-  type TransferFundsSettings,
-  FortePaymentControllerProvider
+  type TransferFundsSettings
 } from '../../contexts/index.js'
 import {
   AddFundsContent,
@@ -43,6 +41,7 @@ import {
   TransferToWallet
 } from '../../views/index.js'
 import { NavigationHeader } from '../NavigationHeader.js'
+
 import { ForteController } from './ForteController.js'
 
 export interface SequenceCheckoutConfig {
@@ -57,7 +56,9 @@ export type SequenceCheckoutProviderProps = {
 const getDefaultLocationCheckout = (): NavigationCheckout => {
   return {
     location: 'payment-method-selection',
-    params: {}
+    params: {
+      isInitialBalanceChecked: false
+    }
   }
 }
 export const SequenceCheckoutProvider = ({ children, config }: SequenceCheckoutProviderProps) => {
@@ -245,12 +246,7 @@ export const SequenceCheckoutProvider = ({ children, config }: SequenceCheckoutP
     <EnvironmentContextProvider
       value={{
         marketplaceApiUrl: config?.env?.marketplaceApiUrl ?? 'https://marketplace-api.sequence.app',
-        sardineCheckoutUrl: config?.env?.sardineCheckoutUrl ?? 'https://sardine-checkout.sequence.info',
-        sardineOnRampUrl: config?.env?.sardineOnRampUrl ?? 'https://crypto.sardine.ai/',
-        transakApiUrl: config?.env?.transakApiUrl ?? 'https://global.transak.com',
-        transakApiKey: config?.env?.transakApiKey ?? '5911d9ec-46b5-48fa-a755-d59a715ff0cf',
-        fortePaymentUrl: config?.env?.fortePaymentUrl ?? 'https://api.payments.forte.io',
-        forteWidgetUrl: config?.env?.forteWidgetUrl ?? 'https://client.payments.forte.io/forte-payments-widget.js'
+        forteWidgetUrl: config?.env?.forteWidgetUrl ?? 'https://payments.prod.lemmax.com/forte-payments-widget.js'
       }}
     >
       <ForteController>
@@ -350,7 +346,7 @@ export const SequenceCheckoutProvider = ({ children, config }: SequenceCheckoutP
                                 contentProps={{
                                   style: {
                                     maxWidth: '320px',
-                                    height: '368px',
+                                    height: 'auto',
                                     ...getModalPositionCss(position)
                                   }
                                 }}

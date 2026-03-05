@@ -1,145 +1,123 @@
-import { KitConfig, getKitConnectWallets } from '@0xsequence/kit'
-import { getDefaultConnectors, getDefaultWaasConnectors, mock } from '@0xsequence/kit-connectors'
-import { Chain, arbitrumNova, arbitrumSepolia, mainnet, polygon } from 'wagmi/chains'
-import { findNetworkConfig, allNetworks } from '@0xsequence/network'
-import { createConfig, http } from 'wagmi'
-import { Transport, zeroAddress } from 'viem'
+import { ConnectConfig, createConfig, createContractPermission } from '@0xsequence/connect'
+import { ChainId } from '@0xsequence/connect'
+import { Environment } from '@imtbl/config'
+import { passport } from '@imtbl/sdk'
 
-export type ConnectionMode = 'waas' | 'universal'
+import { webSdkDemoLogoDataUrl } from './constants/index.js'
+import { getEmitterContractAddress } from './constants/permissions'
 
-const searchParams = new URLSearchParams(location.search)
-
-// append ?mode=waas|universal to url to switch between connection modes
-const connectionMode: ConnectionMode = searchParams.get('mode') === 'universal' ? 'universal' : 'waas'
+// const searchParams = new URLSearchParams(location.search)
 
 // append ?debug to url to enable debug mode
-const isDebugMode = searchParams.has('debug')
+// const isDebugMode = searchParams.has('debug')
+// @ts-ignore
+const isDev = false
+const projectAccessKey = isDev ? 'AQAAAAAAAAVBcvNU0sTXiBQmgnL-uVm929Y' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
+const walletConnectProjectId = 'c65a6cb1aa83c4e24500130f23a437d8'
+export const WALLET_URL_STORAGE_KEY = 'sequence-react-example.walletUrl'
+export const DEFAULT_WALLET_URL = 'https://immutable.ecosystem-demo.xyz'
+// export const DEFAULT_WALLET_URL = 'https://v3.sequence-dev.app/'
 
-const projectAccessKey = 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
+export const sanitizeWalletUrl = (walletUrl: string): string => {
+  const trimmed = walletUrl.trim()
 
-const chains = [arbitrumNova, arbitrumSepolia, mainnet, polygon] as const satisfies Chain[]
-const transports = chains.reduce<Record<number, Transport>>((acc, chain) => {
-  const network = findNetworkConfig(allNetworks, chain.id)
-
-  if (network) {
-    acc[chain.id] = http(network.rpcUrl)
+  if (!trimmed || trimmed.endsWith('://')) {
+    return DEFAULT_WALLET_URL
   }
 
-  return acc
-}, {})
-
-chains.forEach(chain => {
-  const network = findNetworkConfig(allNetworks, chain.id)
-  if (!network) return
-  transports[chain.id] = http(network.rpcUrl)
-})
-
-/// Use this to test the waas connectors
-// WaaS config
-const waasConfigKey = 'eyJwcm9qZWN0SWQiOjE2ODE1LCJycGNTZXJ2ZXIiOiJodHRwczovL3dhYXMuc2VxdWVuY2UuYXBwIn0='
-const googleClientId = '970987756660-35a6tc48hvi8cev9cnknp0iugv9poa23.apps.googleusercontent.com'
-const appleClientId = 'com.horizon.sequence.waas'
-const appleRedirectURI = 'https://' + window.location.host
-
-const getWaasConnectors = () => {
-  const connectors = [
-    ...getDefaultWaasConnectors({
-      walletConnectProjectId: 'c65a6cb1aa83c4e24500130f23a437d8',
-      defaultChainId: arbitrumSepolia.id,
-      waasConfigKey,
-      googleClientId,
-      appleClientId,
-      appleRedirectURI,
-      appName: 'Kit Demo',
-      projectAccessKey,
-      enableConfirmationModal: localStorage.getItem('confirmationEnabled') === 'true'
-    }),
-    ...(isDebugMode
-      ? getKitConnectWallets(projectAccessKey, [
-          mock({
-            accounts: ['0xCb88b6315507e9d8c35D81AFB7F190aB6c3227C9']
-          })
-        ])
-      : [])
-  ]
-
-  return connectors
+  const withoutTrailingSlash = trimmed.replace(/\/+$/, '')
+  return withoutTrailingSlash || DEFAULT_WALLET_URL
 }
 
-const getUniversalConnectors = () => {
-  const connectors = [
-    ...getDefaultConnectors({
-      walletConnectProjectId: 'c65a6cb1aa83c4e24500130f23a437d8',
-      defaultChainId: arbitrumNova.id,
-      appName: 'demo app',
-      projectAccessKey
-    }),
-    ...(isDebugMode
-      ? getKitConnectWallets(projectAccessKey, [
-          mock({
-            accounts: ['0xCb88b6315507e9d8c35D81AFB7F190aB6c3227C9']
-          })
-        ])
-      : [])
-  ]
-  return connectors
+export const sponsoredContractAddresses: Record<number, `0x${string}`> = {
+  [ChainId.ARBITRUM_NOVA]: '0x37470dac8a0255141745906c972e414b1409b470'
 }
 
-/// Use this to test the universal connectors
-// const connectors = [
-//   ...getDefaultConnectors({
-//     walletConnectProjectId: 'c65a6cb1aa83c4e24500130f23a437d8',
-//     defaultChainId: arbitrumNova.id,
-//     appName: 'demo app',
-//     projectAccessKey
-//   }),
-//   ...(isDebugMode
-//     ? getKitConnectWallets(projectAccessKey, [
-//         mock({
-//           accounts: ['0xCb88b6315507e9d8c35D81AFB7F190aB6c3227C9']
-//         })
-//       ])
-//     : [])
-// ]
-
-export const wagmiConfig = createConfig({
-  transports,
-  chains,
-  connectors: connectionMode === 'waas' ? getWaasConnectors() : getUniversalConnectors()
-})
-
-export const kitConfig: KitConfig = {
-  defaultTheme: 'dark',
+export const connectConfig: ConnectConfig = {
+  projectAccessKey,
+  walletUrl: DEFAULT_WALLET_URL,
   signIn: {
-    projectName: 'Kit Demo',
-    // logoUrl: 'sw-logo-white.svg',
-    useMock: isDebugMode
+    projectName: 'Web SDK Demo',
+    logoUrl: webSdkDemoLogoDataUrl,
+    descriptiveSocials: true,
+    disableTooltipForDescriptiveSocials: true
   },
-  displayedAssets: [
-    // Native token
-    {
-      contractAddress: zeroAddress,
-      chainId: arbitrumNova.id
-    },
-    // Native token
-    {
-      contractAddress: zeroAddress,
-      chainId: arbitrumSepolia.id
-    },
-    // Waas demo NFT
-    {
-      contractAddress: '0x0d402c63cae0200f0723b3e6fa0914627a48462e',
-      chainId: arbitrumNova.id
-    },
-    // Waas demo NFT
-    {
-      contractAddress: '0x0d402c63cae0200f0723b3e6fa0914627a48462e',
-      chainId: arbitrumSepolia.id
-    },
-    // Skyweaver assets
-    {
-      contractAddress: '0x631998e91476da5b870d741192fc5cbc55f5a52e',
-      chainId: polygon.id
-    }
-  ]
+  // Custom css injected into shadow dom
+  // customCSS: `
+  //   span {
+  //     color: red !important;
+  //   }
+  // `,
+  displayedAssets: [],
+  env: isDev
+    ? {
+        indexerGatewayUrl: 'https://dev-indexer.sequence.app',
+        metadataUrl: 'https://dev-metadata.sequence.app',
+        apiUrl: 'https://dev-api.sequence.app',
+        indexerUrl: 'https://dev-indexer.sequence.app',
+        nodeGatewayUrl: 'https://dev-nodes.sequence.app',
+        trailsApiUrl: 'https://dev-trails-api.sequence-dev.app',
+        builderUrl: 'https://dev-api.sequence.build'
+      }
+    : undefined
 }
+
+export const passportInstance = new passport.Passport({
+  baseConfig: {
+    environment: Environment.SANDBOX,
+    publishableKey: 'pk_imapik-test-VEMeW7wUX7hE7LHg3FxY'
+  },
+  forceScwDeployBeforeMessageSignature: true,
+  clientId: 'ap8Gv3188GLFROiBFBNFz77DojRpqxnS',
+  redirectUri: `${window.location.origin}/auth-callback`,
+  logoutRedirectUri: `${window.location.origin}`,
+  audience: 'platform_api',
+  scope: 'openid offline_access email transact'
+})
+
+export const loadWalletUrl = (): string => {
+  if (typeof window === 'undefined') {
+    return DEFAULT_WALLET_URL
+  }
+
+  const stored = window.localStorage.getItem(WALLET_URL_STORAGE_KEY)
+  return sanitizeWalletUrl(stored ?? DEFAULT_WALLET_URL)
+}
+
+export const persistWalletUrl = (walletUrl: string) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const sanitized = sanitizeWalletUrl(walletUrl)
+
+  window.localStorage.setItem(WALLET_URL_STORAGE_KEY, sanitized)
+}
+
+export const createExampleConfig = (walletUrl: string) =>
+  createConfig({
+    ...connectConfig,
+    walletUrl: sanitizeWalletUrl(walletUrl),
+    dappOrigin: window.location.origin,
+    appName: 'Sequence Web SDK Demo',
+    defaultChainId: ChainId.ARBITRUM_SEPOLIA,
+    walletConnect: {
+      projectId: walletConnectProjectId
+    },
+    nodesUrl: isDev ? 'https://dev-nodes.sequence.app/{network}' : 'https://nodes.sequence.app/{network}',
+    relayerUrl: isDev ? 'https://dev-{network}-relayer.sequence.app' : 'https://{network}-relayer.sequence.app',
+    enableImplicitSession: true,
+    includeFeeOptionPermissions: true,
+    explicitSessionParams: {
+      chainId: ChainId.ARBITRUM_SEPOLIA,
+      expiresIn: {
+        minutes: 3
+      },
+      permissions: [
+        createContractPermission({
+          address: getEmitterContractAddress(window.location.origin),
+          functionSignature: 'function explicitEmit()'
+        })
+      ]
+    }
+  })

@@ -1,13 +1,14 @@
+import { type SequenceIndexer, type TransactionReceipt } from '@0xsequence/indexer'
+
 import { createGenericContext } from './genericContext.js'
+import type { ActionButtons } from './SelectPaymentModal.js'
 
 interface Item {
-  tokenId: string
+  tokenId?: string
   quantity: string
   decimals?: number
   price: string
 }
-
-export type TxStatus = 'pending' | 'success' | 'error'
 
 export interface TransactionStatusSettings {
   collectionAddress?: string
@@ -19,7 +20,8 @@ export interface TransactionStatusSettings {
   onError?: (error: Error) => void
   onClose?: () => void
   txHash: string
-  statusOverride?: TxStatus
+  successActionButtons?: ActionButtons[]
+  onSuccessChecker?: (receipt: TransactionReceipt, indexerClient?: SequenceIndexer) => Promise<void>
 }
 
 type TransactionStatusContext = {

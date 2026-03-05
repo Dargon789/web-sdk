@@ -1,8 +1,11 @@
 'use client'
 
 import type { Theme } from '@0xsequence/design-system'
-import { createGenericContext, type ModalPosition } from '@0xsequence/web-sdk-core'
 import type { Dispatch, SetStateAction } from 'react'
+
+import type { ModalPosition } from '../index.js'
+
+import { createGenericContext } from './genericContext.js'
 
 type ThemeContext = {
   setTheme: Dispatch<SetStateAction<Theme>>

@@ -7,20 +7,27 @@ import {
   type ExplicitSession
 } from '@0xsequence/connect'
 import { supplyERC20Calldata, supplyETHCalldata, withdrawERC20Calldata, withdrawETHCalldata } from '@contractjs/aave-v3'
-import { useEffect, useState } from 'react'
-import { encodeFunctionData, formatUnits, maxUint256, parseAbi, parseEther, parseUnits } from 'viem'
-import { useAccount, useBalance, useDisconnect, useSendTransaction } from 'wagmi'
+import { useEffect, useMemo, useState } from 'react'
+import { encodeFunctionData, erc20Abi, formatUnits, maxUint256, parseAbi, parseEther, parseUnits } from 'viem'
+import { useBalance, useConnection, useConnections, useDisconnect, useReadContract, useSendTransaction } from 'wagmi'
 
 import { AAVE_V3_POOL_ADDRESS_ARBITRUM, AAVE_V3_WRAPPED_TOKEN_GATEWAY_ADDRESS_ARBITRUM, USDC_ADDRESS_ARBITRUM } from './config'
 
 const AUSDC_ADDRESS = '0x724dc807b04555b71ed48a6896b6F41593b8C637'
 const AWETH_ADDRESS = '0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8'
+const AUSDC_DECIMALS = 6
+const AWETH_DECIMALS = 18
+const USDC_DECIMALS = 6
+const AUSDC_SYMBOL = 'aUSDC'
+const AWETH_SYMBOL = 'aWETH'
+const USDC_SYMBOL = 'USDC'
 
 function App() {
   const { setOpenConnectModal } = useOpenConnectModal()
 
-  const { isConnected, address } = useAccount()
-  const { disconnect } = useDisconnect()
+  const { isConnected, address } = useConnection()
+  const connections = useConnections()
+  const disconnect = useDisconnect()
 
   // State for input fields
   const [supplyAmount, setSupplyAmount] = useState('')
@@ -33,11 +40,42 @@ function App() {
 
   // State for session info
   const [sessionsInfo, setSessionsInfo] = useState<ExplicitSession[]>([])
+  const walletAddress = address as `0x${string}` | undefined
+  const isWalletAddressReady = Boolean(walletAddress)
 
   // Balance Hooks
-  const { data: aUsdcBalance, refetch: refetchAusdcBalance } = useBalance({ address, token: AUSDC_ADDRESS, chainId: 42161 })
-  const { data: aWethBalance, refetch: refetchAwethBalance } = useBalance({ address, token: AWETH_ADDRESS, chainId: 42161 })
-  const { data: usdcBalance } = useBalance({ address, token: USDC_ADDRESS_ARBITRUM, chainId: 42161 })
+  const { data: aUsdcBalance, refetch: refetchAusdcBalance } = useReadContract({
+    address: AUSDC_ADDRESS as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: walletAddress ? [walletAddress] : undefined,
+    chainId: 42161,
+    query: { enabled: isWalletAddressReady }
+  })
+  const { data: aWethBalance, refetch: refetchAwethBalance } = useReadContract({
+    address: AWETH_ADDRESS as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: walletAddress ? [walletAddress] : undefined,
+    chainId: 42161,
+    query: { enabled: isWalletAddressReady }
+  })
+  const { data: usdcBalance } = useReadContract({
+    address: USDC_ADDRESS_ARBITRUM as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: walletAddress ? [walletAddress] : undefined,
+    chainId: 42161,
+    query: { enabled: isWalletAddressReady }
+  })
+  const { data: usdcAllowance, refetch: refetchUsdcAllowance } = useReadContract({
+    address: USDC_ADDRESS_ARBITRUM as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'allowance',
+    args: walletAddress ? [walletAddress, AAVE_V3_POOL_ADDRESS_ARBITRUM as `0x${string}`] : undefined,
+    chainId: 42161,
+    query: { enabled: isWalletAddressReady }
+  })
 
   // Session hooks
   const { getExplicitSessions, modifyExplicitSession, addExplicitSession } = useExplicitSessions()
@@ -92,6 +130,12 @@ function App() {
     error: errorApproveUSDC
   } = useSendTransaction()
   const {
+    data: dataRevokeUSDC,
+    sendTransaction: sendRevokeUSDCTransaction,
+    isPending: isPendingRevokeUSDC,
+    error: errorRevokeUSDC
+  } = useSendTransaction()
+  const {
     data: dataCallTestContract,
     sendTransaction: sendCallTestContract,
     isPending: isPendingCallTestContract,
@@ -115,12 +159,14 @@ function App() {
       dataApproveAWETH ||
       dataExplicitEmit ||
       dataApproveUSDC ||
+      dataRevokeUSDC ||
       dataCallTestContract
     if (latestData) {
       setLatestTxHash(latestData)
       // Refetch balances after a successful transaction
       refetchAusdcBalance()
       refetchAwethBalance()
+      refetchUsdcAllowance()
     }
   }, [
     dataSupply,
@@ -131,16 +177,27 @@ function App() {
     dataApproveAWETH,
     dataExplicitEmit,
     dataApproveUSDC,
+    dataRevokeUSDC,
     dataCallTestContract,
     refetchAusdcBalance,
-    refetchAwethBalance
+    refetchAwethBalance,
+    refetchUsdcAllowance
   ])
 
   useEffect(() => {
-    getExplicitSessions().then(sessions => {
-      setSessionsInfo(sessions)
-    })
-  }, [getExplicitSessions])
+    if (!isConnected) {
+      return
+    }
+    const hasV3Connection = connections.some(c => c.connector.id.includes('sequence-v3-wallet'))
+    if (!hasV3Connection) {
+      return
+    }
+    getExplicitSessions()
+      .then(sessions => {
+        setSessionsInfo(sessions)
+      })
+      .catch(() => {})
+  }, [connections, getExplicitSessions, isConnected])
 
   const anyError =
     errorSupply ||
@@ -151,10 +208,44 @@ function App() {
     errorApproveAWETH ||
     errorExplicitEmit ||
     errorApproveUSDC ||
+    errorRevokeUSDC ||
     errorCallTestContract
 
+  const requiredUsdcAmount = useMemo(() => {
+    if (!supplyAmount || isNaN(Number(supplyAmount))) {
+      return 0n
+    }
+    try {
+      return parseUnits(supplyAmount, USDC_DECIMALS)
+    } catch {
+      return 0n
+    }
+  }, [supplyAmount])
+
+  const hasUsdcAllowance = useMemo(() => {
+    if (!requiredUsdcAmount || requiredUsdcAmount === 0n) {
+      return true
+    }
+    return typeof usdcAllowance === 'bigint' && usdcAllowance >= requiredUsdcAmount
+  }, [requiredUsdcAmount, usdcAllowance])
+
+  const usdcAllowanceDisplay = useMemo(() => {
+    if (typeof usdcAllowance !== 'bigint') {
+      return null
+    }
+    if (usdcAllowance >= maxUint256 - 1n) {
+      return `Unlimited ${USDC_SYMBOL}`
+    }
+    const formatted = formatUnits(usdcAllowance, USDC_DECIMALS)
+    const numeric = Number(formatted)
+    if (Number.isFinite(numeric)) {
+      return `${numeric.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${USDC_SYMBOL}`
+    }
+    return `${formatted} ${USDC_SYMBOL}`
+  }, [usdcAllowance])
+
   const handleConnect = () => setOpenConnectModal(true)
-  const handleDisconnect = () => disconnect()
+  const handleDisconnect = () => disconnect.mutate()
 
   const handleSupply = (isNative: boolean = false) => {
     if (isNative) {
@@ -168,6 +259,9 @@ function App() {
       })
     } else {
       if (!supplyAmount || isNaN(Number(supplyAmount))) {
+        return
+      }
+      if (!hasUsdcAllowance) {
         return
       }
       const amountAsBigInt = parseUnits(supplyAmount, 6)
@@ -233,7 +327,18 @@ function App() {
       data: encodeFunctionData({
         abi: parseAbi(['function approve(address spender, uint256 amount)']),
         functionName: 'approve',
-        args: [AAVE_V3_POOL_ADDRESS_ARBITRUM, maxUint256]
+        args: [AAVE_V3_POOL_ADDRESS_ARBITRUM, parseUnits('100', USDC_DECIMALS)]
+      })
+    })
+  }
+
+  const handleRevokeUSDC = () => {
+    sendRevokeUSDCTransaction({
+      to: USDC_ADDRESS_ARBITRUM,
+      data: encodeFunctionData({
+        abi: parseAbi(['function approve(address spender, uint256 amount)']),
+        functionName: 'approve',
+        args: [AAVE_V3_POOL_ADDRESS_ARBITRUM, 0n]
       })
     })
   }
@@ -309,13 +414,13 @@ function App() {
                 <div className="flex flex-col gap-2">
                   {' '}
                   <p>Native Balance:</p>
-                  <p className="address-mono">{nativeBalanceData.formatted}</p>
+                  <p className="address-mono">{formatUnits(nativeBalanceData.value, nativeBalanceData.decimals)}</p>
                 </div>
 
                 <div className="flex flex-col gap-2 mt-2">
                   <p>USDC Balance:</p>
                   <p className="address-mono">
-                    {usdcBalance ? `${parseFloat(usdcBalance.formatted).toFixed(5)} ${usdcBalance.symbol}` : '0.00'}
+                    {usdcBalance ? `${parseFloat(formatUnits(usdcBalance, USDC_DECIMALS)).toFixed(5)} ${USDC_SYMBOL}` : '0.00'}
                   </p>
                 </div>
               </div>
@@ -329,7 +434,7 @@ function App() {
                 <div className="pool-container">
                   <div className="pool-info">
                     <div className="pool-logo">
-                      <img src="https://seeklogo.com/images/U/usd-coin-usdc-logo-CB4C5B1C51-seeklogo.com.png" alt="USDC Logo" />
+                      <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png" alt="USDC Logo" />
                       <img
                         src="https://s2.coinmarketcap.com/static/img/coins/64x64/11841.png"
                         alt="Arbitrum Network"
@@ -341,7 +446,9 @@ function App() {
                       <p className="pool-apy">APY 4.68%</p>
                       <p className="pool-balance">
                         Pool Balance:{' '}
-                        {aUsdcBalance ? `${parseFloat(aUsdcBalance.formatted).toFixed(5)} ${aUsdcBalance.symbol}` : '0.00'}
+                        {aUsdcBalance
+                          ? `${parseFloat(formatUnits(aUsdcBalance, AUSDC_DECIMALS)).toFixed(5)} ${AUSDC_SYMBOL}`
+                          : '0.00'}
                       </p>
                     </div>
                   </div>
@@ -356,10 +463,18 @@ function App() {
                         className="input-field"
                         aria-label="Supply amount"
                       />
-                      <button onClick={() => handleSupply(false)} disabled={isPendingSupply} className="btn btn-supply">
+                      <button
+                        onClick={() => handleSupply(false)}
+                        disabled={isPendingSupply || !hasUsdcAllowance}
+                        className="btn btn-supply"
+                      >
                         {isPendingSupply ? 'Supplying...' : 'Supply'}
                       </button>
                     </div>
+                    {!hasUsdcAllowance && supplyAmount && !isNaN(Number(supplyAmount)) && (
+                      <p className="text-xs text-red-500 mt-2">Insufficient allowance. Approve USDC first.</p>
+                    )}
+                    {usdcAllowanceDisplay && <p className="text-xs text-slate-500 mt-1">Allowance: {usdcAllowanceDisplay}</p>}
                     <div className="action-group">
                       <input
                         type="number"
@@ -393,7 +508,9 @@ function App() {
                       <p className="pool-apy">APY 1.68%</p>
                       <p className="pool-balance">
                         Pool Balance:{' '}
-                        {aWethBalance ? `${parseFloat(aWethBalance.formatted).toFixed(5)} ${aWethBalance.symbol}` : '0.00'}
+                        {aWethBalance
+                          ? `${parseFloat(formatUnits(aWethBalance, AWETH_DECIMALS)).toFixed(5)} ${AWETH_SYMBOL}`
+                          : '0.00'}
                       </p>
                     </div>
                   </div>
@@ -476,9 +593,14 @@ function App() {
                   <div className="action-item">
                     <h3>Approve USDC</h3>
                     <p>Approve USDC to AAVE V3 Pool.</p>
-                    <button onClick={handleApproveUSDC} disabled={isPendingApproveUSDC} className="btn btn-secondary">
-                      {isPendingApproveUSDC ? 'Approving...' : 'Approve USDC'}
-                    </button>
+                    <div className="action-buttons">
+                      <button onClick={handleApproveUSDC} disabled={isPendingApproveUSDC} className="btn btn-secondary">
+                        {isPendingApproveUSDC ? 'Approving...' : 'Approve USDC'}
+                      </button>
+                      <button onClick={handleRevokeUSDC} disabled={isPendingRevokeUSDC} className="btn btn-secondary">
+                        {isPendingRevokeUSDC ? 'Revoking...' : 'Revoke USDC allowance'}
+                      </button>
+                    </div>
                   </div>
                   <div className="action-item">
                     <h3>Approve aWETH</h3>

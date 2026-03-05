@@ -1,4 +1,5 @@
 import type { Token } from '@0xsequence/api'
+import { compareAddress, formatDisplay, getNativeTokenInfoByChainId, truncateAtIndex } from '@0xsequence/connect'
 import {
   ArrowRightIcon,
   Button,
@@ -12,7 +13,6 @@ import {
 } from '@0xsequence/design-system'
 import { useGetCoinPrices, useGetCollectiblePrices, useGetExchangeRate } from '@0xsequence/hooks'
 import { TxnTransferType, type Transaction, type TxnTransfer } from '@0xsequence/indexer'
-import { compareAddress, formatDisplay, getNativeTokenInfoByChainId, truncateAtIndex } from '@0xsequence/web-sdk-core'
 import dayjs from 'dayjs'
 import { formatUnits, zeroAddress } from 'viem'
 import { useConfig } from 'wagmi'

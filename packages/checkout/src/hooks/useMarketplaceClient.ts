@@ -1,24 +1,24 @@
-import { useProjectAccessKey, useEnvironment } from '@0xsequence/kit'
+import { useProjectAccessKey } from '@0xsequence/connect'
 import { MarketplaceIndexer } from '@0xsequence/marketplace'
-import { networks, stringTemplate } from '@0xsequence/network'
+import { networks } from '@0xsequence/connect'
 import { useMemo } from 'react'
+
+import { useEnvironmentContext } from '../contexts/Environment.js'
 
 export interface UseMarketplaceClientArgs {
   chain: ChainNameOrId
 }
 
 export const useMarketplaceClient = ({ chain }: UseMarketplaceClientArgs) => {
-  const { isEnabledDevSequenceApis, devProjectAccessKey } = useEnvironment()
-
-  const prodProjectAccessKey = useProjectAccessKey()
-
-  const projectAccessKey = isEnabledDevSequenceApis ? devProjectAccessKey : prodProjectAccessKey
+  const projectAccessKey = useProjectAccessKey()
+  const { marketplaceApiUrl } = useEnvironmentContext()
 
   const marketplaceClient = useMemo(() => {
-    const env = isEnabledDevSequenceApis ? 'development' : 'production'
-    const clientUrl = marketplaceApiURL(chain, env)
+    const network = getNetwork(chain).name
+
+    const clientUrl = `${marketplaceApiUrl}/${network}`
     return new MarketplaceIndexer(clientUrl, projectAccessKey)
-  }, [projectAccessKey, isEnabledDevSequenceApis])
+  }, [projectAccessKey])
 
   return marketplaceClient
 }
@@ -32,22 +32,4 @@ const getNetwork = (nameOrId: ChainNameOrId) => {
     }
   }
   throw new Error(`Unsopported chain; ${nameOrId}`)
-}
-
-export type Env = 'development' | 'production'
-
-const getPrefix = (env: Env) => {
-  switch (env) {
-    case 'development':
-      return 'dev-'
-    case 'production':
-      return ''
-  }
-}
-
-const marketplaceApiURL = (chain: ChainNameOrId, env: Env = 'production') => {
-  const prefix = getPrefix(env)
-  const network = getNetwork(chain).name
-  const apiBaseUrl = 'https://${prefix}marketplace-api.sequence.app/${network}'
-  return stringTemplate(apiBaseUrl, { network: network, prefix })
 }

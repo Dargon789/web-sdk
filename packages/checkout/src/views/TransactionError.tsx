@@ -2,17 +2,17 @@ import { CloseIcon, Text } from '@0xsequence/design-system'
 import React, { useEffect } from 'react'
 
 import type { TransactionErrorNavigation } from '../contexts/index.js'
-import { useCreditCardCheckoutModal, useNavigation } from '../hooks/index.js'
+import { useCheckoutModal, useNavigation } from '../hooks/index.js'
 
 export const TransactionError = () => {
-  const { closeCreditCardCheckout, settings } = useCreditCardCheckoutModal()
+  const { closeCheckout, settings } = useCheckoutModal()
   const nav = useNavigation()
   const navigation = nav.navigation as TransactionErrorNavigation
 
   useEffect(() => {
     setTimeout(() => {
-      closeCreditCardCheckout()
-      settings?.onError?.(navigation.params.error, settings)
+      closeCheckout()
+      settings?.creditCardCheckout?.onError?.(navigation.params.error, settings?.creditCardCheckout)
     }, 3000)
   }, [])
 

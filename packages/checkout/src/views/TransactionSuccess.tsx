@@ -1,20 +1,20 @@
 import { CheckmarkIcon, Text } from '@0xsequence/design-system'
-import { allNetworks, ChainId } from '@0xsequence/network'
+import { allNetworks, ChainId } from '@0xsequence/connect'
 import React, { useEffect } from 'react'
 
 import type { TransactionSuccessNavigation } from '../contexts/index.js'
-import { useCreditCardCheckoutModal, useNavigation } from '../hooks/index.js'
+import { useCheckoutModal, useNavigation } from '../hooks/index.js'
 
 export const TransactionSuccess = () => {
-  const { settings } = useCreditCardCheckoutModal()
+  const { settings } = useCheckoutModal()
   const nav = useNavigation()
   const navigation = nav.navigation as TransactionSuccessNavigation
 
-  const chainId = settings?.chainId || ChainId.POLYGON
+  const chainId = settings?.creditCardCheckout?.chainId || ChainId.POLYGON
   const network = allNetworks.find(n => n.chainId === chainId)
 
   useEffect(() => {
-    settings?.onSuccess?.(navigation.params.transactionHash, settings)
+    settings?.creditCardCheckout?.onSuccess?.(navigation.params.transactionHash, settings?.creditCardCheckout)
   }, [])
 
   return (

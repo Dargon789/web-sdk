@@ -36,6 +36,7 @@ const resolveInlineBackground = (theme: Theme | undefined) => {
 }
 
 /**
+ * @internal
  * Preview version of SequenceConnectProvider component.
  * This component should only be used for testing purposes.
  * It provides the same functionality as SequenceConnectProvider but only for preview purposes.

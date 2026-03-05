@@ -1,4 +1,8 @@
-import { createGenericContext } from './genericContext'
+'use client'
+
+import type { CreditCardCheckout } from '../contexts/CheckoutModal.js'
+
+import { createGenericContext } from './genericContext.js'
 
 export interface SelectCheckoutNavigation {
   location: 'select-method-checkout'
@@ -27,8 +31,7 @@ export interface TransactionErrorNavigation {
 }
 
 export interface TransactionPendingParams {
-  orderId: string
-  authToken: string
+  creditCardCheckout: CreditCardCheckout
 }
 
 export interface TransactionPendingNavigation {
@@ -48,6 +51,9 @@ export type History = Navigation[]
 type NavigationContext = {
   setHistory: (history: History) => void
   history: History
+  defaultLocation: Navigation
 }
 
-export const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
+const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
+
+export { NavigationContextProvider, useNavigationContext }

@@ -1,7 +1,6 @@
-import { useWallets } from '@0xsequence/connect'
+import { compareAddress, formatDisplay, getNativeTokenInfoByChainId, useWallets } from '@0xsequence/connect'
 import { AddIcon, Button, SendIcon, Text, TokenImage } from '@0xsequence/design-system'
 import { useGetCoinPrices, useGetExchangeRate, useGetSingleTokenBalance, useGetTransactionHistory } from '@0xsequence/hooks'
-import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/web-sdk-core'
 import { useEffect } from 'react'
 import { formatUnits, zeroAddress } from 'viem'
 import { useConfig } from 'wagmi'
@@ -91,11 +90,7 @@ export const CoinDetails = ({ contractAddress, chainId, accountAddress = '' }: T
 
   const onClickAdd = () => {
     setNavigation({
-      location: 'swap-coin',
-      params: {
-        chainId,
-        contractAddress
-      }
+      location: 'swap'
     })
   }
   return (

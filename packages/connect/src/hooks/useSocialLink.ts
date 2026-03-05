@@ -3,6 +3,7 @@
 import { useSocialLinkContext } from '../contexts/SocialLink.js'
 
 export const useSocialLink = () => {
-  return useSocialLinkContext();
+  const { isSocialLinkOpen, waasConfigKey, setIsSocialLinkOpen } = useSocialLinkContext()
 
+  return { isSocialLinkOpen, waasConfigKey, setIsSocialLinkOpen }
 }

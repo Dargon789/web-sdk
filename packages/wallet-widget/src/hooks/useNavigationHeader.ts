@@ -1,6 +1,6 @@
 import { useNavigationHeaderContext } from '../contexts/NavigationHeader.js'
 
 export const useNavigationHeader = () => {
-  return useNavigationHeaderContext();
-
+  const { search, selectedTab, setSearch, setSelectedTab } = useNavigationHeaderContext()
+  return { search, selectedTab, setSearch, setSelectedTab }
 }

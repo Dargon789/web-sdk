@@ -1,12 +1,17 @@
 'use client'
 
-import { SequenceCheckoutProvider, useAddFundsModal } from '@0xsequence/checkout'
-import { ShadowRoot, useConnectConfigContext, useOpenConnectModal, useSocialLink, useTheme } from '@0xsequence/connect'
+import {
+  getModalPositionCss,
+  ShadowRoot,
+  useConnectConfigContext,
+  useOpenConnectModal,
+  useSocialLink,
+  useTheme
+} from '@0xsequence/connect'
 import { Modal, Scroll } from '@0xsequence/design-system'
-import { getModalPositionCss } from '@0xsequence/web-sdk-core'
 import { AnimatePresence } from 'motion/react'
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 
 import { WALLET_HEIGHT, WALLET_WIDTH } from '../../constants/index.js'
 import {
@@ -20,7 +25,6 @@ import { NavigationHeaderContextProvider } from '../../contexts/NavigationHeader
 import { WalletContentRefContext, WalletContentRefProvider } from '../../contexts/WalletContentRef.js'
 
 import { SharedProvider } from './ProviderComponents/SharedProvider.js'
-import { SwapProvider } from './ProviderComponents/SwapProvider.js'
 import { ValueRegistryProvider } from './ProviderComponents/ValueRegistryProvider.js'
 import { getContent, getHeader } from './utils/index.js'
 
@@ -34,20 +38,17 @@ const DEFAULT_LOCATION: Navigation = {
 
 export const SequenceWalletProvider = (props: SequenceWalletProviderProps) => {
   return (
-    <SequenceCheckoutProvider>
-      <WalletContentRefProvider>
-        <WalletContent {...props} />
-      </WalletContentRefProvider>
-    </SequenceCheckoutProvider>
+    <WalletContentRefProvider>
+      <WalletContent {...props} />
+    </WalletContentRefProvider>
   )
 }
 
 export const WalletContent = ({ children }: SequenceWalletProviderProps) => {
   const { theme, position } = useTheme()
-  const { isAddFundsModalOpen } = useAddFundsModal()
   const { isConnectModalOpen } = useOpenConnectModal()
   const { isSocialLinkOpen } = useSocialLink()
-  const { address } = useAccount()
+  const { address } = useConnection()
   const { customCSS } = useConnectConfigContext()
 
   useEffect(() => {
@@ -111,48 +112,42 @@ export const WalletContent = ({ children }: SequenceWalletProviderProps) => {
         <SharedProvider>
           <ValueRegistryProvider>
             <NavigationHeaderContextProvider value={{ search, selectedTab, setSearch, setSelectedTab }}>
-              <SwapProvider>
-                <ShadowRoot theme={theme} customCSS={customCSS}>
-                  <AnimatePresence>
-                    {openWalletModal && !isAddFundsModalOpen && !isConnectModalOpen && !isSocialLinkOpen && (
-                      <Modal
-                        contentProps={{
-                          className: 'border border-border-normal',
-                          style: {
-                            maxWidth: WALLET_WIDTH,
-                            height: WALLET_HEIGHT,
-                            ...getModalPositionCss(position),
-                            scrollbarColor: 'gray black',
-                            scrollbarWidth: 'thin'
-                          }
-                        }}
-                        scroll={false}
-                        isDismissible={navigation.location !== 'search'}
-                        onClose={() => setOpenWalletModal(false)}
+              <ShadowRoot theme={theme} customCSS={customCSS}>
+                <AnimatePresence>
+                  {openWalletModal && !isConnectModalOpen && !isSocialLinkOpen && (
+                    <Modal
+                      contentProps={{
+                        className: 'border border-border-normal',
+                        style: {
+                          maxWidth: WALLET_WIDTH,
+                          height: WALLET_HEIGHT,
+                          ...getModalPositionCss(position),
+                          scrollbarColor: 'gray black',
+                          scrollbarWidth: 'thin'
+                        }
+                      }}
+                      scroll={false}
+                      isDismissible={navigation.location !== 'search'}
+                      onClose={() => setOpenWalletModal(false)}
+                    >
+                      <div
+                        className="flex flex-col"
+                        id="sequence-kit-wallet-content"
+                        ref={walletContentRef}
+                        style={{ height: `calc(${WALLET_HEIGHT} - 2px)` }}
+                        // -2 px because of the Modal border
                       >
-                        <div
-                          className="flex flex-col"
-                          id="sequence-kit-wallet-content"
-                          ref={walletContentRef}
-                          style={{ height: `calc(${WALLET_HEIGHT} - 2px)` }}
-                          // -2 px because of the Modal border
-                        >
-                          <div>{getHeader(navigation)}</div>
+                        <div>{getHeader(navigation)}</div>
 
-                          <div style={{ flex: 1, minHeight: 0 }}>
-                            {displayScrollbar ? (
-                              <Scroll shadows={false}>{getContent(navigation)}</Scroll>
-                            ) : (
-                              getContent(navigation)
-                            )}
-                          </div>
+                        <div style={{ flex: 1, minHeight: 0 }}>
+                          {displayScrollbar ? <Scroll shadows={false}>{getContent(navigation)}</Scroll> : getContent(navigation)}
                         </div>
-                      </Modal>
-                    )}
-                  </AnimatePresence>
-                </ShadowRoot>
-                {children}
-              </SwapProvider>
+                      </div>
+                    </Modal>
+                  )}
+                </AnimatePresence>
+              </ShadowRoot>
+              {children}
             </NavigationHeaderContextProvider>
           </ValueRegistryProvider>
         </SharedProvider>

@@ -1,4 +1,6 @@
 export * from './ethAuth.js'
 export * from './localStorage.js'
 export * from './queryKeys.js'
+export * from './swaps.js'
+export * from './transactions.js'
 export * from './version.js'

@@ -1,4 +1,3 @@
-import { allNetworks, type EIP1193Provider } from '@0xsequence/network'
 import {
   SequenceWaaS,
   WebrpcEndpointError,
@@ -16,13 +15,23 @@ import {
   toHex,
   TransactionRejectedRpcError,
   UserRejectedRequestError,
-  zeroAddress
+  zeroAddress,
+  type Address
 } from 'viem'
 import { createConnector } from 'wagmi'
 
 import { LocalStorageKey } from '../../constants/localStorage.js'
 import { normalizeChainId } from '../../utils/helpers.js'
+import { allNetworks } from '../../utils/networks.js'
 import { getPkcePair, getXOauthUrl } from '../X/XAuth.js'
+
+type EIP1193Request = { method: string; params?: any[] }
+
+interface EIP1193Provider {
+  request(args: EIP1193Request): Promise<any>
+  on(event: string, listener: (...args: any[]) => void): void
+  removeListener(event: string, listener: (...args: any[]) => void): void
+}
 
 export interface SequenceWaasConnectConfig {
   googleClientId?: string
@@ -39,6 +48,19 @@ export interface SequenceWaasConnectConfig {
 export type BaseSequenceWaasConnectorOptions = SequenceConfig & SequenceWaasConnectConfig & Partial<ExtendedSequenceConfig>
 
 sequenceWaasWallet.type = 'sequence-waas' as const
+
+type ConnectAccounts<withCapabilities extends boolean> = withCapabilities extends true
+  ? readonly { address: Address; capabilities: Record<string, unknown> }[]
+  : readonly Address[]
+
+const resolveConnectAccounts = <withCapabilities extends boolean>(
+  accounts: readonly Address[],
+  withCapabilities?: withCapabilities | boolean
+): ConnectAccounts<withCapabilities> => {
+  return (
+    withCapabilities ? accounts.map(address => ({ address, capabilities: {} })) : accounts
+  ) as ConnectAccounts<withCapabilities>
+}
 
 export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
   type Provider = SequenceWaasProvider
@@ -118,7 +140,11 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       })
     },
 
-    async connect(_connectInfo) {
+    async connect<withCapabilities extends boolean = false>(_connectInfo?: {
+      chainId?: number
+      isReconnecting?: boolean
+      withCapabilities?: withCapabilities | boolean
+    }) {
       const provider = await this.getProvider()
       const isSignedIn = await provider.sequenceWaas.isSignedIn()
 
@@ -171,6 +197,7 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       }
 
       const accounts = await this.getAccounts()
+      const resolvedAccounts = resolveConnectAccounts(accounts, _connectInfo?.withCapabilities)
 
       if (accounts.length) {
         await config.storage?.setItem(LocalStorageKey.WaasActiveLoginType, params.loginType)
@@ -179,13 +206,13 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       }
 
       return {
-        accounts,
+        accounts: resolvedAccounts,
         chainId: await this.getChainId()
       }
     },
 
     async disconnect() {
-      const provider = await this.getProvider()
+      const provider = (await this.getProvider()) as SequenceWaasProvider
 
       try {
         await provider.sequenceWaas.dropSession({ sessionId: await provider.sequenceWaas.getSessionId(), strict: false })
@@ -200,7 +227,7 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
     },
 
     async getAccounts() {
-      const provider = await this.getProvider()
+      const provider = (await this.getProvider()) as SequenceWaasProvider
 
       try {
         const isSignedIn = await provider.sequenceWaas.isSignedIn()
@@ -221,7 +248,7 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
     },
 
     async isAuthorized() {
-      const provider = await this.getProvider()
+      const provider = (await this.getProvider()) as SequenceWaasProvider
 
       const activeWaasOption = await config.storage?.getItem(LocalStorageKey.WaasActiveLoginType)
       if (params.loginType !== activeWaasOption) {
@@ -235,7 +262,7 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
     },
 
     async switchChain({ chainId }) {
-      const provider = await this.getProvider()
+      const provider = (await this.getProvider()) as SequenceWaasProvider
       const chain = config.chains.find(c => c.id === chainId) || config.chains[0]
 
       await provider.request({
@@ -249,7 +276,7 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
     },
 
     async getChainId() {
-      const provider = await this.getProvider()
+      const provider = (await this.getProvider()) as SequenceWaasProvider
       return Number(provider.getChainId())
     },
 

@@ -70,11 +70,13 @@ export interface ConnectConfig {
   waasConfigKey?: string
   walletUrl?: string
   chainIds?: number[]
+  defaultChainId?: number
   disableAnalytics?: boolean
   defaultTheme?: Theme
   position?: ModalPosition
   signIn?: {
     logoUrl?: string
+    showWalletAuthOptionsFirst?: boolean
     descriptiveSocials?: boolean
     disableTooltipForDescriptiveSocials?: boolean
     projectName?: string
@@ -82,12 +84,17 @@ export interface ConnectConfig {
   }
   displayedAssets?: DisplayedAsset[]
   readOnlyNetworks?: number[]
-  ethAuth?: EthAuthSettings
+  /** ETHAuth is enabled by default when omitted. Set to `false` to disable. */
+  ethAuth?: EthAuthSettings | false
   env?: Partial<SequenceHooksEnv>
   hideExternalConnectOptions?: boolean
   hideSocialConnectOptions?: boolean
   hideConnectedWallets?: boolean
   customCSS?: string
+  trailsCustomCSS?: string | { light?: string; dark?: string }
+  embeddedWalletTitle?: string
+  renderInline?: boolean
+  onConnectSuccess?: (address: string) => void
 }
 
 export type StorageItem = {

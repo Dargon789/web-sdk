@@ -1,9 +1,9 @@
+import { truncateAtMiddle } from '@0xsequence/connect'
 import { Button, Card, ChevronRightIcon, GradientAvatar, Spinner, Text } from '@0xsequence/design-system'
 import { useIndexerClient } from '@0xsequence/hooks'
-import { truncateAtMiddle } from '@0xsequence/web-sdk-core'
 import { useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 
 import { FeeOptionSelector, type FeeOption } from './FeeOptionSelector.js'
 import { SendItemInfo } from './SendItemInfo.js'
@@ -34,7 +34,7 @@ interface TransactionConfirmationProps {
 }
 
 const useFeeOptionBalances = (feeOptions: TransactionConfirmationProps['feeOptions'], chainId: number) => {
-  const { address: accountAddress } = useAccount()
+  const { address: accountAddress } = useConnection()
   const indexerClient = useIndexerClient(chainId)
 
   return useQuery({

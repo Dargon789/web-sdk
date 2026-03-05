@@ -1,12 +1,11 @@
-import './globals.css'
-import '@0xsequence/design-system/styles.css'
-import { ThemeProvider } from '@0xsequence/design-system'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { headers } from 'next/headers'
 import { cookieToInitialState } from 'wagmi'
 
-import { wagmiConfig } from '../config'
+import './globals.css'
+
+import { config } from '../config'
 
 import { Providers } from './Providers'
 
@@ -22,14 +21,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const initialState = cookieToInitialState(wagmiConfig, headers().get('cookie'))
+  const initialState = cookieToInitialState(config.wagmiConfig, headers().get('cookie'))
 
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider theme="dark">
-          <Providers initialState={initialState}>{children}</Providers>
-        </ThemeProvider>
+        <Providers initialState={initialState}>{children}</Providers>
       </body>
     </html>
   )

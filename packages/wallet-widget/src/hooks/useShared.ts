@@ -1,6 +1,7 @@
 import { useSharedContext } from '../contexts/Shared.js'
 
 export const useShared = () => {
-  return useSharedContext();
+  const { isGuest, signInDisplay } = useSharedContext()
 
+  return { isGuest, signInDisplay }
 }

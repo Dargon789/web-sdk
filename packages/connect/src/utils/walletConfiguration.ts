@@ -34,6 +34,17 @@ type WalletConfigurationResponse = {
   themes?: Record<string, WalletConfigurationTheme>
   enabledProviders?: string[]
   supportedChains?: number[]
+  sdkConfig?: {
+    brandedSignIn?: boolean
+    signInButtonTitle?: string | null
+    signInButtonLogo?: string | { src?: string } | null
+  }
+}
+
+export type WalletConfigurationSdkConfig = {
+  brandedSignIn?: boolean
+  signInButtonTitle?: string
+  signInButtonLogo?: string
 }
 
 export type WalletConfigurationOverrides = {
@@ -42,7 +53,9 @@ export type WalletConfigurationOverrides = {
     logoUrl?: string
   }
   chainIds?: number[]
+  defaultChainId?: number
   enabledProviders?: WalletConfigurationProvider[]
+  sdkConfig?: WalletConfigurationSdkConfig
 }
 
 type CachedWalletConfiguration = {
@@ -54,6 +67,7 @@ const CACHE_TTL_MS = 1000 * 60 * 60 * 4
 const allowedProviders: WalletConfigurationProvider[] = ['EMAIL', 'GOOGLE', 'APPLE', 'PASSKEY']
 const walletConfigurationPromises = new Map<string, Promise<WalletConfigurationResponse>>()
 const walletConfigurationCache = new Map<string, CachedWalletConfiguration>()
+const WALLET_CONFIGURATION_CACHE_KEY_PREFIX = '@0xsequence.wallet-config:config:'
 const PROJECT_NAME_CACHE_KEY_PREFIX = '@0xsequence.wallet-config.projectName:'
 
 export const normalizeWalletUrl = (walletUrl: string): string => {
@@ -66,7 +80,7 @@ export const normalizeWalletUrl = (walletUrl: string): string => {
   return withProtocol.replace(/\/+$/, '')
 }
 
-const getCachedWalletConfiguration = (normalizedUrl: string): WalletConfigurationResponse | undefined => {
+const getCachedWalletConfigurationFromMemory = (normalizedUrl: string): WalletConfigurationResponse | undefined => {
   const cached = walletConfigurationCache.get(normalizedUrl)
 
   if (!cached) {
@@ -81,16 +95,72 @@ const getCachedWalletConfiguration = (normalizedUrl: string): WalletConfiguratio
   return cached.data
 }
 
-export const fetchWalletConfiguration = async (walletUrl: string): Promise<WalletConfigurationResponse> => {
+const buildWalletConfigurationCacheKey = (normalizedUrl: string) => `${WALLET_CONFIGURATION_CACHE_KEY_PREFIX}${normalizedUrl}`
+
+const readWalletConfigurationFromStorage = (normalizedUrl: string): WalletConfigurationResponse | undefined => {
+  const cacheKey = buildWalletConfigurationCacheKey(normalizedUrl)
+  try {
+    const cached = localStorage.getItem(cacheKey)
+    if (!cached) {
+      return undefined
+    }
+
+    const parsed = JSON.parse(cached) as CachedWalletConfiguration
+    if (!parsed || typeof parsed.expiresAt !== 'number' || !parsed.data) {
+      localStorage.removeItem(cacheKey)
+      return undefined
+    }
+
+    if (Date.now() > parsed.expiresAt) {
+      localStorage.removeItem(cacheKey)
+      return undefined
+    }
+
+    return parsed.data
+  } catch {
+    return undefined
+  }
+}
+
+const writeWalletConfigurationToStorage = (normalizedUrl: string, data: WalletConfigurationResponse) => {
+  const cacheKey = buildWalletConfigurationCacheKey(normalizedUrl)
+  try {
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({
+        data,
+        expiresAt: Date.now() + CACHE_TTL_MS
+      } satisfies CachedWalletConfiguration)
+    )
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export const getCachedWalletConfiguration = (walletUrl: string): WalletConfigurationResponse | undefined => {
+  const normalizedUrl = normalizeWalletUrl(walletUrl)
+  if (!normalizedUrl) {
+    return undefined
+  }
+
+  return readWalletConfigurationFromStorage(normalizedUrl)
+}
+
+export const fetchWalletConfiguration = async (
+  walletUrl: string,
+  options?: { force?: boolean }
+): Promise<WalletConfigurationResponse> => {
   const normalizedUrl = normalizeWalletUrl(walletUrl)
 
   if (!normalizedUrl) {
     throw new Error('walletUrl is required to fetch wallet configuration')
   }
 
-  const cached = getCachedWalletConfiguration(normalizedUrl)
-  if (cached) {
-    return cached
+  if (!options?.force) {
+    const cached = getCachedWalletConfigurationFromMemory(normalizedUrl)
+    if (cached) {
+      return cached
+    }
   }
 
   if (walletConfigurationPromises.has(normalizedUrl)) {
@@ -112,6 +182,7 @@ export const fetchWalletConfiguration = async (walletUrl: string): Promise<Walle
 
       const result = (await response.json()) as WalletConfigurationResponse
       walletConfigurationCache.set(normalizedUrl, { data: result, expiresAt: Date.now() + CACHE_TTL_MS })
+      writeWalletConfigurationToStorage(normalizedUrl, result)
       return result
     } catch (error) {
       if ((error as Error | undefined)?.name === 'AbortError') {
@@ -193,8 +264,20 @@ export const mapWalletConfigurationToOverrides = (config: WalletConfigurationRes
   const logoUrl = pickLogoUrl(config)
 
   const chainIds = Array.isArray(config.supportedChains) && config.supportedChains.length > 0 ? config.supportedChains : undefined
+  const defaultChainId = chainIds?.[0]
 
   const enabledProviders = normalizeEnabledProviders(config.enabledProviders)
+
+  const sdkConfig: WalletConfigurationSdkConfig | undefined = config.sdkConfig
+    ? {
+        brandedSignIn: config.sdkConfig.brandedSignIn,
+        signInButtonTitle: config.sdkConfig.signInButtonTitle ?? undefined,
+        signInButtonLogo:
+          (typeof config.sdkConfig.signInButtonLogo === 'object' && config.sdkConfig.signInButtonLogo !== null
+            ? (config.sdkConfig.signInButtonLogo as { src?: string }).src
+            : config.sdkConfig.signInButtonLogo) ?? undefined
+      }
+    : undefined
 
   return {
     signIn:
@@ -205,7 +288,9 @@ export const mapWalletConfigurationToOverrides = (config: WalletConfigurationRes
           }
         : undefined,
     chainIds,
-    enabledProviders
+    defaultChainId,
+    enabledProviders,
+    sdkConfig
   }
 }
 
@@ -223,6 +308,10 @@ export const mergeConnectConfigWithWalletConfiguration = (
 
   if (overrides.chainIds !== undefined) {
     mergedConfig.chainIds = overrides.chainIds
+  }
+
+  if (overrides.defaultChainId !== undefined && mergedConfig.defaultChainId === undefined) {
+    mergedConfig.defaultChainId = overrides.defaultChainId
   }
 
   return mergedConfig

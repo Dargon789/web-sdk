@@ -1,22 +1,13 @@
 'use client'
 
-import { Transaction } from '@0xsequence/indexer'
+import type { Transaction } from '@0xsequence/indexer'
 
-import { createGenericContext } from './genericContext'
-
-export interface CollectionDetailsParams {
-  contractAddress: string
-  chainId: number
-}
-
-export interface CollectionDetailsNavigation {
-  location: 'collection-details'
-  params: CollectionDetailsParams
-}
+import { createGenericContext } from './genericContext.js'
 
 export interface CoinDetailsParams {
   contractAddress: string
   chainId: number
+  accountAddress: string
 }
 
 export interface CoinDetailsNavigation {
@@ -28,11 +19,22 @@ export interface CollectibleDetailsParams {
   contractAddress: string
   chainId: number
   tokenId: string
+  accountAddress: string
 }
 
 export interface CollectibleDetailsNavigation {
   location: 'collectible-details'
   params: CollectibleDetailsParams
+}
+
+export interface CollectionDetailsParams {
+  contractAddress: string
+  chainId: number
+}
+
+export interface CollectionDetailsNavigation {
+  location: 'collection-details'
+  params: CollectionDetailsParams
 }
 
 export interface TransactionDetailsParams {
@@ -44,44 +46,14 @@ export interface TransactionDetailsNavigation {
   params: TransactionDetailsParams
 }
 
-export interface SearchViewAllParams {
-  defaultTab: 'coins' | 'collections'
-}
-
-export interface SearchViewAllNavigation {
-  location: 'search-view-all'
-  params: SearchViewAllParams
-}
-
 export interface SendCoinParams {
   chainId: number
   contractAddress: string
 }
 
-export interface SwapCoinParams {
-  chainId: number
-  contractAddress: string
-}
-
-export interface SwapCoinListParams {
-  chainId: number
-  contractAddress: string
-  amount: string
-}
-
 export interface SendCoinNavigation {
   location: 'send-coin'
   params: SendCoinParams
-}
-
-export interface SwapCoinNavigation {
-  location: 'swap-coin'
-  params: SwapCoinParams
-}
-
-export interface SwapCoinListNavigation {
-  location: 'swap-coin-list'
-  params: SwapCoinListParams
 }
 
 export interface SendCollectibleParams {
@@ -98,23 +70,19 @@ export interface SendCollectibleNavigation {
 export interface BasicNavigation {
   location:
     | 'home'
-    | 'send'
+    | 'send-general'
     | 'swap'
     | 'receive'
     | 'buy'
-    | 'receive'
     | 'history'
-    | 'legacy-settings'
-    | 'legacy-settings-general'
-    | 'legacy-settings-currency'
-    | 'legacy-settings-networks'
     | 'settings'
     | 'settings-wallets'
+    | 'settings-currency'
     | 'settings-profiles'
     | 'settings-apps'
+    | 'settings-preferences'
+    | 'connect-dapp'
     | 'search'
-    | 'search-tokens'
-    | 'search-collectibles'
 }
 
 export type Navigation =
@@ -123,11 +91,8 @@ export type Navigation =
   | CollectibleDetailsNavigation
   | CollectionDetailsNavigation
   | TransactionDetailsNavigation
-  | SearchViewAllNavigation
   | SendCoinNavigation
   | SendCollectibleNavigation
-  | SwapCoinNavigation
-  | SwapCoinListNavigation
 
 export type History = Navigation[]
 
@@ -138,4 +103,6 @@ type NavigationContext = {
   setIsBackButtonEnabled: (enabled: boolean) => void
 }
 
-export const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
+const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
+
+export { NavigationContextProvider, useNavigationContext }
