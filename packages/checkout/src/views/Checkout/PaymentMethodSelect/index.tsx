@@ -29,13 +29,21 @@ type Tab = 'crypto' | 'credit-card'
 
 export const PaymentSelectionContent = () => {
   const { selectPaymentSettings = {} as SelectPaymentSettings } = useSelectPaymentModal()
-  const isSwitchingChainRef = useRef(false)
 
-  const isFirstRender = useRef<boolean>(true)
-  const { collectibles, creditCardProviders = [], onClose = () => {}, price } = selectPaymentSettings
-  const { skipOnCloseCallback } = useSkipOnCloseCallback(onClose)
+  const { price } = selectPaymentSettings
 
   const isFree = Number(price) == 0
+
+  const isFirstRender = useRef<boolean>(true)
+  const { collectibles, creditCardProviders = [], onClose = () => {} } = selectPaymentSettings
+  const { skipOnCloseCallback } = useSkipOnCloseCallback(onClose)
+
+  const validCreditCardProviders = creditCardProviders.filter(provider => {
+    if (provider === 'transak') {
+      return !!selectPaymentSettings?.transakConfig
+    }
+    return true
+  })
 
   const [selectedTab, setSelectedTab] = useState<Tab>('crypto')
   const { clearCachedBalances } = useClearCachedBalances()
@@ -46,23 +54,21 @@ export const PaymentSelectionContent = () => {
 
   const isTokenIdUnknown = collectibles.some(collectible => !collectible.tokenId)
 
-  const showCreditCardPayment = creditCardProviders.length > 0 && !isTokenIdUnknown && !isFree
+  const showCreditCardPayment = validCreditCardProviders.length > 0 && !isTokenIdUnknown && !isFree
 
   const tabs: { label: string; value: Tab }[] = [
     { label: 'Crypto', value: 'crypto' as Tab },
     ...(showCreditCardPayment ? [{ label: 'Credit Card', value: 'credit-card' as Tab }] : [])
   ]
 
-  const isSingleOption = tabs.length == 1
-
   const TabWrapper = ({ children }: { children: React.ReactNode }) => {
-    return <div className="w-full bg-background-secondary mt-2 p-3 rounded-xl min-h-[128px]">{children}</div>
+    return <div className="w-full bg-background-secondary mt-2 p-3 rounded-xl h-[128px]">{children}</div>
   }
 
   return (
     <>
       <div
-        className="flex flex-col gap-2 pb-3 items-start w-full px-3 h-full transition-opacity duration-200"
+        className="flex flex-col gap-2 items-start w-full pb-0 px-3 h-full transition-opacity duration-200"
         style={{
           paddingTop: HEADER_HEIGHT
         }}
@@ -73,7 +79,7 @@ export const PaymentSelectionContent = () => {
         <div className="w-full relative">
           <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 bg-background-primary px-2">
             <Text variant="xsmall" color="text50" className="relative top-[-2px]" fontWeight="normal">
-              {`Pay with${isSingleOption ? ' ' + tabs[0].label : ''}`}
+              Pay with
             </Text>
           </div>
           <Divider className="w-full" />
@@ -92,10 +98,10 @@ export const PaymentSelectionContent = () => {
             }
           }}
         >
-          {!isSingleOption && <TabsHeader tabs={tabs} value={selectedTab} />}
+          <TabsHeader tabs={tabs} value={selectedTab} />
           <TabsContent value="crypto">
             <TabWrapper>
-              <PayWithCryptoTab isSwitchingChainRef={isSwitchingChainRef} skipOnCloseCallback={skipOnCloseCallback} />
+              <PayWithCryptoTab skipOnCloseCallback={skipOnCloseCallback} />
             </TabWrapper>
           </TabsContent>
           <TabsContent value="credit-card">

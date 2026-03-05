@@ -1,9 +1,9 @@
 import { type ForteConfig } from '@0xsequence/checkout'
 import { zeroAddress } from 'viem'
-import { encodeFunctionData, toHex } from 'viem'
 
 import { ERC_1155_SALE_CONTRACT } from '../constants/erc1155-sale-contract'
 import { ERC_721_SALE_CONTRACT } from '../constants/erc721-sale-contract'
+import { encodeFunctionData, toHex } from 'viem'
 import { orderbookAbi } from '../constants/orderbook-abi'
 
 interface PurchaseTransactionDataERC721Sale {
@@ -157,6 +157,7 @@ export const checkoutPresets: Record<string, (recipientAddress: string) => Check
       }
     ]
     const price = '1000000000000000'
+    // NOTE: placeholder until bug with backend is fixed
     const structuredCalldata = ''
     return {
       chain: 11155111,
@@ -176,9 +177,17 @@ export const checkoutPresets: Record<string, (recipientAddress: string) => Check
         calldata: structuredCalldata,
         sellerAddress: '0x184D4F89ad34bb0491563787ca28118273402986'
       }
+      // forteConfig: {
+      //   protocol: 'seaport',
+      //   orderHash: '0xa29984c1892bb28bc35170a0e7e4db64ceacfbd20dc5576bd67f1aae9dd678a3',
+      //   // listings with amount > 1 are bugged
+      //   // orderHash: '0x832b698e52508849fe533fdef53d6d9674be4f43eb1a2eb3415e46041f087af9',
+      //   seaportProtocolAddress: '0x0000000000000068F116a894984e2DB1123eB395',
+      //   sellerAddress: '0x184D4F89ad34bb0491563787ca28118273402986'
+      // }
     }
   },
-  'forte-transak-payment-erc1155-sale-native-token-testnet': (recipientAddress: string) => {
+  'forte-payment-erc1155-sale-native-token-testnet': (recipientAddress: string) => {
     const collectibles = [
       {
         tokenId: '1',
@@ -237,16 +246,7 @@ export const checkoutPresets: Record<string, (recipientAddress: string) => Check
       forteConfig: {
         protocol: 'mint',
         calldata: structuredCalldata,
-        sellerAddress: '0x184D4F89ad34bb0491563787ca28118273402986',
-        onFortePaymentsBuyNftSuccess: e => {
-          console.log('onFortePaymentsBuyNftSuccess', e)
-        },
-        onFortePaymentsBuyNftMintSuccess: e => {
-          console.log('onFortePaymentsBuyNftMintSuccess', e)
-        },
-        onFortePaymentsWidgetClosed: e => {
-          console.log('onFortePaymentsWidgetClosed', e)
-        }
+        sellerAddress: '0x184D4F89ad34bb0491563787ca28118273402986'
       }
     }
   },
@@ -258,7 +258,7 @@ export const checkoutPresets: Record<string, (recipientAddress: string) => Check
       }
     ]
     const price = '1000000000000000'
-    const requestId = '40'
+    const requestId = '34'
     const txData = getOrderbookTransactionData({
       recipientAddress: recipientAddress,
       requestId,
@@ -380,7 +380,7 @@ export const checkoutPresets: Record<string, (recipientAddress: string) => Check
     ]
     const price = '1000000000000000'
     const currencyAddress = '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14'
-    const requestId = '41'
+    const requestId = '33'
     const txData = getOrderbookTransactionData({
       recipientAddress: recipientAddress,
       requestId,
