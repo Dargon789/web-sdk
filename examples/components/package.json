@@ -4,13 +4,14 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@radix-ui/react-popover": "^1.1.11"
+    "@radix-ui/react-popover": "^1.1.11",
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@0xsequence/design-system": "3.2.9",
-    "react": "^19.1.0",
-    "wagmi": "^3.2.0"
+    "@0xsequence/design-system": "2.1.11",
+    "@0xsequence/web-sdk-core": "workspace:*",
+    "@0xsequence/network": "*",
+    "wagmi": "^2.15.0"
   },
-  "private": true,
-  "version": "0.0.0"
+  "private": true
 }

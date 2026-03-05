@@ -21,11 +21,7 @@ export const walletConnect = (options: WalletConnectOptions): Wallet => ({
     return createConnector(config => {
       const connector = baseConnector(config)
 
-      const connect = async <withCapabilities extends boolean = false>(params?: {
-        chainId?: number
-        isReconnecting?: boolean
-        withCapabilities?: withCapabilities | boolean
-      }) => {
+      const connect = async (params?: { chainId?: number }) => {
         const targetChainId = params?.chainId ?? defaultNetwork ?? config.chains[0]?.id
         if (!targetChainId) {
           throw new Error('No target chain ID available')
@@ -36,7 +32,7 @@ export const walletConnect = (options: WalletConnectOptions): Wallet => ({
         }
 
         // First establish the basic connection
-        const result = await connector.connect({ ...params, chainId: targetChainId })
+        const result = await connector.connect()
 
         // Only attempt to switch chains if we're not already on the target chain
         if (result.chainId !== targetChainId) {
@@ -57,6 +53,7 @@ export const walletConnect = (options: WalletConnectOptions): Wallet => ({
 
         return result
       }
+
       return {
         ...connector,
         connect
