@@ -1,5 +1,144 @@
 # @0xsequence/connect
 
+## 6.0.0
+
+### Major Changes
+
+- 3313726: Connect package improvements for v6
+
+### Patch Changes
+
+- 3313726: ethauth fixes
+- 3313726: 6.0.0 beta fixes
+- 3313726: Ecosystem wallet config update
+- 3313726: ethauth support
+- 6.0.0 release
+- Updated dependencies [3313726]
+- Updated dependencies [3313726]
+- Updated dependencies [3313726]
+- Updated dependencies [3313726]
+- Updated dependencies [3313726]
+- Updated dependencies
+  - @0xsequence/hooks@6.0.0
+
+## 6.0.0-beta.4
+
+### Patch Changes
+
+- Ecosystem wallet config update
+
+- Updated dependencies []:
+  - @0xsequence/hooks@6.0.0-beta.4
+
+## 6.0.0-beta.3
+
+### Patch Changes
+
+- ethauth fixes
+
+- Updated dependencies []:
+  - @0xsequence/hooks@6.0.0-beta.3
+
+## 6.0.0-beta.2
+
+### Patch Changes
+
+- ethauth support
+
+- Updated dependencies []:
+  - @0xsequence/hooks@6.0.0-beta.2
+
+## 6.0.0-beta.1
+
+### Patch Changes
+
+- 6.0.0 beta fixes
+
+- Updated dependencies []:
+  - @0xsequence/hooks@6.0.0-beta.1
+
+## 6.0.0-beta.0
+
+### Major Changes
+
+- Connect package improvements for v6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @0xsequence/hooks@6.0.0-beta.0
+
+## 5.4.8
+
+### Patch Changes
+
+- sequence.js dependency upgrades
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.4.8
+
+## 5.4.7
+
+### Patch Changes
+
+- sequence.js upgrades
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.4.7
+
+## 5.4.6
+
+### Patch Changes
+
+- Dependency updates
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.4.6
+
+## 5.4.5
+
+### Patch Changes
+
+- Fix for free items checkout, sequence dep upgrades
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.4.5
+
+## 5.4.4
+
+### Patch Changes
+
+- Sequence logo update
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.4.4
+
+## 5.4.3
+
+### Patch Changes
+
+- Minor fix for Sequence logo
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.4.3
+
+## 5.4.2
+
+### Patch Changes
+
+- - **Onramp**: Add optional Transak alternate flow with default and windowed modes (#549)
+  - Add `showWalletAuthOptionsFirst` parameter to control connector ordering (#563)
+  - Update Sequence logos with newest logo (#561)
+  - Better logic for initial balance check (#562)
+  - Change injected connector logic to display before others (#563)
+  - Fix Transak parameters (#557)
+  - Add funds height when error state (#556)
+  - Add message for rejected transactions (#559)
+  - Deprecate `findVersion` (#560)
+
+- Updated dependencies []:
+  - @0xsequence/hooks@5.4.2
+
 ## 5.4.1
 
 ### Patch Changes

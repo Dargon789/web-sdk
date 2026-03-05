@@ -1,9 +1,9 @@
-import { useGetCoinPrices, useGetContractInfo } from '@0xsequence/connect'
 import { Spinner, Text, TokenImage } from '@0xsequence/design-system'
-import { findSupportedNetwork } from '@0xsequence/network'
+import { useGetCoinPrices, useGetContractInfo } from '@0xsequence/hooks'
+import { findSupportedNetwork } from '@0xsequence/connect'
 import { formatUnits } from 'viem'
 
-import { useSelectPaymentModal } from '../../../hooks'
+import { useSelectPaymentModal } from '../../../../hooks/useSelectPaymentModal.js'
 
 export const Price = () => {
   const { selectPaymentSettings } = useSelectPaymentModal()
