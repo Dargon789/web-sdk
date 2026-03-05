@@ -36,7 +36,7 @@ const App = () => {
 
 # Opening the embedded wallet
 
-The embedded wallet modal can be summoded with the `useOpenWalletModal` hook.
+The embedded wallet modal can be summoned with the `useOpenWalletModal` hook.
 
 ```js
 import { useOpenWalletModal } from '@0xsequence/wallet-widget'
