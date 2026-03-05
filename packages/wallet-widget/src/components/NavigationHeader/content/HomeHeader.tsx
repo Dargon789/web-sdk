@@ -50,10 +50,24 @@ export const HomeHeader = () => {
     })
   }
 
+  const onClickSwap = () => {
+    setIsOperationMenuOpen(false)
+    setNavigation({
+      location: 'swap'
+    })
+  }
+
   const onClickReceive = () => {
     setIsOperationMenuOpen(false)
     setNavigation({
       location: 'receive'
+    })
+  }
+
+  const onClickBuy = () => {
+    setIsOperationMenuOpen(false)
+    setNavigation({
+      location: 'buy'
     })
   }
 
@@ -83,8 +97,7 @@ export const HomeHeader = () => {
 
           {isOperationMenuOpen && (
             <PopoverPrimitive.Content
-              className="flex flex-col p-2 gap-2 z-30 rounded-xl border border-border-normal"
-              style={{ background: 'rgb(25, 25, 25)' }}
+              className="flex flex-col p-2 gap-2 z-30 rounded-xl border border-border-normal bg-background-primary"
               asChild
               side="bottom"
               sideOffset={8}
@@ -98,9 +111,20 @@ export const HomeHeader = () => {
                     onClickSend()
                   }}
                 >
-                  <ArrowUpIcon color="white" />
+                  <ArrowUpIcon className="text-primary" />
                   <Text variant="normal" fontWeight="bold" color="primary">
                     Send
+                  </Text>
+                </div>
+                <div
+                  className="flex flex-row items-center py-2 px-4 gap-2 bg-background-secondary rounded-lg hover:opacity-80 cursor-pointer"
+                  onClick={() => {
+                    onClickSwap()
+                  }}
+                >
+                  <SwapIcon className="text-primary" />
+                  <Text variant="normal" fontWeight="bold" color="primary">
+                    Swap
                   </Text>
                 </div>
                 <div
@@ -109,9 +133,20 @@ export const HomeHeader = () => {
                     onClickReceive()
                   }}
                 >
-                  <ScanIcon color="white" />
+                  <ScanIcon className="text-primary" />
                   <Text variant="normal" fontWeight="bold" color="primary">
                     Receive
+                  </Text>
+                </div>
+                <div
+                  className="flex flex-row items-center py-2 px-4 gap-2 bg-background-secondary rounded-lg hover:opacity-80 cursor-pointer"
+                  onClick={() => {
+                    onClickBuy()
+                  }}
+                >
+                  <AddIcon className="text-primary" />
+                  <Text variant="normal" fontWeight="bold" color="primary">
+                    Buy
                   </Text>
                 </div>
               </div>
