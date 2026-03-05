@@ -201,7 +201,7 @@ const connectors = getDefaultConnectors('universal', {
 })
 
 /*
-  const connectors = getDefaultWaasConnectors('{
+  const connectors = getDefaultWaasConnectors({
     projectAccessKey,
     defaultChainId: 137,
     appName: 'Demo Dapp',
