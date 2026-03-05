@@ -1,13 +1,14 @@
+import { CollectibleTileImage, formatDisplay } from '@0xsequence/connect'
 import { Spinner, Text, TokenImage } from '@0xsequence/design-system'
 import { useGetCoinPrices, useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
-import { findSupportedNetwork } from '@0xsequence/network'
-import { CollectibleTileImage, formatDisplay } from '@0xsequence/web-sdk-core'
+import { findSupportedNetwork } from '@0xsequence/connect'
 import { formatUnits } from 'viem'
 
 import { useSelectPaymentModal } from '../../../../hooks/useSelectPaymentModal.js'
 
 export const OrderSummary = () => {
   const { selectPaymentSettings } = useSelectPaymentModal()
+  const isFree = Number(selectPaymentSettings!.price) == 0
   const chain = selectPaymentSettings!.chain
   const network = findSupportedNetwork(chain)
   const chainId = network?.chainId || 137
@@ -52,8 +53,6 @@ export const OrderSummary = () => {
     )
   }
 
-  const isFree = Number(selectPaymentSettings!.price) == 0
-
   const formattedPrice = formatUnits(BigInt(selectPaymentSettings!.price), dataCurrencyInfo?.decimals || 0)
   const displayPrice = formatDisplay(formattedPrice, {
     disableScientificNotation: true,
@@ -64,7 +63,7 @@ export const OrderSummary = () => {
   const fiatExchangeRate = dataCoinPrices?.[0].price?.value || 0
   const priceFiat = (fiatExchangeRate * Number(formattedPrice)).toFixed(2)
 
-  const priceSection = () => {
+  const PriceSection = () => {
     if (isFree) {
       return (
         <Text color="text50" variant="xsmall" fontWeight="normal">
@@ -116,7 +115,7 @@ export const OrderSummary = () => {
                 <Text variant="xsmall" color="secondary" fontWeight="normal">
                   {dataCollectionInfo?.name || null}
                 </Text>
-                {priceSection()}
+                <PriceSection />
               </div>
             </div>
           )

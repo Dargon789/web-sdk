@@ -64,7 +64,15 @@ export {
 } from './utils/helpers.js'
 export { createNativeTokenBalance, getNativeTokenInfoByChainId } from './utils/tokens.js'
 export { getModalPositionCss } from './utils/styling.js'
-export { getNetwork, getNetworkBackgroundColor, getNetworkColor } from './utils/networks.js'
+export {
+  ChainId,
+  allNetworks,
+  findSupportedNetwork,
+  getNetwork,
+  getNetworkBackgroundColor,
+  getNetworkColor,
+  networks
+} from './utils/networks.js'
 export { signEthAuthProof, validateEthProof } from './utils/ethAuth.js'
 export { isTxRejected, sendTransactions, waitForTransactionReceipt } from './utils/transactions.js'
 export { createContractPermission, createContractPermissions, createExplicitSessionConfig } from './utils/session/index.js'
@@ -126,6 +134,10 @@ export { useExplicitSessions } from './hooks/useExplicitSessions.js'
 export { useSequenceSessionState } from './hooks/useSequenceSessionState.js'
 export { useAuthStatus } from './hooks/useAuthStatus.js'
 export type { UseAuthStatusOptions, UseAuthStatusResult } from './hooks/useAuthStatus.js'
+export { useHasPermission } from './hooks/useHasPermission.js'
+export { useSendWalletTransaction } from './hooks/useSendWalletTransaction.js'
+export type { HasPermissionParams, UseHasPermissionReturnType } from './hooks/useHasPermission.js'
+export type { SendWalletTransactionParams, UseSendWalletTransactionReturnType } from './hooks/useSendWalletTransaction.js'
 
 // Components
 export { NetworkBadge } from './components/NetworkBadge/index.js'
