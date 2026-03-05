@@ -18,7 +18,7 @@ pnpm install @0xsequence/wallet-widget
 yarn add @0xsequence/wallet-widget
 ```
 
-Then the wallet provider module must placed below the Sequence Web SDK Core provider.
+Then the wallet provider module must be placed below the Sequence Web SDK Core provider.
 
 ```js
 import { SequenceWalletProvider } from '@0xsequence/wallet-widget'
