@@ -1,4 +1,4 @@
-import { useConnectModalContext } from '../contexts/ConnectModal'
+import { useConnectModalContext } from '../contexts/ConnectModal.js'
 
 /**
  * Return type for the useOpenConnectModal hook.
@@ -7,6 +7,7 @@ import { useConnectModalContext } from '../contexts/ConnectModal'
  * @property Current open state of the Connect modal `openConnectModalState`
  */
 type UseOpenConnectModalReturnType = {
+  isConnectModalOpen: boolean
   setOpenConnectModal: (isOpen: boolean) => void
   openConnectModalState: boolean
 }
@@ -17,7 +18,7 @@ type UseOpenConnectModalReturnType = {
  * This hook provides a method to open and close the connect modal, and access its current open state.
  * The Connect modal provides various wallet connection options including Sequence wallet and external wallets.
  *
- * Go to {@link https://docs.sequence.xyz/sdk/web/hooks/useOpenConnectModal} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/wallet-sdk/ecosystem/hooks/useOpenConnectModal} for more detailed documentation.
  *
  * @returns An object containing function to control the Connect modal and its state {@link UseOpenConnectModalReturnType}
  *
@@ -47,7 +48,7 @@ type UseOpenConnectModalReturnType = {
  * ```
  */
 export const useOpenConnectModal = (): UseOpenConnectModalReturnType => {
-  const { setOpenConnectModal, openConnectModalState } = useConnectModalContext()
+  const { isConnectModalOpen, setOpenConnectModal, openConnectModalState } = useConnectModalContext()
 
-  return { setOpenConnectModal, openConnectModalState }
+  return { isConnectModalOpen, setOpenConnectModal, openConnectModalState }
 }

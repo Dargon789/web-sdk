@@ -1,4 +1,4 @@
-import React, { RefObject, PropsWithChildren, useEffect, useRef, useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef, useState, type PropsWithChildren, type RefObject } from 'react'
 
 export const useIntersectionObserver = (ref: RefObject<Element | null>, options?: IntersectionObserverInit) => {
   const [entry, setEntry] = useState<IntersectionObserverEntry | null>(null)
@@ -22,35 +22,40 @@ export const useIntersectionObserver = (ref: RefObject<Element | null>, options?
 interface InfiniteScrollProps {
   onLoad: (pageNumber: number) => Promise<any>
   hasMore?: boolean
+  resetTrigger?: boolean
 }
 
 export const InfiniteScroll = (props: PropsWithChildren<InfiniteScrollProps>) => {
-  const { onLoad, hasMore = true, children } = props
+  const { onLoad, hasMore = true, children, resetTrigger } = props
 
   const [pageNumber, setPageNumber] = useState(0)
-  const [isLoading, setLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const isBottom = useIntersectionObserver(bottomRef)
 
   useEffect(() => {
-    if (isBottom && hasMore && !isLoading) {
+    setPageNumber(0)
+  }, [resetTrigger])
+
+  useEffect(() => {
+    if (isBottom && hasMore && !isFetching) {
       handleLoad()
     }
   }, [isBottom])
 
   const handleLoad = async () => {
-    setLoading(true)
+    setIsFetching(true)
 
     await onLoad(pageNumber)
 
     setPageNumber(pageNumber => pageNumber + 1)
-    setLoading(false)
+    setIsFetching(false)
   }
 
   return (
     <>
       {children}
-      <div ref={bottomRef} />
+      <span ref={bottomRef} />
     </>
   )
 }

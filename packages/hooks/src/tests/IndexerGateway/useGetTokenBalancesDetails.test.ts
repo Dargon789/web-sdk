@@ -1,14 +1,17 @@
 import { IndexerGateway } from '@0xsequence/indexer'
 import { renderHook, waitFor } from '@testing-library/react'
-import { HttpResponse, http } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
-import { ACCOUNT_ADDRESS } from '../../constants'
-import { useGetTokenBalancesDetails } from '../../hooks/IndexerGateway/useGetTokenBalancesDetails'
-import { createWrapper } from '../createWrapper'
-import { server } from '../setup'
+import { ACCOUNT_ADDRESS } from '../../constants.js'
+import {
+  useGetTokenBalancesDetails,
+  type GetTokenBalancesDetailsArgs
+} from '../../hooks/IndexerGateway/useGetTokenBalancesDetails.js'
+import { createWrapper } from '../createWrapper.js'
+import { server } from '../setup.js'
 
-const getTokenBalancesDetailsArgs: IndexerGateway.GetTokenBalancesDetailsArgs = {
+const getTokenBalancesDetailsArgs: GetTokenBalancesDetailsArgs = {
   filter: {
     accountAddresses: [ACCOUNT_ADDRESS],
     contractStatus: IndexerGateway.ContractVerificationStatus.ALL,
@@ -26,7 +29,7 @@ describe('useGetTokenBalancesDetails', () => {
 
     expect(result.current.data).toBeDefined()
 
-    const value = BigInt(result.current.data![0].balance || 0)
+    const value = BigInt(result.current.data?.pages[0].balances[0].balance || 0)
 
     expect(value).toBeGreaterThan(0)
   })

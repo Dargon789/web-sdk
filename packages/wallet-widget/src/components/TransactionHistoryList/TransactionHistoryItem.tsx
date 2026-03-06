@@ -1,14 +1,13 @@
-import { TokenPrice } from '@0xsequence/api'
+import type { TokenPrice } from '@0xsequence/api'
 import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/connect'
-import { ArrowRightIcon, Text, Image, TransactionIcon, Skeleton, NetworkImage } from '@0xsequence/design-system'
+import { ArrowRightIcon, NetworkImage, Skeleton, Text, TokenImage, TransactionIcon } from '@0xsequence/design-system'
 import { useGetCoinPrices, useGetExchangeRate } from '@0xsequence/hooks'
-import { Transaction, TxnTransfer, TxnTransferType } from '@0xsequence/indexer'
+import { TxnTransferType, type Transaction, type TxnTransfer } from '@0xsequence/indexer'
 import dayjs from 'dayjs'
-import React from 'react'
 import { formatUnits, zeroAddress } from 'viem'
 import { useConfig } from 'wagmi'
 
-import { useSettings, useNavigation } from '../../hooks'
+import { useNavigation, useSettings } from '../../hooks/index.js'
 
 interface TransactionHistoryItemProps {
   transaction: Transaction
@@ -37,16 +36,16 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
     }
   })
 
-  const { data: coinPrices = [], isPending: isPendingCoinPrices } = useGetCoinPrices(
+  const { data: coinPrices = [], isLoading: isLoadingCoinPrices } = useGetCoinPrices(
     tokenContractAddresses.map(contractAddress => ({
       contractAddress,
       chainId: transaction.chainId
     }))
   )
 
-  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
+  const { data: conversionRate = 1, isLoading: isLoadingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
 
-  const isPending = isPendingCoinPrices || isPendingConversionRate
+  const isLoading = isLoadingCoinPrices || isLoadingConversionRate
 
   const { transfers } = transaction
 
@@ -103,7 +102,15 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
       textColor = 'positive'
     }
 
-    return <Text variant="normal" fontWeight="bold" color={textColor}>{`${sign}${amount} ${symbol}`}</Text>
+    return (
+      <Text
+        className="overflow-hidden"
+        variant="normal"
+        fontWeight="bold"
+        color={textColor}
+        ellipsis
+      >{`${sign}${amount} ${symbol}`}</Text>
+    )
   }
 
   interface GetTransfer {
@@ -114,6 +121,7 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
   const getTransfer = ({ transfer, isFirstItem }: GetTransfer) => {
     const { amounts } = transfer
     const date = dayjs(transaction.timestamp).format('MMM DD, YYYY')
+
     return (
       <div className="flex gap-2 w-full flex-col justify-between">
         <div className="flex flex-row justify-between">
@@ -144,7 +152,11 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
             decimals = isNativeToken ? nativeTokenInfo.decimals : transfer.contractInfo?.decimals
           }
           const amountValue = formatUnits(BigInt(amount), decimals || 18)
-          const symbol = isNativeToken ? nativeTokenInfo.symbol : transfer.contractInfo?.symbol || ''
+          const symbol = isNativeToken
+            ? nativeTokenInfo.symbol
+            : isCollectible
+              ? transfer.contractInfo?.name || ''
+              : transfer.contractInfo?.symbol || ''
           const tokenLogoUri = isNativeToken ? nativeTokenInfo.logoURI : transfer.contractInfo?.logoURI
 
           const fiatConversionRate = coinPrices.find((coinPrice: TokenPrice) =>
@@ -153,11 +165,11 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
 
           return (
             <div className="flex flex-row justify-between" key={index}>
-              <div className="flex flex-row gap-2 justify-center items-center">
-                {tokenLogoUri && <Image className="w-5" src={tokenLogoUri} alt="token logo" />}
+              <div className="flex flex-row gap-2 justify-start items-center w-full">
+                {(tokenLogoUri || symbol) && <TokenImage src={tokenLogoUri} symbol={symbol} size="sm" />}
                 {getTransferAmountLabel(decimals === 0 ? amount : formatDisplay(amountValue), symbol, transfer.transferType)}
               </div>
-              {isPending && <Skeleton style={{ width: '35px', height: '20px' }} />}
+              {isLoading && <Skeleton style={{ width: '35px', height: '20px' }} />}
               {fiatConversionRate && (
                 <Text variant="normal" fontWeight="medium" color="muted">
                   {`${fiatCurrency.sign}${(Number(amountValue) * fiatConversionRate * conversionRate).toFixed(2)}`}

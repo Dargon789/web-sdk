@@ -1,6 +1,6 @@
 import { formatDisplay } from '@0xsequence/connect'
-import { Card, Image, Text, Skeleton, TokenImage, NetworkImage } from '@0xsequence/design-system'
-import { useGetTokenMetadata, useGetContractInfo } from '@0xsequence/hooks'
+import { Card, Image, NetworkImage, Skeleton, Text, TokenImage } from '@0xsequence/design-system'
+import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
 import { formatUnits } from 'viem'
 
 interface OrderSummaryItem {
@@ -11,18 +11,18 @@ interface OrderSummaryItem {
 }
 
 export const OrderSummaryItem = ({ contractAddress, tokenId, quantityRaw, chainId }: OrderSummaryItem) => {
-  const { data: tokenMetadata, isPending: isPendingTokenMetadata } = useGetTokenMetadata({
+  const { data: tokenMetadata, isLoading: isLoadingTokenMetadata } = useGetTokenMetadata({
     chainID: String(chainId),
     contractAddress,
     tokenIDs: [tokenId]
   })
-  const { data: contractInfo, isPending: isPendingContractInfo } = useGetContractInfo({
+  const { data: contractInfo, isLoading: isLoadingContractInfo } = useGetContractInfo({
     chainID: String(chainId),
     contractAddress
   })
-  const isPending = isPendingTokenMetadata || isPendingContractInfo
+  const isLoading = isLoadingTokenMetadata || isLoadingContractInfo
 
-  if (isPending) {
+  if (isLoading) {
     return <OrderSummarySkeleton />
   }
 

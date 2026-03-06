@@ -1,23 +1,29 @@
 'use client'
 
-import { createContext } from 'react'
+import { createContext, useState } from 'react'
 
 export interface SequenceHooksEnv {
   indexerGatewayUrl: string
   metadataUrl: string
   apiUrl: string
   indexerUrl: string
+  nodeGatewayUrl: string
+  trailsApiUrl: string
   imageProxyUrl: string
+  builderUrl: string
 }
 
 export interface SequenceHooksConfigProviderValue {
   projectAccessKey: string
   env?: Partial<SequenceHooksEnv>
+  jwt?: string
 }
 
 export interface SequenceHooksConfig {
   projectAccessKey: string
   env: Required<SequenceHooksEnv>
+  jwt: string | undefined
+  setJWT: React.Dispatch<React.SetStateAction<string | undefined>>
 }
 
 const defaultEnv: Required<SequenceHooksEnv> = {
@@ -25,7 +31,10 @@ const defaultEnv: Required<SequenceHooksEnv> = {
   metadataUrl: 'https://metadata.sequence.app',
   apiUrl: 'https://api.sequence.app',
   indexerUrl: 'https://indexer.sequence.app',
-  imageProxyUrl: 'https://imgproxy.sequence.xyz/'
+  nodeGatewayUrl: 'https://nodes.sequence.app',
+  trailsApiUrl: 'https://trails-api.sequence.app',
+  imageProxyUrl: 'https://imgproxy.sequence.xyz/',
+  builderUrl: 'https://api.sequence.build'
 }
 
 export const SequenceHooksContext = createContext<SequenceHooksConfig | null>(null)
@@ -36,12 +45,16 @@ interface SequenceHooksProviderProps {
 }
 
 export const SequenceHooksProvider = (props: SequenceHooksProviderProps) => {
-  const config = {
+  const [jwt, setJWT] = useState<string | undefined>(props.config.jwt)
+
+  const config: SequenceHooksConfig = {
     ...props.config,
     env: {
       ...defaultEnv,
       ...props.config.env
-    }
+    },
+    jwt,
+    setJWT
   }
 
   return <SequenceHooksContext.Provider value={config}>{props.children}</SequenceHooksContext.Provider>

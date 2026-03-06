@@ -36,13 +36,13 @@ const App = () => {
 }
 ```
 
-# NFT Checkout (Sequence Pay)
+# NFT Checkout
 
 <div align="center">
   <img src="../../public/docs/checkout-modal.png">
 </div>
 
-Sequence Pay Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
+NFT Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
 
 ## Basic Usage
 
@@ -100,9 +100,9 @@ const MyComponent = () => {
       recipientAddress: address,
       currencyAddress,
       collectionAddress,
-      creditCardProviders: ['sardine'],
+      creditCardProviders: ['transak'],
       copyrightText: 'ⓒ2024 Sequence',
-      onSuccess: (txnHash: string) => {
+      onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
       },
       onError: (error: Error) => {
@@ -140,10 +140,10 @@ The `@0xsequence/checkout` library indeed simplifies the integration of Web3 pay
 
 ```js
 import { useERC1155SaleContractCheckout } from "@0xsequence/checkout";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 
 const MyComponent = () => {
-  const { address: userAddress } = useAccount();
+  const { address: userAddress } = useConnection();
   const { openCheckoutModal } = useERC1155SaleContractCheckout({
     chain: 80001, // chainId of the chain the collectible is on
     contractAddress: "0x0327b2f274e04d292e74a06809bcd687c63a4ba4", // address of the contract handling the minting function
@@ -156,7 +156,7 @@ const MyComponent = () => {
         quantity: "1",
       },
     ],
-    onSuccess: (txnHash: string) => {
+    onSuccess: (txnHash?: string) => {
       console.log("success!", txnHash);
     },
     onError: (error: Error) => {
@@ -252,5 +252,54 @@ const MyComponent = () => {
   }
 
   return <button onClick={onClick}>Add Funds</button>
+}
+```
+
+## Custom Checkout UIs
+
+Fully customized checkout UIs can be created with the `useCheckoutUI` hook. The hook will return three objects `orderSummary`, `creditCardPayment` and `cryptoPayment` which serve to create the order summary section, credit card payment section and crypto payment section of a checkout UI. API calls are done within the hook and all that if left to build is placing the information and actions.
+
+Each section comes with its own loading, error and data states.
+
+```js
+import { useCheckoutUI } from '@0xsequence/checkout'
+
+const CustomCheckoutUI = () => {
+  const checkoutUIParams = {
+    collectible,
+    chain: chainId,
+    totalPriceRaw: price,
+    targetContractAddress: salesContractAddress,
+    recipientAddress: address || '',
+    currencyAddress,
+    collectionAddress,
+    creditCardProvider: 'transak' as CreditCardProviders,
+    onSuccess: (txnHash?: string) => {
+      console.log('success!', txnHash)
+    },
+    onError: (error: Error) => {
+      console.error(error)
+    },
+    txData: purchaseTransactionData
+  }
+
+  const { orderSummary, creditCardPayment, cryptoPayment } = useCheckoutUI(checkoutUIParams)
+
+  const isLoading = orderSummary.isLoading || creditCardPayment.isLoading || cryptoPayment.isLoading
+
+  const error = orderSummary.error || creditCardPayment.error || cryptoPayment.error
+
+  if (isLoading) {
+    return <div>loading...</div>
+  }
+  if (error)  {
+    return <div>an error has occurred</div>
+  }
+
+  return (
+    <CustomOrderSummaryComponent data={orderSummary.data}>
+    <CustomCreditCardComponent data={creditCardPayment.data}>
+    <CustomCryptoPaymentComponent data={cryptoPayment.data} purchaseAction={cryptoPayment.purchaseAction}>
+  )
 }
 ```

@@ -1,31 +1,30 @@
 import { Text } from '@0xsequence/design-system'
-import React from 'react'
+import { useObservable } from 'micro-observables'
 
-import { SelectButton } from '../../components/SelectButton'
-import { supportedFiatCurrencies } from '../../constants'
-import { useSettings } from '../../hooks'
+import { ListCard } from '../../components/ListCard/ListCard.js'
+import { supportedFiatCurrencies } from '../../constants/index.js'
+import { useSettings } from '../../hooks/index.js'
 
 export const SettingsCurrency = () => {
-  const { fiatCurrency, setFiatCurrency } = useSettings()
+  const { fiatCurrencyObservable, setFiatCurrency } = useSettings()
+  const fiatCurrency = useObservable(fiatCurrencyObservable)
 
   return (
-    <div className="pb-5 px-4 pt-3">
+    <div className="px-4 pb-4">
       <div className="flex flex-col gap-2">
-        {supportedFiatCurrencies.map(currency => {
+        {supportedFiatCurrencies.map((currency, index) => {
           return (
-            <SelectButton
-              key={currency.symbol}
-              value={currency.symbol}
-              selected={currency.symbol === fiatCurrency.symbol}
+            <ListCard
+              type="radio"
+              key={index}
+              isSelected={currency.symbol === fiatCurrency.symbol}
               onClick={() => setFiatCurrency && setFiatCurrency(currency)}
             >
-              <div className="flex gap-2 justify-start items-center">
-                <Text color="primary" fontWeight="bold">
-                  {currency.symbol}
-                </Text>
-                <Text color="muted">{currency.name.message}</Text>
-              </div>
-            </SelectButton>
+              <Text color="primary" fontWeight="bold">
+                {currency.symbol}
+              </Text>
+              <Text color="muted">{currency.name.message}</Text>
+            </ListCard>
           )
         })}
       </div>

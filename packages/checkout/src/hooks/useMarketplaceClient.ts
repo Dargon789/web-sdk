@@ -1,9 +1,9 @@
 import { useProjectAccessKey } from '@0xsequence/connect'
 import { MarketplaceIndexer } from '@0xsequence/marketplace'
-import { networks } from '@0xsequence/network'
+import { networks } from '@0xsequence/connect'
 import { useMemo } from 'react'
 
-import { useEnvironmentContext } from '../contexts/Environment'
+import { useEnvironmentContext } from '../contexts/Environment.js'
 
 export interface UseMarketplaceClientArgs {
   chain: ChainNameOrId
@@ -11,9 +11,9 @@ export interface UseMarketplaceClientArgs {
 
 export const useMarketplaceClient = ({ chain }: UseMarketplaceClientArgs) => {
   const projectAccessKey = useProjectAccessKey()
+  const { marketplaceApiUrl } = useEnvironmentContext()
 
   const marketplaceClient = useMemo(() => {
-    const { marketplaceApiUrl } = useEnvironmentContext()
     const network = getNetwork(chain).name
 
     const clientUrl = `${marketplaceApiUrl}/${network}`

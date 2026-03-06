@@ -1,6 +1,6 @@
-import { ContractType, TokenBalance } from '@0xsequence/indexer'
+import { ContractType, type TokenBalance } from '@0xsequence/indexer'
 
-import { ZERO_ADDRESS } from '../constants'
+import { ZERO_ADDRESS } from '../constants.js'
 
 export const compareAddress = (a: string, b: string) => {
   return a.toLowerCase() === b.toLowerCase()
@@ -25,6 +25,8 @@ export const createNativeTokenBalance = (chainId: number, accountAddress: string
     accountAddress,
     contractType: ContractType.NATIVE,
     balance,
+    balanceUSD: '0',
+    priceUSD: '0',
     blockHash: '',
     blockNumber: 0,
     tokenID: '',

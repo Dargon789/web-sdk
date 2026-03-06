@@ -1,6 +1,6 @@
 import { Image } from '@0xsequence/design-system'
 
-import { ConnectConfig } from '../../types'
+import type { ConnectConfig } from '../../types.js'
 
 interface BannerProps {
   config: ConnectConfig
@@ -13,7 +13,7 @@ export const Banner = ({ config = {} as ConnectConfig }: BannerProps) => {
   return (
     <>
       {logoUrl && (
-        <div className="flex mt-5 justify-center items-center">
+        <div className="flex mt-5 mb-6 justify-center items-center">
           <Image src={logoUrl} style={{ height: '110px' }} />
         </div>
       )}

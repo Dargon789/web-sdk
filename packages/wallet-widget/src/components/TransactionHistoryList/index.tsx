@@ -1,17 +1,19 @@
 import { Spinner, Text } from '@0xsequence/design-system'
-import { Transaction } from '@0xsequence/indexer'
+import type { Transaction } from '@0xsequence/indexer'
 import { useMemo } from 'react'
 
-import { TransactionHistoryItem } from './TransactionHistoryItem'
-import { TransactionHistorySkeleton } from './TransactionHistorySkeleton'
+import { NoResults } from '../NoResults.js'
+
+import { TransactionHistoryItem } from './TransactionHistoryItem.js'
+import { TransactionHistorySkeleton } from './TransactionHistorySkeleton.js'
 
 interface TransactionHistoryListProps {
   transactions: Transaction[]
-  isPending: boolean
+  isLoading: boolean
   isFetchingNextPage: boolean
 }
 
-export const TransactionHistoryList = ({ transactions, isPending, isFetchingNextPage }: TransactionHistoryListProps) => {
+export const TransactionHistoryList = ({ transactions, isLoading, isFetchingNextPage }: TransactionHistoryListProps) => {
   type TransactionPeriodId = 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'past'
 
   interface TransactionPeriods {
@@ -90,7 +92,7 @@ export const TransactionHistoryList = ({ transactions, isPending, isFetchingNext
     return transactionsByTime
   }, [transactions])
 
-  if (isPending) {
+  if (isLoading) {
     return (
       <div className="flex flex-col gap-2">
         <TransactionHistorySkeleton />
@@ -121,7 +123,7 @@ export const TransactionHistoryList = ({ transactions, isPending, isFetchingNext
       <div className="flex flex-col gap-2">
         {transactions.map((transaction, index) => {
           return (
-            <div className="flex flex-col gap-2" key={`${transaction.txnHash}-${index}`}>
+            <div className="flex flex-col" key={`${transaction.txnHash}-${index}`}>
               <TransactionHistoryItem transaction={transaction} />
             </div>
           )
@@ -144,12 +146,7 @@ export const TransactionHistoryList = ({ transactions, isPending, isFetchingNext
           </div>
         )
       })}
-      {transactions.length === 0 && (
-        <div className="flex flex-col gap-3">
-          <TimeLabel label={'History'} />
-          <Text color="primary">No Recent Transaction History Found</Text>
-        </div>
-      )}
+      {transactions.length === 0 && <NoResults />}
       {isFetchingNextPage && (
         <div className="flex m-4 items-center justify-center">
           <Spinner />

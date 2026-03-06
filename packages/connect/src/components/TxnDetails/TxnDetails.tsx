@@ -1,15 +1,15 @@
 import { commons } from '@0xsequence/core'
-import { Card, GradientAvatar, Skeleton, Text, TokenImage } from '@0xsequence/design-system'
-import { useAPIClient, useGetTokenBalancesSummary, useGetTokenMetadata } from '@0xsequence/hooks'
-import { ContractType, ContractVerificationStatus } from '@0xsequence/indexer'
+import { Card, Collapsible, GradientAvatar, Skeleton, Text, TokenImage } from '@0xsequence/design-system'
+import { useAPIClient, useGetSingleTokenBalance, useGetTokenMetadata } from '@0xsequence/hooks'
+import { ContractType } from '@0xsequence/indexer'
 import { useEffect, useState } from 'react'
 import { formatUnits, zeroAddress } from 'viem'
 import { useConfig } from 'wagmi'
 
-import { compareAddress, capitalize, truncateAtMiddle } from '../../utils/helpers'
-import { getNativeTokenInfoByChainId } from '../../utils/tokens'
-import { DecodingType, TransferProps, AwardItemProps, decodeTransactions } from '../../utils/txnDecoding'
-import { CollectibleTileImage } from '../CollectibleTileImage'
+import { capitalize, compareAddress, truncateAtMiddle } from '../../utils/helpers.js'
+import { getNativeTokenInfoByChainId } from '../../utils/tokens.js'
+import { decodeTransactions, DecodingType, type AwardItemProps, type TransferProps } from '../../utils/txnDecoding.js'
+import { CollectibleTileImage } from '../CollectibleTileImage/index.js'
 
 interface TxnDetailsProps {
   address: string
@@ -44,6 +44,7 @@ export const TxnDetails = ({ address, txs, chainId }: TxnDetailsProps) => {
   const [awardItemProps, setAwardItemProps] = useState<AwardItemProps[]>([])
 
   const getTxnProps = async () => {
+    // @ts-ignore
     const decodedTxnDatas = await decodeTransactions(apiClient, address, txs)
     const type = decodedTxnDatas[0]?.type
 
@@ -62,20 +63,28 @@ export const TxnDetails = ({ address, txs, chainId }: TxnDetailsProps) => {
     getTxnProps()
   }, [])
 
-  if (!decodingType) {
-    return <TxnDetailsSkeleton />
-  }
-
-  if (decodingType === DecodingType.UNKNOWN) {
-    return <></>
-  }
+  let txnContent = <></>
 
   if (transferProps[0]) {
-    return <TransferItemInfo address={address} transferProps={transferProps[0]} chainId={chainId} />
+    txnContent = <TransferItemInfo address={address} transferProps={transferProps[0]} chainId={chainId} />
   }
   if (awardItemProps[0]) {
-    return <AwardItemInfo awardItemProps={awardItemProps[0]} />
+    txnContent = <AwardItemInfo awardItemProps={awardItemProps[0]} />
   }
+
+  return (
+    <div className="flex flex-col w-full">
+      {txnContent}
+
+      <Collapsible className="mt-4" label="Transaction data" defaultOpen={!decodingType || decodingType === DecodingType.UNKNOWN}>
+        <Card className="overflow-x-scroll my-3">
+          <Text className="mb-4" variant="code">
+            {JSON.stringify(txs, null, 2)}
+          </Text>
+        </Card>
+      </Collapsible>
+    </div>
+  )
 }
 
 interface TransferItemInfoProps {
@@ -93,14 +102,10 @@ const TransferItemInfo = ({ address, transferProps, chainId }: TransferItemInfoP
   const isNFT = transferProps.contractType === ContractType.ERC1155 || transferProps.contractType === ContractType.ERC721
   const nativeTokenInfo = getNativeTokenInfoByChainId(chainId, chains)
 
-  const { data: balances = [] } = useGetTokenBalancesSummary({
-    chainIds: [chainId],
-    filter: {
-      accountAddresses: [address],
-      contractStatus: ContractVerificationStatus.ALL,
-      contractWhitelist: [contractAddress],
-      omitNativeBalances: false
-    }
+  const { data: tokenBalance } = useGetSingleTokenBalance({
+    chainId,
+    contractAddress,
+    accountAddress: address
   })
 
   const { data: tokenMetadata } = useGetTokenMetadata({
@@ -109,7 +114,6 @@ const TransferItemInfo = ({ address, transferProps, chainId }: TransferItemInfoP
     tokenIDs: transferProps.tokenIds ?? []
   })
 
-  const tokenBalance = contractAddress ? balances.find(b => compareAddress(b.contractAddress, contractAddress)) : undefined
   const decimals = isNativeCoin ? nativeTokenInfo.decimals : tokenBalance?.contractInfo?.decimals || 18
 
   const imageUrl = isNativeCoin

@@ -1,4 +1,4 @@
-import { SwapModalSettings, useSwapModalContext } from '../contexts/SwapModal'
+import { useSwapModalContext, type SwapModalSettings } from '../contexts/SwapModal.js'
 
 /**
  * Return type for the useSwapModal hook.
@@ -8,6 +8,7 @@ import { SwapModalSettings, useSwapModalContext } from '../contexts/SwapModal'
  * @property {SwapModalSettings|undefined} swapModalSettings - Current settings for the Swap modal
  */
 type UseSwapModalReturnType = {
+  isSwapModalOpen: boolean
   openSwapModal: (settings: SwapModalSettings) => void
   closeSwapModal: () => void
   swapModalSettings: SwapModalSettings | undefined
@@ -20,7 +21,7 @@ type UseSwapModalReturnType = {
  * The Swap modal allows users to select tokens from their wallet to swap to a specified target token,
  * with the option to execute additional transactions after the swap completes.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useSwapModal} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/checkout-sdk/hooks/useSwapModal} for more detailed documentation.
  *
  * @returns An object containing functions to control the Swap modal and its state {@link UseSwapModalReturnType}
  *
@@ -66,14 +67,14 @@ type UseSwapModalReturnType = {
  *
  *   return (
  *     <button onClick={handleSwap}>
- *       Swap with Sequence Pay
+ *       Swap
  *     </button>
  *   )
  * }
  * ```
  */
 export const useSwapModal = (): UseSwapModalReturnType => {
-  const { openSwapModal, closeSwapModal, swapModalSettings } = useSwapModalContext()
+  const { isSwapModalOpen, openSwapModal, closeSwapModal, swapModalSettings } = useSwapModalContext()
 
-  return { openSwapModal, closeSwapModal, swapModalSettings }
+  return { isSwapModalOpen, openSwapModal, closeSwapModal, swapModalSettings }
 }

@@ -1,12 +1,12 @@
 import { truncateAtMiddle } from '@0xsequence/connect'
-import { Button, ChevronRightIcon, Text, Card, GradientAvatar, Spinner } from '@0xsequence/design-system'
+import { Button, Card, ChevronRightIcon, GradientAvatar, Spinner, Text } from '@0xsequence/design-system'
 import { useIndexerClient } from '@0xsequence/hooks'
 import { useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 
-import { FeeOption, FeeOptionSelector } from './FeeOptionSelector'
-import { SendItemInfo } from './SendItemInfo'
+import { FeeOptionSelector, type FeeOption } from './FeeOptionSelector.js'
+import { SendItemInfo } from './SendItemInfo.js'
 
 interface TransactionConfirmationProps {
   // Display data
@@ -24,6 +24,7 @@ interface TransactionConfirmationProps {
     options: FeeOption[]
     chainId: number
   }
+  disabled?: boolean
   onSelectFeeOption?: (feeTokenAddress: string | null) => void
   isLoading?: boolean
 
@@ -33,7 +34,7 @@ interface TransactionConfirmationProps {
 }
 
 const useFeeOptionBalances = (feeOptions: TransactionConfirmationProps['feeOptions'], chainId: number) => {
-  const { address: accountAddress } = useAccount()
+  const { address: accountAddress } = useConnection()
   const indexerClient = useIndexerClient(chainId)
 
   return useQuery({
@@ -89,6 +90,7 @@ export const TransactionConfirmation = ({
   feeOptions,
   onSelectFeeOption,
   isLoading,
+  disabled,
   onConfirm,
   onCancel
 }: TransactionConfirmationProps) => {
@@ -103,7 +105,7 @@ export const TransactionConfirmation = ({
   // If feeOptions exist and have options, a selection is required
   // If feeOptions don't exist or have no options, no selection is required
   const isFeeSelectionRequired = Boolean(feeOptions?.options?.length)
-  const isConfirmDisabled = isFeeSelectionRequired && !selectedFeeOptionAddress
+  const isConfirmDisabled = (isFeeSelectionRequired && !selectedFeeOptionAddress) || disabled
 
   return (
     <div className="flex w-full h-full items-center justify-center bg-background-primary">
@@ -164,16 +166,18 @@ export const TransactionConfirmation = ({
             </div>
           ) : (
             <>
+              <Button className="w-full" variant="glass" size="lg" onClick={onCancel} label="Cancel" />
               <Button
                 className="w-full"
                 variant="primary"
                 size="lg"
-                onClick={onConfirm}
+                onClick={() => {
+                  onConfirm()
+                }}
                 label="Confirm"
                 rightIcon={ChevronRightIcon}
                 disabled={isConfirmDisabled}
               />
-              <Button className="w-full" variant="glass" size="lg" onClick={onCancel} label="Cancel" />
             </>
           )}
         </div>

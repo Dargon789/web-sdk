@@ -1,19 +1,19 @@
 'use client'
 
-import { Theme } from '@0xsequence/design-system'
-import React from 'react'
+import type { Theme } from '@0xsequence/design-system'
+import type { Dispatch, SetStateAction } from 'react'
 
-import { ModalPosition } from '../index'
+import type { ModalPosition } from '../index.js'
 
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from './genericContext.js'
 
 type ThemeContext = {
-  setTheme: React.Dispatch<React.SetStateAction<Theme>>
+  setTheme: Dispatch<SetStateAction<Theme>>
   theme: Theme
   position: ModalPosition
-  setPosition: React.Dispatch<React.SetStateAction<ModalPosition>>
+  setPosition: Dispatch<SetStateAction<ModalPosition>>
 }
 
 const [useThemeContext, ThemeContextProvider] = createGenericContext<ThemeContext>()
 
-export { useThemeContext, ThemeContextProvider }
+export { ThemeContextProvider, useThemeContext }

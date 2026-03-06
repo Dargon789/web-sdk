@@ -1,9 +1,11 @@
-import { SequenceWaaS, SignInResponse } from '@0xsequence/waas'
+'use client'
+
+import { SequenceWaaS, type SignInResponse } from '@0xsequence/waas'
 import { useState } from 'react'
 
 // import { EmailWaasOptions } from '../connectors/email/emailWaas'
-import { randomName } from '../connectors/wagmiConnectors'
-import { ExtendedConnector } from '../types'
+import { randomName } from '../connectors/wagmiConnectors/index.js'
+import type { ExtendedConnector } from '../types.js'
 
 interface SuccessResultV1 {
   version: 1
@@ -15,6 +17,52 @@ interface SuccessResultV2 {
   signInResponse: SignInResponse
 }
 
+/**
+ * Hook to handle email-based authentication flow for WaaS (Wallet-as-a-Service).
+ *
+ * This hook manages the complete email authentication process, including:
+ * - Initiating email authentication
+ * - Handling verification code submission
+ * - Managing loading and error states
+ * - Supporting both v1 (idToken) and v2 (SignInResponse) authentication formats
+ *
+ * @param {ExtendedConnector} [params.connector] - The WaaS connector to use for authentication.
+ *        Optional because the user might not have selected a connector yet.
+ * @param {Function} params.onSuccess - Callback function called when authentication succeeds.
+ *        Receives either a v1 result (with idToken) or v2 result (with SignInResponse).
+ *
+ * @returns {Object} An object containing:
+ * - `inProgress` - Whether authentication is currently in progress
+ * - `loading` - Whether a specific authentication operation is loading
+ * - `error` - Any error that occurred during authentication
+ * - `initiateAuth` - Function to start the email authentication process
+ * - `sendChallengeAnswer` - Function to submit the verification code
+ * - `cancel` - Function to cancel the authentication process
+ * - `resetError` - Function to clear any error state
+ *
+ * @example
+ * ```tsx
+ * const {
+ *   inProgress,
+ *   loading,
+ *   error,
+ *   initiateAuth,
+ *   sendChallengeAnswer,
+ *   resetError
+ * } = useEmailAuth({
+ *   connector: emailConnector,
+ *   onSuccess: async (result) => {
+ *     if ('signInResponse' in result) {
+ *       // Handle v2 authentication
+ *       await storage.setItem('email', result.signInResponse.email)
+ *     } else {
+ *       // Handle v1 authentication
+ *       await storage.setItem('idToken', result.idToken)
+ *     }
+ *   }
+ * })
+ * ```
+ */
 export function useEmailAuth({
   connector,
   onSuccess
@@ -22,6 +70,12 @@ export function useEmailAuth({
   connector?: ExtendedConnector
   onSuccess: (result: SuccessResultV1 | SuccessResultV2) => void
 }) {
+  const [_email, setEmail] = useState('')
+  const [error, setError] = useState<Error | undefined>()
+  const [loading, setLoading] = useState(false)
+  const [instance, _setInstance] = useState('')
+  const [respondWithCode, setRespondWithCode] = useState<((code: string) => Promise<void>) | null>()
+
   if (!connector) {
     return {
       inProgress: false,
@@ -32,12 +86,6 @@ export function useEmailAuth({
       resetError: () => {}
     }
   }
-
-  const [_email, setEmail] = useState('')
-  const [error, setError] = useState<Error | undefined>()
-  const [loading, setLoading] = useState(false)
-  const [instance, _setInstance] = useState('')
-  const [respondWithCode, setRespondWithCode] = useState<((code: string) => Promise<void>) | null>()
 
   const getSequenceWaas = () => {
     if (!connector) {

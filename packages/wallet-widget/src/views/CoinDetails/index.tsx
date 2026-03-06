@@ -1,91 +1,80 @@
-import { compareAddress, formatDisplay, getNativeTokenInfoByChainId, ContractVerificationStatus } from '@0xsequence/connect'
-import { Button, SendIcon, SwapIcon, Text, TokenImage } from '@0xsequence/design-system'
-import { useGetTokenBalancesSummary, useGetCoinPrices, useGetExchangeRate, useGetTransactionHistory } from '@0xsequence/hooks'
+import { compareAddress, formatDisplay, getNativeTokenInfoByChainId, useWallets } from '@0xsequence/connect'
+import { AddIcon, Button, SendIcon, Text, TokenImage } from '@0xsequence/design-system'
+import { useGetCoinPrices, useGetExchangeRate, useGetSingleTokenBalance, useGetTransactionHistory } from '@0xsequence/hooks'
+import { useEffect } from 'react'
 import { formatUnits, zeroAddress } from 'viem'
-import { useAccount, useConfig } from 'wagmi'
+import { useConfig } from 'wagmi'
 
-import { InfiniteScroll } from '../../components/InfiniteScroll'
-import { NetworkBadge } from '../../components/NetworkBadge'
-import { TransactionHistoryList } from '../../components/TransactionHistoryList'
-import { HEADER_HEIGHT } from '../../constants'
-import { useSettings, useNavigation } from '../../hooks'
-import { computeBalanceFiat, flattenPaginatedTransactionHistory } from '../../utils'
+import { InfiniteScroll } from '../../components/InfiniteScroll.js'
+import type { TokenInfo } from '../../components/NavigationHeader/index.js'
+import { NetworkBadge } from '../../components/NetworkBadge.js'
+import { TransactionHistoryList } from '../../components/TransactionHistoryList/index.js'
+import { useNavigation, useSettings } from '../../hooks/index.js'
+import { computeBalanceFiat, flattenPaginatedTransactionHistory } from '../../utils/index.js'
 
-import { CoinDetailsSkeleton } from './Skeleton'
+import { CoinDetailsSkeleton } from './Skeleton.js'
 
-export interface CoinDetailsProps {
-  contractAddress: string
-  chainId: number
-}
-
-export const CoinDetails = ({ contractAddress, chainId }: CoinDetailsProps) => {
+export const CoinDetails = ({ contractAddress, chainId, accountAddress = '' }: TokenInfo) => {
   const { chains } = useConfig()
   const { setNavigation } = useNavigation()
-  const { fiatCurrency, hideUnlistedTokens } = useSettings()
-  const { address: accountAddress } = useAccount()
+  const { fiatCurrency } = useSettings()
+  const { setActiveWallet } = useWallets()
+
+  useEffect(() => {
+    setActiveWallet(accountAddress)
+  }, [accountAddress])
 
   const isReadOnly = !chains.map(chain => chain.id).includes(chainId)
 
   const {
     data: dataTransactionHistory,
-    isPending: isPendingTransactionHistory,
+    isLoading: isLoadingTransactionHistory,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
   } = useGetTransactionHistory({
     chainId,
-    accountAddress: accountAddress || '',
-    contractAddress
+    accountAddresses: [accountAddress],
+    contractAddresses: [contractAddress]
   })
 
   const transactionHistory = flattenPaginatedTransactionHistory(dataTransactionHistory)
 
-  const { data: tokenBalance, isPending: isPendingCoinBalance } = useGetTokenBalancesSummary({
-    chainIds: [chainId],
-    filter: {
-      accountAddresses: [accountAddress || ''],
-      contractWhitelist: [contractAddress],
-      contractStatus: hideUnlistedTokens ? ContractVerificationStatus.VERIFIED : ContractVerificationStatus.ALL,
-      omitNativeBalances: false
-    }
+  const { data: tokenBalance, isLoading: isLoadingCoinBalance } = useGetSingleTokenBalance({
+    chainId,
+    contractAddress,
+    accountAddress: accountAddress || ''
   })
 
-  const dataCoinBalance =
-    tokenBalance && tokenBalance.length > 0
-      ? compareAddress(contractAddress, zeroAddress)
-        ? tokenBalance?.[0]
-        : tokenBalance?.[1]
-      : undefined
-
-  const { data: dataCoinPrices, isPending: isPendingCoinPrices } = useGetCoinPrices([
+  const { data: dataCoinPrices, isLoading: isLoadingCoinPrices } = useGetCoinPrices([
     {
       chainId,
       contractAddress
     }
   ])
 
-  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
+  const { data: conversionRate = 1, isLoading: isLoadingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
 
-  const isPending = isPendingCoinBalance || isPendingCoinPrices || isPendingConversionRate
+  const isLoading = isLoadingCoinBalance || isLoadingCoinPrices || isLoadingConversionRate
 
-  if (isPending) {
+  if (isLoading) {
     return <CoinDetailsSkeleton chainId={chainId} isReadOnly={isReadOnly} />
   }
 
   const isNativeToken = compareAddress(contractAddress, zeroAddress)
-  const logo = isNativeToken ? getNativeTokenInfoByChainId(chainId, chains).logoURI : dataCoinBalance?.contractInfo?.logoURI
-  const symbol = isNativeToken ? getNativeTokenInfoByChainId(chainId, chains).symbol : dataCoinBalance?.contractInfo?.symbol
-  const name = isNativeToken ? getNativeTokenInfoByChainId(chainId, chains).name : dataCoinBalance?.contractInfo?.name
-  const decimals = isNativeToken ? getNativeTokenInfoByChainId(chainId, chains).decimals : dataCoinBalance?.contractInfo?.decimals
-  const formattedBalance = formatUnits(BigInt(dataCoinBalance?.balance || '0'), decimals || 18)
+  const logo = isNativeToken ? getNativeTokenInfoByChainId(chainId, chains).logoURI : tokenBalance?.contractInfo?.logoURI
+  const symbol = isNativeToken ? getNativeTokenInfoByChainId(chainId, chains).symbol : tokenBalance?.contractInfo?.symbol
+  const name = isNativeToken ? getNativeTokenInfoByChainId(chainId, chains).name : tokenBalance?.contractInfo?.name
+  const decimals = isNativeToken ? getNativeTokenInfoByChainId(chainId, chains).decimals : tokenBalance?.contractInfo?.decimals
+  const formattedBalance = formatUnits(BigInt(tokenBalance?.balance || '0'), decimals || 18)
   const balanceDisplayed = formatDisplay(formattedBalance)
 
-  const coinBalanceFiat = dataCoinBalance
+  const coinBalanceFiat = tokenBalance
     ? computeBalanceFiat({
-        balance: dataCoinBalance,
+        balance: tokenBalance,
         prices: dataCoinPrices || [],
         conversionRate,
-        decimals: decimals || 0
+        decimals: decimals || 18
       })
     : '0'
 
@@ -99,18 +88,14 @@ export const CoinDetails = ({ contractAddress, chainId }: CoinDetailsProps) => {
     })
   }
 
-  const onClickSwap = () => {
+  const onClickAdd = () => {
     setNavigation({
-      location: 'swap-coin',
-      params: {
-        chainId,
-        contractAddress
-      }
+      location: 'swap'
     })
   }
   return (
-    <div style={{ paddingTop: HEADER_HEIGHT }}>
-      <div className="flex flex-col gap-10 pb-5 px-4 pt-0" style={{ marginTop: '-20px' }}>
+    <div>
+      <div className="flex flex-col gap-10 pb-5 px-4 pt-0">
         <div className="flex mb-10 gap-2 items-center justify-center flex-col">
           <TokenImage src={logo} size="xl" />
           <Text variant="large" color="primary" fontWeight="bold">
@@ -129,15 +114,20 @@ export const CoinDetails = ({ contractAddress, chainId }: CoinDetailsProps) => {
         </div>
         {!isReadOnly && (
           <div className="flex gap-2">
-            <Button className="w-full text-primary" variant="primary" leftIcon={SendIcon} label="Send" onClick={onClickSend} />
-            <Button className="w-full text-primary" variant="primary" leftIcon={SwapIcon} label="Buy" onClick={onClickSwap} />
+            <Button
+              className="w-full text-primary bg-background-secondary"
+              leftIcon={SendIcon}
+              label="Send"
+              onClick={onClickSend}
+            />
+            <Button className="w-full text-primary bg-background-secondary" leftIcon={AddIcon} label="Add" onClick={onClickAdd} />
           </div>
         )}
         <div>
           <InfiniteScroll onLoad={() => fetchNextPage()} hasMore={hasNextPage}>
             <TransactionHistoryList
               transactions={transactionHistory}
-              isPending={isPendingTransactionHistory}
+              isLoading={isLoadingTransactionHistory}
               isFetchingNextPage={isFetchingNextPage}
             />
           </InfiniteScroll>

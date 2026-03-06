@@ -1,17 +1,17 @@
 import {
-  Image,
-  Text,
-  GradientAvatar,
-  truncateAddress,
-  NetworkImage,
-  Card,
   Button,
+  Card,
   ChevronDownIcon,
-  SignoutIcon
+  GradientAvatar,
+  Image,
+  NetworkImage,
+  SignoutIcon,
+  Text,
+  truncateAddress
 } from '@0xsequence/design-system'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import { useState } from 'react'
-import { useAccount, useChainId, useChains, useDisconnect, useSwitchChain } from 'wagmi'
+import { useChainId, useChains, useConnection, useDisconnect, useSwitchChain } from 'wagmi'
 
 export const Header = () => {
   return (
@@ -32,8 +32,8 @@ export const Header = () => {
 
 const AccountMenu = () => {
   const [isOpen, toggleOpen] = useState(false)
-  const { address, connector } = useAccount()
-  const { disconnect } = useDisconnect()
+  const { address, connector } = useConnection()
+  const disconnect = useDisconnect()
 
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={toggleOpen}>
@@ -82,7 +82,7 @@ const AccountMenu = () => {
                   variant="emphasis"
                   rightIcon={SignoutIcon}
                   label="Sign out"
-                  onClick={() => disconnect()}
+                  onClick={() => disconnect.mutate()}
                 />
               </div>
             </Card>
@@ -99,6 +99,12 @@ const NetworkSelect = () => {
   const { switchChain } = useSwitchChain()
   const [isOpen, toggleOpen] = useState(false)
 
+  chains.map(chain => {
+    if (chain.id === 8453) {
+      chain.name = 'Base'
+    }
+  })
+
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={toggleOpen}>
       <PopoverPrimitive.Trigger asChild>
@@ -108,7 +114,7 @@ const NetworkSelect = () => {
         >
           <div className="flex items-center gap-2">
             <NetworkImage chainId={chainId} size="sm" />
-            <Text display={{ sm: 'none', lg: 'block' }} variant="normal" fontWeight="bold" color="primary">
+            <Text className="hidden lg:block" variant="normal" fontWeight="bold" color="primary">
               {chains.find(chain => chain.id === chainId)?.name || chainId}
             </Text>
           </div>
@@ -121,26 +127,28 @@ const NetworkSelect = () => {
       {isOpen && (
         <PopoverPrimitive.Portal>
           <PopoverPrimitive.Content side="bottom" sideOffset={8} align="end" asChild>
-            <Card className="flex z-20 bg-background-raised backdrop-blur-md relative p-2 flex-col gap-2">
-              {chains.map(chain => (
-                <Button
-                  className="w-full"
-                  key={chain.id}
-                  shape="square"
-                  onClick={() => {
-                    switchChain({ chainId: chain.id })
-                    toggleOpen(false)
-                  }}
-                  leftIcon={() => <NetworkImage chainId={chain.id} size="sm" />}
-                  label={
-                    <div className="flex items-center gap-2">
-                      <Text variant="normal" fontWeight="bold" color="primary">
-                        {chain.name}
-                      </Text>
-                    </div>
-                  }
-                />
-              ))}
+            <Card className="flex z-20 bg-background-raised backdrop-blur-md relative flex-col overflow-hidden">
+              <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {chains.map(chain => (
+                  <Button
+                    className="w-full min-h-[44px] h-12"
+                    key={chain.id}
+                    shape="square"
+                    onClick={() => {
+                      switchChain({ chainId: chain.id })
+                      toggleOpen(false)
+                    }}
+                    leftIcon={() => <NetworkImage chainId={chain.id} size="sm" />}
+                    label={
+                      <div className="flex items-center gap-2">
+                        <Text variant="normal" fontWeight="bold" color="primary">
+                          {chain.name}
+                        </Text>
+                      </div>
+                    }
+                  />
+                ))}
+              </div>
             </Card>
           </PopoverPrimitive.Content>
         </PopoverPrimitive.Portal>

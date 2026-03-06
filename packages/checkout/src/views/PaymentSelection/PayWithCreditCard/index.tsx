@@ -1,12 +1,12 @@
 import { ArrowRightIcon, Card, PaymentsIcon, Spinner, Text } from '@0xsequence/design-system'
 import { useClearCachedBalances, useGetContractInfo } from '@0xsequence/hooks'
-import { findSupportedNetwork } from '@0xsequence/network'
+import { findSupportedNetwork } from '@0xsequence/connect'
 import { useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 
-import { SelectPaymentSettings } from '../../../contexts'
-import { CheckoutSettings } from '../../../contexts/CheckoutModal'
-import { useCheckoutModal, useSelectPaymentModal } from '../../../hooks'
+import type { CheckoutSettings } from '../../../contexts/CheckoutModal.js'
+import type { SelectPaymentSettings } from '../../../contexts/SelectPaymentModal.js'
+import { useCheckoutModal, useSelectPaymentModal } from '../../../hooks/index.js'
 
 interface PayWithCreditCardProps {
   settings: SelectPaymentSettings
@@ -14,7 +14,7 @@ interface PayWithCreditCardProps {
   skipOnCloseCallback: () => void
 }
 
-type BasePaymentProviderOptions = 'sardine' | 'transak'
+type BasePaymentProviderOptions = 'transak' | 'forte'
 type CustomPaymentProviderOptions = 'custom'
 type PaymentProviderOptions = BasePaymentProviderOptions | CustomPaymentProviderOptions
 
@@ -27,16 +27,16 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
     txData,
     collectibles,
     collectionAddress,
-    approvedSpenderAddress,
     onSuccess = () => {},
     onError = () => {},
     onClose = () => {},
     creditCardProviders = [],
+    supplementaryAnalyticsInfo = {},
     transakConfig,
-    supplementaryAnalyticsInfo = {}
+    forteConfig
   } = settings
 
-  const { address: userAddress } = useAccount()
+  const { address: userAddress } = useConnection()
   const { clearCachedBalances } = useClearCachedBalances()
   const { closeSelectPaymentModal } = useSelectPaymentModal()
   const { triggerCheckout } = useCheckoutModal()
@@ -62,8 +62,8 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
           onClickCustomProvider()
         }
         return
-      case 'sardine':
       case 'transak':
+      case 'forte':
         onPurchase()
         return
       default:
@@ -87,7 +87,7 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
 
     const checkoutSettings: CheckoutSettings = {
       creditCardCheckout: {
-        onSuccess: (txHash: string) => {
+        onSuccess: (txHash?: string) => {
           clearCachedBalances()
           onSuccess(txHash)
         },
@@ -100,15 +100,16 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
         currencySymbol: currencyInfoData.symbol,
         currencyAddress,
         currencyDecimals: String(currencyInfoData?.decimals || 0),
-        nftId: collectible.tokenId,
+        nftId: collectible.tokenId ?? '',
         nftAddress: collectionAddress,
         nftQuantity: collectible.quantity,
         nftDecimals: collectible.decimals === undefined ? undefined : String(collectible.decimals),
         provider: selectedPaymentProvider as BasePaymentProviderOptions,
         calldata: txData,
+        approvedSpenderAddress: settings.approvedSpenderAddress,
+        supplementaryAnalyticsInfo,
         transakConfig,
-        approvedSpenderAddress: approvedSpenderAddress || targetContractAddress,
-        supplementaryAnalyticsInfo
+        forteConfig
       }
     }
 
@@ -120,45 +121,35 @@ export const PayWithCreditCard = ({ settings, disableButtons, skipOnCloseCallbac
   const Options = () => {
     return (
       <div className="flex flex-col justify-center items-center gap-2 w-full">
-        {/* Only 1 option will be displayed, even if multiple providers are passed */}
-        {creditCardProviders
-          .slice(0, 1)
-          .filter(provider => {
-            // cannot display transak checkout if the settings aren't provided
-            if (provider === 'transak' && !settings.transakConfig) {
-              return false
-            }
-            return true
-          })
-          .map(creditCardProvider => {
-            switch (creditCardProvider) {
-              case 'sardine':
-              case 'transak':
-              case 'custom':
-                return (
-                  <Card
-                    className="flex justify-between items-center p-4 cursor-pointer"
-                    key="sardine"
-                    onClick={() => {
-                      setSelectedPaymentProvider(creditCardProvider)
-                    }}
-                    disabled={disableButtons}
-                  >
-                    <div className="flex flex-row gap-3 items-center">
-                      <PaymentsIcon className="text-white" />
-                      <Text color="primary" variant="normal" fontWeight="bold">
-                        Pay with credit or debit card
-                      </Text>
-                    </div>
-                    <div style={{ transform: 'rotate(-45deg)' }}>
-                      <ArrowRightIcon className="text-white" />
-                    </div>
-                  </Card>
-                )
-              default:
-                return null
-            }
-          })}
+        {creditCardProviders.slice(0, 1).map(creditCardProvider => {
+          switch (creditCardProvider) {
+            case 'transak':
+            case 'forte':
+            case 'custom':
+              return (
+                <Card
+                  className="flex justify-between items-center p-4 cursor-pointer"
+                  key="sardine"
+                  onClick={() => {
+                    setSelectedPaymentProvider(creditCardProvider)
+                  }}
+                  disabled={disableButtons}
+                >
+                  <div className="flex flex-row gap-3 items-center">
+                    <PaymentsIcon className="text-white" />
+                    <Text color="primary" variant="normal" fontWeight="bold">
+                      Pay with credit or debit card
+                    </Text>
+                  </div>
+                  <div style={{ transform: 'rotate(-45deg)' }}>
+                    <ArrowRightIcon className="text-white" />
+                  </div>
+                </Card>
+              )
+            default:
+              return null
+          }
+        })}
       </div>
     )
   }

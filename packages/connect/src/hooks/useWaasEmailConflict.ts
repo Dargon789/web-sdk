@@ -1,6 +1,8 @@
-import { IdentityType, EmailConflictInfo, SequenceWaaS } from '@0xsequence/waas'
+'use client'
+
+import { IdentityType, SequenceWaaS, type EmailConflictInfo } from '@0xsequence/waas'
 import { useEffect, useRef, useState } from 'react'
-import { useConnect } from 'wagmi'
+import { useConnectors } from 'wagmi'
 
 export type FormattedEmailConflictInfo = {
   email: string
@@ -35,7 +37,7 @@ const accountTypeText = (info: EmailConflictInfo | null) => {
 }
 
 export const useEmailConflict = () => {
-  const { connectors } = useConnect()
+  const connectors = useConnectors()
   const forceCreateFuncRef = useRef<((forceCreate: boolean) => Promise<void>) | null>(null)
   const [isOpen, toggleModal] = useState(false)
   const [emailConflictInfo, setEmailConflictInfo] = useState<EmailConflictInfo | null>(null)
@@ -45,7 +47,6 @@ export const useEmailConflict = () => {
 
   useEffect(() => {
     if (waasInstances.length > 0) {
-      // Set up listeners for all waas instances
       const disposers = waasInstances.map(waas =>
         waas.onEmailConflict(async (info, forceCreate) => {
           forceCreateFuncRef.current = forceCreate
@@ -54,7 +55,6 @@ export const useEmailConflict = () => {
         })
       )
 
-      // Return cleanup function that disposes all listeners
       return () => {
         disposers.forEach(disposer => disposer())
       }

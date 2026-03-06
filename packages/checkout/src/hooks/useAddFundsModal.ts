@@ -1,4 +1,4 @@
-import { AddFundsSettings, useAddFundsModalContext } from '../contexts/AddFundsModal'
+import { useAddFundsModalContext, type AddFundsSettings } from '../contexts/AddFundsModal.js'
 
 /**
  * Return type for the useAddFundsModal hook.
@@ -8,6 +8,7 @@ import { AddFundsSettings, useAddFundsModalContext } from '../contexts/AddFundsM
  * @property Current settings for the On-ramp modal `addFundsSettings`
  */
 type UseAddFundsModalReturnType = {
+  isAddFundsModalOpen: boolean
   triggerAddFunds: (settings: AddFundsSettings) => void
   closeAddFunds: () => void
   addFundsSettings: AddFundsSettings | undefined
@@ -20,7 +21,7 @@ type UseAddFundsModalReturnType = {
  * The modal integration is powered by Transak, allowing users to purchase crypto directly within
  * your application.
  *
- * Go to {@link https://docs.sequence.xyz/sdk/web/hooks/useAddFundsModal} for more detailed documentation.
+ * Go to {@link https://docs.sequence.xyz/sdk/web/checkout-sdk/hooks/useAddFundsModal} for more detailed documentation.
  *
  * @returns An object containing functions and settings for the On-ramp modal {@link UseAddFundsModalReturnType}
  *
@@ -52,7 +53,7 @@ type UseAddFundsModalReturnType = {
  * ```
  */
 export const useAddFundsModal = (): UseAddFundsModalReturnType => {
-  const { triggerAddFunds, closeAddFunds, addFundsSettings } = useAddFundsModalContext()
+  const { isAddFundsModalOpen, triggerAddFunds, closeAddFunds, addFundsSettings } = useAddFundsModalContext()
 
-  return { triggerAddFunds, closeAddFunds, addFundsSettings }
+  return { isAddFundsModalOpen, triggerAddFunds, closeAddFunds, addFundsSettings }
 }

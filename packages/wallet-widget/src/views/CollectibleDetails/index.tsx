@@ -1,79 +1,61 @@
-import { formatDisplay, ContractVerificationStatus } from '@0xsequence/connect'
-import { Button, Image, NetworkImage, SendIcon, Text } from '@0xsequence/design-system'
+import { formatDisplay, truncateAtIndex } from '@0xsequence/connect'
 import {
-  useGetTokenBalancesDetails,
-  useGetTransactionHistory,
-  useGetCollectiblePrices,
-  useGetExchangeRate
-} from '@0xsequence/hooks'
-import { formatUnits } from 'viem'
-import { useAccount, useConfig } from 'wagmi'
+  ArrowUpIcon,
+  Button,
+  Divider,
+  ExternalLinkIcon,
+  GradientAvatar,
+  Image,
+  NetworkImage,
+  Skeleton,
+  Text
+} from '@0xsequence/design-system'
+import { useGetSingleTokenBalance } from '@0xsequence/hooks'
+import { findSupportedNetwork } from '@0xsequence/connect'
+import * as PopoverPrimitive from '@radix-ui/react-popover'
+import { useEffect, useRef, useState } from 'react'
+import { formatUnits, getAddress } from 'viem'
+import { useConfig } from 'wagmi'
 
-import { CollectibleTileImage } from '../../components/CollectibleTileImage'
-import { InfiniteScroll } from '../../components/InfiniteScroll'
-import { TransactionHistoryList } from '../../components/TransactionHistoryList'
-import { HEADER_HEIGHT } from '../../constants'
-import { useSettings, useNavigation } from '../../hooks'
-import { computeBalanceFiat, flattenPaginatedTransactionHistory } from '../../utils'
+import type { TokenInfo } from '../../components/NavigationHeader/index.js'
+import { TokenTileImage } from '../../components/TokenTileImage.js'
+import { useNavigation, useSettings } from '../../hooks/index.js'
 
-import { CollectibleDetailsSkeleton } from './Skeleton'
+import { InfoBadge } from './InfoBadge.js'
+import { PropertiesBadge } from './PropertiesBadge.js'
+import { CollectibleDetailsSkeleton } from './Skeleton.js'
 
-export interface CollectibleDetailsProps {
-  contractAddress: string
-  chainId: number
-  tokenId: string
-}
-
-export const CollectibleDetails = ({ contractAddress, chainId, tokenId }: CollectibleDetailsProps) => {
+export const CollectibleDetails = ({ contractAddress, chainId, tokenId, accountAddress }: TokenInfo) => {
   const { chains } = useConfig()
-
-  const { address: accountAddress } = useAccount()
-  const { fiatCurrency } = useSettings()
   const { setNavigation } = useNavigation()
+  const network = findSupportedNetwork(chainId)
+  const { hideUnlistedTokens } = useSettings()
+
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [triggerWidth, setTriggerWidth] = useState<number>(0)
+
+  const [isExternalPopoverOpen, setIsExternalPopoverOpen] = useState(false)
+  const [foundMarketplaceURL] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (triggerRef.current) {
+      setTriggerWidth(triggerRef.current.offsetWidth)
+    }
+  }, [isExternalPopoverOpen])
 
   const isReadOnly = !chains.map(chain => chain.id).includes(chainId)
 
-  const {
-    data: dataTransactionHistory,
-    isPending: isPendingTransactionHistory,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage
-  } = useGetTransactionHistory({
+  const { data: tokenBalance, isLoading: isLoadingCollectibleBalance } = useGetSingleTokenBalance({
     chainId,
-    accountAddress: accountAddress || '',
     contractAddress,
-    tokenId
+    accountAddress: accountAddress || '',
+    tokenId,
+    hideUnlistedTokens: hideUnlistedTokens
   })
 
-  const transactionHistory = flattenPaginatedTransactionHistory(dataTransactionHistory)
+  const isLoading = isLoadingCollectibleBalance
 
-  const { data: dataTokens, isPending: isPendingCollectibleBalance } = useGetTokenBalancesDetails({
-    filter: {
-      accountAddresses: accountAddress ? [accountAddress] : [],
-      contractStatus: ContractVerificationStatus.ALL,
-      contractWhitelist: [contractAddress],
-      omitNativeBalances: true
-    },
-    chainIds: [chainId]
-  })
-
-  const dataCollectibleBalance =
-    dataTokens && dataTokens.length > 0 ? dataTokens.find(token => token.tokenID === tokenId) : undefined
-
-  const { data: dataCollectiblePrices, isPending: isPendingCollectiblePrices } = useGetCollectiblePrices([
-    {
-      chainId,
-      contractAddress,
-      tokenId
-    }
-  ])
-
-  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
-
-  const isPending = isPendingCollectibleBalance || isPendingCollectiblePrices || isPendingConversionRate
-
-  if (isPending) {
+  if (isLoading) {
     return <CollectibleDetailsSkeleton isReadOnly={isReadOnly} />
   }
 
@@ -83,101 +65,164 @@ export const CollectibleDetails = ({ contractAddress, chainId, tokenId }: Collec
       params: {
         chainId,
         contractAddress,
-        tokenId
+        tokenId: tokenId || ''
       }
     })
   }
 
-  const collectionLogo = dataCollectibleBalance?.contractInfo?.logoURI
-  const collectionName = dataCollectibleBalance?.contractInfo?.name || 'Unknown Collection'
+  const onClickOpenScan = () => {
+    // window.open(`${network?.blockExplorer?.rootUrl}token/${contractAddress}?a=${tokenId}`, '_blank')
+    window.open(`${network?.blockExplorer?.rootUrl}nft/${contractAddress}/${tokenId}`, '_blank')
+  }
 
-  const decimals = dataCollectibleBalance?.tokenMetadata?.decimals || 0
-  const rawBalance = dataCollectibleBalance?.balance || '0'
+  const onClickOpenMarketplace = () => {}
+
+  const collectionLogo = tokenBalance?.contractInfo?.logoURI
+  const collectionName = tokenBalance?.contractInfo?.name || 'Unknown Collection'
+
+  const decimals = tokenBalance?.tokenMetadata?.decimals || 0
+  const rawBalance = tokenBalance?.balance || '0'
   const balance = formatUnits(BigInt(rawBalance), decimals)
   const formattedBalance = formatDisplay(Number(balance))
 
-  const valueFiat = dataCollectibleBalance
-    ? computeBalanceFiat({
-        balance: dataCollectibleBalance,
-        prices: dataCollectiblePrices || [],
-        conversionRate,
-        decimals: decimals
-      })
-    : '0'
+  const onClickCollection = () => {
+    setNavigation({
+      location: 'collection-details',
+      params: {
+        chainId,
+        contractAddress
+      }
+    })
+  }
 
   return (
-    <div style={{ paddingTop: HEADER_HEIGHT }}>
-      <div
-        className="flex flex-col gap-10 pb-5 px-4 pt-0"
-        style={{
-          marginTop: '-20px'
-        }}
-      >
-        <div className="flex gap-3 items-center justify-center flex-col">
-          <div className="flex flex-row gap-2 justify-center items-center">
-            {collectionLogo && (
-              <Image
-                className="rounded-full w-8"
-                src={collectionLogo}
-                alt="collection logo"
-                style={{
-                  objectFit: 'cover'
-                }}
+    <div>
+      <div className="flex flex-col p-4 gap-4">
+        <TokenTileImage src={tokenBalance?.tokenMetadata?.image} symbol={tokenBalance?.tokenMetadata?.name} />
+        <div className="flex flex-row gap-4">
+          <Button
+            className="text-primary w-full bg-background-secondary"
+            variant="glass"
+            leftIcon={ArrowUpIcon}
+            label="Send"
+            onClick={onClickSend}
+          />
+
+          <PopoverPrimitive.Root open={isExternalPopoverOpen} onOpenChange={setIsExternalPopoverOpen}>
+            <PopoverPrimitive.Trigger asChild>
+              <Button
+                ref={triggerRef}
+                className="text-primary w-full bg-background-secondary"
+                variant="glass"
+                leftIcon={ExternalLinkIcon}
+                label="Open in..."
               />
+            </PopoverPrimitive.Trigger>
+
+            {isExternalPopoverOpen && (
+              <PopoverPrimitive.Content
+                className="flex flex-col p-2 gap-2 z-20 rounded-2xl border border-border-normal"
+                style={{ background: 'rgb(25, 25, 25)', minWidth: triggerWidth }}
+                asChild
+                side="bottom"
+                sideOffset={-44}
+                align="end"
+              >
+                <div>
+                  <div
+                    className="flex flex-row items-center py-2 px-4 gap-2 bg-background-secondary rounded-lg hover:opacity-80 cursor-pointer"
+                    onClick={() => {
+                      onClickOpenScan()
+                    }}
+                  >
+                    <Text variant="normal" fontWeight="bold" color="primary">
+                      Open in {network?.blockExplorer?.name}
+                    </Text>
+                  </div>
+                  {foundMarketplaceURL && (
+                    <div
+                      className="flex flex-row items-center py-2 px-4 gap-2 bg-background-secondary rounded-lg hover:opacity-80 cursor-pointer"
+                      onClick={() => {
+                        onClickOpenMarketplace()
+                      }}
+                    >
+                      <Text variant="normal" fontWeight="bold" color="primary">
+                        Open in Marketplace
+                      </Text>
+                    </div>
+                  )}
+                </div>
+              </PopoverPrimitive.Content>
             )}
-            <div className="flex gap-1 flex-row justify-center items-center">
-              <Text variant="small" fontWeight="bold" color="primary">
-                {collectionName}
-              </Text>
-              <NetworkImage chainId={chainId} size="xs" />
-            </div>
-          </div>
-          <div className="flex flex-col justify-center items-center">
-            <Text variant="large" color="primary" fontWeight="bold">
-              {dataCollectibleBalance?.tokenMetadata?.name || 'Unknown Collectible'}
+          </PopoverPrimitive.Root>
+        </div>
+        <Text variant="xxlarge" color="primary" fontWeight="bold">
+          {tokenBalance?.tokenMetadata?.name || 'Unknown Collectible'}
+        </Text>
+        <div className="flex flex-row justify-between items-center">
+          <Text variant="normal" color="primary">
+            Network
+          </Text>
+          <InfoBadge
+            leftIcon={<NetworkImage chainId={chainId} size="xs" />}
+            label={chains.find(chain => chain.id === chainId)?.name || 'Unknown Network'}
+          />
+        </div>
+        <Divider className="my-0" />
+        <div className="flex flex-row justify-between items-center">
+          <Text variant="normal" color="primary">
+            Collection
+          </Text>
+          <InfoBadge
+            leftIcon={
+              collectionLogo ? (
+                <Image src={collectionLogo} alt="collection logo" className="rounded-sm w-4" />
+              ) : (
+                <Skeleton className="w-4 h-4 rounded-sm" />
+              )
+            }
+            label={collectionName}
+            onClick={() => {
+              onClickCollection()
+            }}
+          />
+        </div>
+        <Divider className="my-0" />
+        <div className="flex flex-row justify-between items-center">
+          <Text variant="normal" color="primary">
+            Owner
+          </Text>
+          <InfoBadge
+            leftIcon={
+              tokenBalance?.accountAddress && <GradientAvatar address={getAddress(tokenBalance?.accountAddress)} size="xs" />
+            }
+            label={truncateAtIndex(tokenBalance?.accountAddress || '', 6) || 'Unknown Owner'}
+          />
+        </div>
+        <Divider className="my-0" />
+        <div className="flex flex-row justify-between items-center">
+          <Text variant="normal" color="primary">
+            Balance
+          </Text>
+          <Text variant="normal" color="primary">
+            {formattedBalance}
+          </Text>
+        </div>
+        <Divider className="my-0" />
+        <Text variant="normal" color="primary">
+          {tokenBalance?.tokenMetadata?.description}
+        </Text>
+        {tokenBalance?.tokenMetadata?.properties?.length > 0 && (
+          <>
+            <Divider className="my-0" />
+            <Text variant="normal" color="primary">
+              Properties
             </Text>
-            <Text variant="small" color="muted" fontWeight="medium">
-              {`#${tokenId}`}
-            </Text>
-          </div>
-        </div>
-        <div>
-          <CollectibleTileImage imageUrl={dataCollectibleBalance?.tokenMetadata?.image} />
-        </div>
-        <div>
-          {/* balance */}
-          <div>
-            <Text variant="normal" fontWeight="medium" color="muted">
-              Balance
-            </Text>
-            <div className="flex flex-row items-end justify-between">
-              <Text variant="xlarge" fontWeight="bold" color="primary">
-                {formattedBalance}
-              </Text>
-              {dataCollectiblePrices && dataCollectiblePrices[0].price?.value && (
-                <Text variant="normal" fontWeight="medium" color="muted">{`${fiatCurrency.symbol} ${valueFiat}`}</Text>
-              )}
-            </div>
-          </div>
-          {!isReadOnly && (
-            <Button
-              className="text-primary mt-4 w-full"
-              variant="primary"
-              leftIcon={SendIcon}
-              label="Send"
-              onClick={onClickSend}
-            />
-          )}
-        </div>
-        <div>
-          <InfiniteScroll onLoad={() => fetchNextPage()} hasMore={hasNextPage}>
-            <TransactionHistoryList
-              transactions={transactionHistory}
-              isPending={isPendingTransactionHistory}
-              isFetchingNextPage={isFetchingNextPage}
-            />
-          </InfiniteScroll>
-        </div>
+            {tokenBalance?.tokenMetadata?.properties?.map((property: any) => (
+              <PropertiesBadge name={property.name} value={property.value} />
+            ))}
+          </>
+        )}
       </div>
     </div>
   )

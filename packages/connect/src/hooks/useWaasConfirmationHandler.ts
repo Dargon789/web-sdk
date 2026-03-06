@@ -1,7 +1,9 @@
-import { commons } from '@0xsequence/core'
-import { useState, useEffect } from 'react'
+'use client'
 
-import { Deferred } from '../utils/deferred'
+import type { commons } from '@0xsequence/core'
+import { useEffect, useState } from 'react'
+
+import { Deferred } from '../utils/deferred.js'
 
 let _pendingConfirmation: Deferred<{ id: string; confirmed: boolean }> | undefined
 
@@ -13,8 +15,49 @@ export type WaasRequestConfirmation = {
   chainId?: number
 }
 
+/**
+ * Hook to handle transaction and message signing confirmations for WaaS (Wallet-as-a-Service) connections.
+ *
+ * This hook sets up confirmation handlers for signing transactions and messages when using a WaaS connector.
+ * It manages the state of pending confirmations and provides functions to confirm or reject signing requests.
+ *
+ * @param waasConnector - The WaaS connector instance to handle confirmations for (optional)
+ * @param enabled - Whether the confirmation handler is enabled (optional, defaults to true)
+ *
+ * @returns A tuple containing:
+ * - [0] {@link WaasRequestConfirmation} | undefined - The current pending request confirmation info or undefined if none
+ * - [1] `(id: string) => void` - Function to confirm a pending request by ID
+ * - [2] `(id: string) => void` - Function to reject a pending request by ID
+ *
+ * The {@link WaasRequestConfirmation} object contains:
+ * - `id` - Unique identifier for the request
+ * - `type` - Either 'signTransaction' or 'signMessage'
+ * - `message?` - Optional message to sign (for signMessage requests)
+ * - `txs?` - Optional array of transactions (for signTransaction requests)
+ * - `chainId?` - Optional chain ID for the request
+ *
+ * @example
+ * ```tsx
+ * const [
+ *   pendingRequestConfirmation,
+ *   confirmPendingRequest,
+ *   rejectPendingRequest
+ * ] = useWaasConfirmationHandler(waasConnector)
+ *
+ * // When user confirms the request
+ * if (pendingRequestConfirmation) {
+ *   confirmPendingRequest(pendingRequestConfirmation.id)
+ * }
+ *
+ * // When user rejects the request
+ * if (pendingRequestConfirmation) {
+ *   rejectPendingRequest(pendingRequestConfirmation.id)
+ * }
+ * ```
+ */
 export function useWaasConfirmationHandler(
-  waasConnector?: any
+  waasConnector?: any,
+  enabled: boolean = true
 ): [WaasRequestConfirmation | undefined, (id: string) => void, (id: string) => void] {
   const [pendingRequestConfirmation, setPendingRequestConfirmation] = useState<WaasRequestConfirmation | undefined>()
 
@@ -32,7 +75,7 @@ export function useWaasConfirmationHandler(
 
   useEffect(() => {
     async function setup() {
-      if (!waasConnector) {
+      if (!waasConnector || !enabled) {
         return
       }
 
@@ -62,7 +105,7 @@ export function useWaasConfirmationHandler(
       }
     }
     setup()
-  })
+  }, [waasConnector, enabled])
 
   return [pendingRequestConfirmation, confirmPendingRequest, rejectPendingRequest]
 }
