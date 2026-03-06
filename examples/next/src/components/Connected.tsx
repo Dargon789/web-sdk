@@ -4,20 +4,21 @@ import {
   useExplicitSessions,
   useFeeOptions,
   useOpenConnectModal,
+  useSendWalletTransaction,
   useSequenceSessionState,
   useWallets,
   type ParameterRule,
   type Permission
 } from '@0xsequence/connect'
-import { Button, Card, Text } from '@0xsequence/design-system'
-import { allNetworks, ChainId } from '@0xsequence/network'
+import { Button, Card, Divider, Text } from '@0xsequence/design-system'
+import { allNetworks, ChainId } from '@0xsequence/connect'
 import { useOpenWalletModal } from '@0xsequence/wallet-widget'
 import { Alert, CardButton, Header, WalletListItem, type AlertProps } from 'example-shared-components'
 import { AbiFunction } from 'ox'
 import React, { useEffect } from 'react'
-import { formatUnits } from 'viem'
+import { encodeFunctionData, formatUnits } from 'viem'
 import { createSiweMessage, generateSiweNonce } from 'viem/siwe'
-import { useAccount, useChainId, usePublicClient, useSendTransaction, useWalletClient, useWriteContract } from 'wagmi'
+import { useChainId, useConnection, usePublicClient, useSendTransaction, useSwitchChain, useWalletClient } from 'wagmi'
 
 import { messageToSign } from '../constants'
 import { abi } from '../constants/nft-abi'
@@ -25,9 +26,38 @@ import { EMITTER_ABI, getEmitterContractAddress, getSessionConfigForType, Permis
 
 import { Select } from './Select'
 
+const INITIAL_V3_CHAIN_ID_STORAGE_KEY = 'sequence.example.initialV3ChainId'
+
+const getStoredInitialV3ChainId = (): number | undefined => {
+  if (typeof window === 'undefined') {
+    return undefined
+  }
+
+  const storedValue = window.localStorage.getItem(INITIAL_V3_CHAIN_ID_STORAGE_KEY)
+  if (!storedValue) {
+    return undefined
+  }
+
+  const parsed = Number(storedValue)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
+}
+
+const setStoredInitialV3ChainId = (chainId?: number) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (!chainId) {
+    window.localStorage.removeItem(INITIAL_V3_CHAIN_ID_STORAGE_KEY)
+    return
+  }
+
+  window.localStorage.setItem(INITIAL_V3_CHAIN_ID_STORAGE_KEY, String(chainId))
+}
+
 export const Connected = () => {
   const { setOpenConnectModal } = useOpenConnectModal()
-  const { address } = useAccount()
+  const { address, chainId: connectedChainId } = useConnection()
 
   const { setOpenWalletModal } = useOpenWalletModal()
 
@@ -51,7 +81,13 @@ export const Connected = () => {
     error: sendImplicitTestTransactionError,
     reset: resetImplicitTestTransaction
   } = useSendTransaction()
-  const { data: txnData2, isPending: isPendingMintTxn, writeContract, reset: resetWriteContract } = useWriteContract()
+  const {
+    data: mintTxnData,
+    sendTransaction: sendMintWalletTransaction,
+    isLoading: isPendingMintTxn,
+    error: mintTxnError,
+    reset: resetMintWalletTransaction
+  } = useSendWalletTransaction()
   const {
     data: txnData3,
     sendTransaction: sendUnsponsoredTransaction,
@@ -84,6 +120,7 @@ export const Connected = () => {
   const [lastPermissionedTxnDataHash, setLastPermissionedTxnDataHash] = React.useState<string | undefined>()
 
   const chainId = useChainId()
+  const { switchChainAsync } = useSwitchChain()
   const [pendingFeeOptionConfirmation, confirmPendingFeeOption] = useFeeOptions()
 
   const [selectedFeeOptionTokenName, setSelectedFeeOptionTokenName] = React.useState<string | undefined>()
@@ -92,6 +129,53 @@ export const Connected = () => {
   const [permissionType, setPermissionType] = React.useState<PermissionsType>('contractCall')
 
   const [hasImplicitSession, setHasImplicitSession] = React.useState(false)
+  const [initialV3ChainId, setInitialV3ChainId] = React.useState<number | undefined>(() => getStoredInitialV3ChainId())
+
+  useEffect(() => {
+    if (!isV3WalletConnectionActive) {
+      setInitialV3ChainId(undefined)
+      setStoredInitialV3ChainId(undefined)
+      return
+    }
+
+    if (initialV3ChainId) {
+      return
+    }
+
+    if (connectedChainId) {
+      setInitialV3ChainId(connectedChainId)
+      setStoredInitialV3ChainId(connectedChainId)
+      return
+    }
+
+    if (chainId) {
+      setInitialV3ChainId(chainId)
+      setStoredInitialV3ChainId(chainId)
+      return
+    }
+
+    let isCancelled = false
+    const resolveInitialChain = async () => {
+      if (!walletClient) {
+        return
+      }
+      try {
+        const walletChainId = await walletClient.getChainId()
+        if (!isCancelled) {
+          setInitialV3ChainId(walletChainId)
+          setStoredInitialV3ChainId(walletChainId)
+        }
+      } catch (error) {
+        console.error('Failed to resolve initial V3 chain id:', error)
+      }
+    }
+
+    void resolveInitialChain()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [isV3WalletConnectionActive, initialV3ChainId, connectedChainId, chainId, walletClient])
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -272,8 +356,8 @@ export const Connected = () => {
     if (implicitTestTxnData) {
       setLastImplicitTestTxnDataHash((implicitTestTxnData as any).hash ?? implicitTestTxnData)
     }
-    if (txnData2) {
-      setLastTxnDataHash2((txnData2 as any).hash ?? txnData2)
+    if (mintTxnData) {
+      setLastTxnDataHash2((mintTxnData as any).hash ?? mintTxnData)
     }
     if (txnData3) {
       setLastTxnDataHash3((txnData3 as any).hash ?? txnData3)
@@ -281,7 +365,7 @@ export const Connected = () => {
     if (permissionedTxnData) {
       setLastPermissionedTxnDataHash((permissionedTxnData as any).hash ?? permissionedTxnData)
     }
-  }, [implicitTestTxnData, txnData2, txnData3, permissionedTxnData])
+  }, [implicitTestTxnData, mintTxnData, txnData3, permissionedTxnData])
 
   const domain = {
     name: 'Sequence Example',
@@ -437,7 +521,23 @@ export const Connected = () => {
       return
     }
 
+    const targetChainId = initialV3ChainId ?? connectedChainId ?? chainId
+    if (!targetChainId) {
+      return
+    }
+
+    try {
+      const walletClientChainId = await walletClient.getChainId()
+      if (walletClientChainId !== targetChainId) {
+        await switchChainAsync({ chainId: targetChainId })
+      }
+    } catch (error) {
+      console.error('Failed to switch chain before sending implicit test transaction:', error)
+      return
+    }
+
     sendImplicitTestTransaction({
+      chainId: targetChainId,
       to: getEmitterContractAddress(window.location.origin),
       value: 0n,
       data: AbiFunction.getSelector(EMITTER_ABI[1])
@@ -463,7 +563,19 @@ export const Connected = () => {
     if (!walletClient) {
       return
     }
+
+    try {
+      const walletClientChainId = await walletClient.getChainId()
+      if (walletClientChainId !== chainId) {
+        await switchChainAsync({ chainId })
+      }
+    } catch (error) {
+      console.error('Failed to switch chain before sending permissioned transaction:', error)
+      return
+    }
+
     sendPermissionedTransaction({
+      chainId,
       to: getEmitterContractAddress(window.location.origin),
       data: AbiFunction.getSelector(EMITTER_ABI[0])
     })
@@ -505,17 +617,22 @@ export const Connected = () => {
   }
 
   const runMintNFT = async () => {
-    if (!walletClient) {
+    if (!address) {
       return
     }
 
-    const [account] = await walletClient.getAddresses()
-
-    writeContract({
-      address: '0x0d402C63cAe0200F0723B3e6fa0914627a48462E',
+    const data = encodeFunctionData({
       abi,
       functionName: 'awardItem',
-      args: [account, 'https://dev-metadata.sequence.app/projects/277/collections/62/tokens/0.json']
+      args: [address, 'https://dev-metadata.sequence.app/projects/277/collections/62/tokens/0.json']
+    })
+
+    sendMintWalletTransaction({
+      chainId,
+      transaction: {
+        to: '0x0d402C63cAe0200F0723B3e6fa0914627a48462E',
+        data
+      }
     })
   }
 
@@ -530,11 +647,18 @@ export const Connected = () => {
     setLastPermissionedTxnDataHash(undefined)
     setIsMessageValid(undefined)
     setTypedDataSig(undefined)
-    resetWriteContract()
+    resetMintWalletTransaction()
     resetSendUnsponsoredTransaction()
     resetImplicitTestTransaction()
     resetPermissionedTxn()
-  }, [address, chainId, resetImplicitTestTransaction, resetPermissionedTxn, resetSendUnsponsoredTransaction, resetWriteContract])
+  }, [
+    address,
+    chainId,
+    resetImplicitTestTransaction,
+    resetPermissionedTxn,
+    resetSendUnsponsoredTransaction,
+    resetMintWalletTransaction
+  ])
 
   return (
     <>
@@ -632,7 +756,7 @@ export const Connected = () => {
             {hasImplicitSession && (
               <>
                 <Text className="mt-4" variant="small-bold" color="muted">
-                  Test Implicit Permission transactions
+                  with Implicit permission
                 </Text>
 
                 <CardButton
@@ -655,10 +779,12 @@ export const Connected = () => {
               </>
             )}
 
+            <Divider />
+
             {isV3WalletConnectionActive && (
               <>
                 <Text variant="small-bold" className="mt-4" color="muted">
-                  with V3 Explicit Permissions
+                  with Explicit permission
                 </Text>
 
                 <div className="mb-2">
@@ -898,12 +1024,17 @@ export const Connected = () => {
                 onClick={runMintNFT}
               />
             )}
+            {mintTxnError && (
+              <Text className="ml-4" variant="small" color="negative">
+                Mint failed: {mintTxnError.message}
+              </Text>
+            )}
             {networkForCurrentChainId.blockExplorer &&
               lastTxnDataHash2 &&
-              ((txnData2 as any)?.chainId === chainId || txnData2) && (
+              ((mintTxnData as any)?.chainId === chainId || mintTxnData) && (
                 <Text className="ml-4" variant="small" underline color="primary" asChild>
                   <a
-                    href={`${networkForCurrentChainId.blockExplorer.rootUrl}/tx/${(txnData2 as any).hash ?? txnData2}`}
+                    href={`${networkForCurrentChainId.blockExplorer.rootUrl}/tx/${(mintTxnData as any).hash ?? mintTxnData}`}
                     target="_blank"
                     rel="noreferrer"
                   >
