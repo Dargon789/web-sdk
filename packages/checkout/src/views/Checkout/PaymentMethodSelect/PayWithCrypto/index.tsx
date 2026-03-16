@@ -2,7 +2,6 @@ import {
   compareAddress,
   ContractVerificationStatus,
   formatDisplay,
-  isTxRejected,
   sendTransactions,
   TRANSACTION_CONFIRMATIONS_DEFAULT,
   useAnalyticsContext
@@ -27,9 +26,10 @@ import { ERC_20_CONTRACT_ABI } from '../../../../constants/abi.js'
 import { EVENT_SOURCE } from '../../../../constants/index.js'
 import { type PaymentMethodSelectionParams } from '../../../../contexts/NavigationCheckout.js'
 import type { SelectPaymentSettings } from '../../../../contexts/SelectPaymentModal.js'
-import { useAddFundsModal, useTransactionCounter } from '../../../../hooks/index.js'
+import { useAddFundsModal } from '../../../../hooks/index.js'
 import { useSelectPaymentModal, useTransactionStatusModal } from '../../../../hooks/index.js'
 import { useNavigationCheckout } from '../../../../hooks/useNavigationCheckout.js'
+import { TRANSAK_ONRAMP_URL } from '../../../../utils/transak.js'
 
 import { useInitialBalanceCheck } from './useInitialBalanceCheck.js'
 
@@ -37,8 +37,6 @@ interface PayWithCryptoTabProps {
   skipOnCloseCallback: () => void
   isSwitchingChainRef: RefObject<boolean>
 }
-
-type ErrorCause = 'generic' | 'user-rejection'
 
 export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: PayWithCryptoTabProps) => {
   const connectedChainId = useChainId()
@@ -49,16 +47,8 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
   const { openTransactionStatusModal } = useTransactionStatusModal()
   const { selectPaymentSettings = {} as SelectPaymentSettings, closeSelectPaymentModal } = useSelectPaymentModal()
   const { analytics } = useAnalyticsContext()
-  const [error, setError] = useState<null | ErrorCause>(null)
+  const [isError, setIsError] = useState<boolean>(false)
   const { navigation, setNavigation } = useNavigationCheckout()
-  const {
-    initializeTransactionCounter,
-    incrementTransactionCount,
-    currentTransactionNumber,
-    maxTransactions,
-    isTransactionCounterInitialized,
-    resetTransactionCounter
-  } = useTransactionCounter()
 
   const {
     chain,
@@ -80,7 +70,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     onSuccessChecker
   } = selectPaymentSettings
 
-  const isFree = BigInt(price) === 0n
+  const isFree = Number(price) == 0
 
   const network = findSupportedNetwork(chain)
   const chainId = network?.chainId || 137
@@ -165,12 +155,28 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     }
   )
 
+  const isTargetWalletClientReady = !!walletClient
+  const isTargetPublicClientReady = publicClient?.chain?.id === chainId
+
   useEffect(() => {
-    if (isSwitchingChainRef.current && connectedChainId == Number(chainId) && !isLoadingWalletClient) {
+    if (
+      isSwitchingChainRef.current &&
+      connectedChainId === chainId &&
+      !isLoadingWalletClient &&
+      isTargetWalletClientReady &&
+      isTargetPublicClientReady
+    ) {
       isSwitchingChainRef.current = false
       onClickPurchase()
     }
-  }, [connectedChainId, chainId, isLoadingWalletClient, isSwitchingChainRef.current])
+  }, [
+    connectedChainId,
+    chainId,
+    isLoadingWalletClient,
+    isSwitchingChainRef,
+    isTargetWalletClientReady,
+    isTargetPublicClientReady
+  ])
 
   const isNotEnoughBalanceError =
     typeof swapQuoteError?.cause === 'string' && swapQuoteError?.cause?.includes('not enough balance for swap')
@@ -204,16 +210,16 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     compareAddress(balance.contractAddress, selectedCurrency.address)
   )
 
-  const userBalance = BigInt(tokenBalance?.balance || '0')
-  const requiredBalance = BigInt(selectedCurrencyPrice)
-  const isInsufficientBalance = !isFree && userBalance < requiredBalance
+  const isInsufficientBalance =
+    tokenBalance === undefined ||
+    (tokenBalance?.balance && tokenBalance.balance !== '' && BigInt(tokenBalance.balance) < BigInt(selectedCurrencyPrice))
 
   useInitialBalanceCheck({
     userAddress: userAddress || '',
     buyCurrencyAddress,
     price,
     chainId,
-    isInsufficientBalance,
+    isInsufficientBalance: isInsufficientBalance as boolean,
     tokenBalancesIsLoading
   })
 
@@ -230,32 +236,33 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
   const priceFiat = (fiatExchangeRate * Number(formattedPrice)).toFixed(2)
 
   const onPurchaseMainCurrency = async () => {
-    if (!walletClient || isErrorWalletClient || errorWalletClient) {
-      throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
-        cause: errorWalletClient
-      })
-    }
     if (!userAddress) {
       throw new Error('User address is not available. Please ensure your wallet is connected.')
-    }
-    if (!publicClient) {
-      throw new Error('Public client is not available. Please check your network connection.')
-    }
-    if (!indexerClient) {
-      throw new Error('Indexer client is not available. Please check your network connection.')
     }
     if (!connector) {
       throw new Error('Wallet connector is not available. Please ensure your wallet is properly connected.')
     }
 
     setIsPurchasing(true)
-    setError(null)
+    setIsError(false)
 
     try {
       if (connectedChainId != chainId) {
         await switchChain({ chainId })
         isSwitchingChainRef.current = true
         return
+      }
+
+      if (!walletClient || isErrorWalletClient || errorWalletClient) {
+        throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
+          cause: errorWalletClient
+        })
+      }
+      if (!publicClient || publicClient.chain?.id !== chainId) {
+        throw new Error('Public client is not ready for the selected network. Please try again.')
+      }
+      if (!indexerClient) {
+        throw new Error('Indexer client is not available. Please check your network connection.')
       }
 
       const approveTxData = encodeFunctionData({
@@ -286,7 +293,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
         }
       ]
 
-      const txs = await sendTransactions({
+      const txHash = await sendTransactions({
         chainId,
         senderAddress: userAddress,
         publicClient,
@@ -297,29 +304,6 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
         transactionConfirmations,
         waitConfirmationForLastTransaction: false
       })
-
-      if (txs.length === 0) {
-        throw new Error('No transactions to send')
-      }
-
-      initializeTransactionCounter(txs.length)
-
-      let txHash: string | undefined
-      for (const [index, tx] of txs.entries()) {
-        const currentTxHash = await tx()
-        incrementTransactionCount()
-
-        const isLastTransaction = index === txs.length - 1
-
-        if (isLastTransaction) {
-          onSuccess?.(currentTxHash)
-          txHash = currentTxHash
-        }
-      }
-
-      if (!txHash) {
-        throw new Error('Transaction hash is not available')
-      }
 
       analytics?.track({
         event: 'SEND_TRANSACTION_REQUEST',
@@ -371,23 +355,15 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     } catch (e) {
       console.error('Failed to purchase...', e)
       onError(e as Error)
-      const isRejected = isTxRejected(e as Error)
-      setError(isRejected ? 'user-rejection' : 'generic')
+      setIsError(true)
     }
 
-    resetTransactionCounter()
     setIsPurchasing(false)
   }
 
   const onClickPurchaseSwap = async () => {
-    if (!walletClient) {
-      throw new Error('Wallet client is not available. Please ensure your wallet is connected.')
-    }
     if (!userAddress) {
       throw new Error('User address is not available. Please ensure your wallet is connected.')
-    }
-    if (!publicClient) {
-      throw new Error('Public client is not available. Please check your network connection.')
     }
     if (!connector) {
       throw new Error('Wallet connector is not available. Please ensure your wallet is properly connected.')
@@ -397,13 +373,25 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     }
 
     setIsPurchasing(true)
-    setError(null)
+    setIsError(false)
 
     try {
       if (connectedChainId != chainId) {
         await switchChain({ chainId })
         isSwitchingChainRef.current = true
         return
+      }
+
+      if (!walletClient || isErrorWalletClient || errorWalletClient) {
+        throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
+          cause: errorWalletClient
+        })
+      }
+      if (!publicClient || publicClient.chain?.id !== chainId) {
+        throw new Error('Public client is not ready for the selected network. Please try again.')
+      }
+      if (!indexerClient) {
+        throw new Error('Indexer client is not available. Please check your network connection.')
       }
 
       const approveTxData = encodeFunctionData({
@@ -459,7 +447,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
         }
       ]
 
-      const txs = await sendTransactions({
+      const txHash = await sendTransactions({
         chainId,
         senderAddress: userAddress,
         publicClient,
@@ -470,29 +458,6 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
         transactionConfirmations,
         waitConfirmationForLastTransaction: false
       })
-
-      if (txs.length === 0) {
-        throw new Error('No transactions to send')
-      }
-
-      initializeTransactionCounter(txs.length)
-
-      let txHash: string | undefined
-      for (const [index, tx] of txs.entries()) {
-        const currentTxHash = await tx()
-        incrementTransactionCount()
-
-        const isLastTransaction = index === txs.length - 1
-
-        if (isLastTransaction) {
-          onSuccess?.(currentTxHash)
-          txHash = currentTxHash
-        }
-      }
-
-      if (!txHash) {
-        throw new Error('Transaction hash is not available')
-      }
 
       analytics?.track({
         event: 'SEND_TRANSACTION_REQUEST',
@@ -544,12 +509,10 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     } catch (e) {
       console.error('Failed to purchase...', e)
       onError(e as Error)
-      const isRejected = isTxRejected(e as Error)
-      setError(isRejected ? 'user-rejection' : 'generic')
+      setIsError(true)
     }
 
     setIsPurchasing(false)
-    resetTransactionCounter()
   }
 
   const onClickPurchase = () => {
@@ -561,23 +524,24 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
   }
 
   const onClickAddFunds = () => {
+    if (!onRampProvider || onRampProvider === TransactionOnRampProvider.unknown) {
+      window.open(TRANSAK_ONRAMP_URL, '_blank')
+      return
+    }
+
     const getNetworks = (): string | undefined => {
       const network = findSupportedNetwork(chainId)
       return network?.name?.toLowerCase()
     }
 
-    const useWindowedOnRamp = !onRampProvider || onRampProvider == TransactionOnRampProvider.unknown
-
     skipOnCloseCallback()
     closeSelectPaymentModal()
     triggerAddFunds({
       walletAddress: userAddress || '',
-      provider: onRampProvider || TransactionOnRampProvider.transak,
+      provider: onRampProvider,
       networks: getNetworks(),
       defaultCryptoCurrency: dataCurrencyInfo?.symbol || '',
-      onClose: selectPaymentSettings?.onClose,
-      transakOnRampKind: useWindowedOnRamp ? 'windowed' : 'default',
-      windowedOnRampMessage: "Once you've added funds, you can close this window and try buying with crypto again."
+      onClose: selectPaymentSettings?.onClose
     })
   }
 
@@ -662,38 +626,19 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
             <TokenSelector />
           </div>
         </div>
-        {onRampProvider !== TransactionOnRampProvider.unknown && (
-          <Button
-            label="Add Funds"
-            className="w-full"
-            shape="square"
-            variant="glass"
-            leftIcon={() => <AddIcon size="md" />}
-            onClick={onClickAddFunds}
-          ></Button>
-        )}
+        <Button
+          label="Add Funds"
+          className="w-full"
+          shape="square"
+          variant="glass"
+          leftIcon={() => <AddIcon size="md" />}
+          onClick={onClickAddFunds}
+        ></Button>
       </div>
     )
   }
 
   const PriceSection = () => {
-    if (isTransactionCounterInitialized) {
-      const descriptionText =
-        maxTransactions > 1
-          ? `Confirming transaction ${currentTransactionNumber} of ${maxTransactions}`
-          : `Confirming transaction`
-      return (
-        <div className="flex flex-col flex-wrap justify-between items-center w-full gap-2">
-          <div className="flex flex-col gap-0.5">
-            <Text variant="xsmall" color="text50">
-              {descriptionText}
-            </Text>
-          </div>
-          <Spinner />
-        </div>
-      )
-    }
-
     if (isFree) {
       return (
         <div className="flex flex-col mt-2 mb-1 w-full">
@@ -777,22 +722,15 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     return 'Confirm payment'
   }
 
-  const getErrorText = () => {
-    if (error == 'user-rejection') {
-      return 'The transaction was rejected.'
-    }
-    return 'An error occurred. Please try again.'
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <PriceSection />
 
       <div className="flex flex-col justify-start items-center w-full gap-1">
-        {!!error && (
+        {isError && (
           <div className="flex flex-col justify-start items-center w-full">
             <Text variant="xsmall" color="negative">
-              {getErrorText()}
+              An error occurred. Please try again.
             </Text>
           </div>
         )}

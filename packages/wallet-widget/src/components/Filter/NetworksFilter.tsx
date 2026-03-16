@@ -9,14 +9,15 @@ export const NetworksFilter = () => {
 
   const onClickNetwork = (chainId: number) => {
     if (selectedNetworks.length === allNetworks.length) {
-      setSelectedNetworks([chainId])
-    } else {
-      if (selectedNetworks.includes(chainId)) {
-        setSelectedNetworks(selectedNetworks.filter(n => n !== chainId))
-      } else {
-        setSelectedNetworks([...selectedNetworks, chainId])
-      }
-    }
+          setSelectedNetworks([chainId])
+        }
+    else if (selectedNetworks.includes(chainId)) {
+            setSelectedNetworks(selectedNetworks.filter(n => n !== chainId))
+          }
+    else {
+            setSelectedNetworks([...selectedNetworks, chainId])
+          }
+
   }
 
   return (
