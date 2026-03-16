@@ -1,9 +1,9 @@
 import { SequenceCheckoutConfig } from '@0xsequence/checkout'
 import { ConnectConfig, createConfig, createContractPermission } from '@0xsequence/connect'
-import { ChainId } from '@0xsequence/connect'
+import { ChainId } from '@0xsequence/network'
 import { Environment } from '@imtbl/config'
 import { passport } from '@imtbl/sdk'
-import { zeroAddress } from 'viem'
+import { parseEther, zeroAddress } from 'viem'
 import { cookieStorage, createStorage } from 'wagmi'
 
 import { getEmitterContractAddress } from './constants/permissions'
@@ -12,8 +12,8 @@ const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.
 
 // append ?debug to url to enable debug mode
 const isDebugMode = searchParams.has('debug')
-const isDev = false
-const projectAccessKey = isDev ? 'AQAAAAAAAAVBcvNU0sTXiBQmgnL-uVm929Y' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
+const isDev = true
+const projectAccessKey = isDev ? 'AQAAAAAAAAVBcvNU0sTXiBQmgnL-uVm929Y' : 'AQAAAAAAAKqC8tV0Mgsd0BGlI2bzanNTdEE'
 const walletConnectProjectId = 'c65a6cb1aa83c4e24500130f23a437d8'
 const defaultOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
 
@@ -130,8 +130,11 @@ export const config = createConfig({
   includeFeeOptionPermissions: true,
   explicitSessionParams: {
     chainId: ChainId.OPTIMISM,
+    nativeTokenSpending: {
+      valueLimit: parseEther('0.1')
+    },
     expiresIn: {
-      minutes: 3
+      days: 1
     },
     permissions: [
       createContractPermission({

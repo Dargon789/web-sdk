@@ -1,0 +1,4 @@
+{
+  "main": "dist/0xsequence-kit-contexts.cjs.js",
+  "module": "dist/0xsequence-kit-contexts.esm.js"
+}

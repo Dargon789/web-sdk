@@ -1,4 +1,4 @@
-import { allNetworks } from '@0xsequence/connect'
+import { allNetworks } from '@0xsequence/network'
 
 const NODES_URL = 'https://nodes.sequence.app/{network}'
 

@@ -1,6 +1,7 @@
 import { SequenceCheckoutConfig } from '@0xsequence/checkout'
 import { ConnectConfig, createConfig } from '@0xsequence/connect'
-import { ChainId } from '@0xsequence/connect'
+import { immutable } from '@0xsequence/immutable-connector'
+import { ChainId } from '@0xsequence/network'
 import { Environment } from '@imtbl/config'
 import { passport } from '@imtbl/sdk'
 import { zeroAddress } from 'viem'
@@ -121,7 +122,13 @@ export const config = createConfig('waas', {
   },
   walletConnect: {
     projectId: walletConnectProjectId
-  }
+  },
+  additionalWallets: [
+    immutable({
+      passportInstance,
+      environment: Environment.SANDBOX
+    })
+  ]
 })
 
 export const getErc1155SaleContractConfig = (walletAddress: string) => ({

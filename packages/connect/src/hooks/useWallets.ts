@@ -1,9 +1,9 @@
 'use client'
 
-import { SequenceAPIClient, type GetLinkedWalletsRequest, type LinkedWallet } from '@0xsequence/api'
+import { SequenceAPIClient, type GetLinkedWalletsArgs, type LinkedWallet } from '@0xsequence/api'
 import { useAPIClient } from '@0xsequence/hooks'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useConnect, useConnection, useConnections, useDisconnect, type Connector, type UseConnectionsReturnType } from 'wagmi'
+import { useAccount, useConnect, useConnections, useDisconnect, type Connector, type UseConnectionsReturnType } from 'wagmi'
 
 import { WALLET_LIST_DEBOUNCE_MS } from '../constants.js'
 import { useOptionalConnectConfigContext } from '../contexts/ConnectConfig.js'
@@ -17,12 +17,12 @@ interface UseLinkedWalletsOptions {
 }
 
 // Create a stable storage key from args
-const createStorageKey = (args: GetLinkedWalletsRequest): string =>
+const createStorageKey = (args: GetLinkedWalletsArgs): string =>
   `@0xsequence.linked_wallets-${args.parentWalletAddress}-${args.signatureChainId}`
 
 const getLinkedWallets = async (
   apiClient: SequenceAPIClient,
-  args: GetLinkedWalletsRequest,
+  args: GetLinkedWalletsArgs,
   headers?: object,
   signal?: AbortSignal
 ): Promise<Array<LinkedWallet>> => {
@@ -77,10 +77,7 @@ const notifyLinkedWalletsListeners = () => {
   }, 0)
 }
 
-export const useLinkedWallets = (
-  args: GetLinkedWalletsRequest,
-  options: UseLinkedWalletsOptions = {}
-): UseLinkedWalletsResult => {
+export const useLinkedWallets = (args: GetLinkedWalletsArgs, options: UseLinkedWalletsOptions = {}): UseLinkedWalletsResult => {
   const apiClient = useAPIClient()
   const [data, setData] = useState<LinkedWallet[] | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
@@ -195,7 +192,7 @@ export interface UseWalletsReturnType {
  * For embedded wallets, it also provides access to linked wallets - additional
  * wallets that have been linked to the primary embedded wallet.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/wallet-sdk/ecosystem/hooks/useWallets} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useWallets} for more detailed documentation.
  *
  * @returns An object containing wallet information and management functions {@link UseWalletsReturnType}
  *
@@ -231,10 +228,10 @@ export interface UseWalletsReturnType {
  */
 
 export const useWallets = (): UseWalletsReturnType => {
-  const { address, status: accountStatus } = useConnection()
+  const { address, status: accountStatus } = useAccount()
   const connections = useConnections()
-  const connect = useConnect()
-  const disconnect = useDisconnect()
+  const { connectAsync } = useConnect()
+  const { disconnectAsync } = useDisconnect()
   const connectConfig = useOptionalConnectConfigContext()
   const normalizedWalletUrl = connectConfig?.walletUrl ? normalizeWalletUrl(connectConfig.walletUrl) : ''
   const sequenceProjectName = normalizedWalletUrl ? getCachedProjectName(normalizedWalletUrl) : undefined
@@ -412,7 +409,7 @@ export const useWallets = (): UseWalletsReturnType => {
     }
 
     try {
-      await connect.mutateAsync({ connector: connectionToUse.connector })
+      await connectAsync({ connector: connectionToUse.connector })
     } catch (error) {
       console.error('Failed to set active wallet:', error)
     }
@@ -432,7 +429,7 @@ export const useWallets = (): UseWalletsReturnType => {
     }
 
     try {
-      await disconnect.mutateAsync({ connector: connection.connector })
+      await disconnectAsync({ connector: connection.connector })
     } catch (error) {
       console.error('Failed to disconnect wallet:', error)
     }

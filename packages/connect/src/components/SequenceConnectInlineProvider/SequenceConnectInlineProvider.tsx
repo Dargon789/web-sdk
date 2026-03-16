@@ -2,12 +2,13 @@
 
 import { Button, Card, Modal, ModalPrimitive, Spinner, Text, ThemeProvider, type Theme } from '@0xsequence/design-system'
 import { SequenceHooksProvider } from '@0xsequence/hooks'
+import { ChainId } from '@0xsequence/network'
 import { SequenceClient, setupAnalytics, type Analytics } from '@0xsequence/provider'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AnimatePresence } from 'motion/react'
 import React, { useEffect, useState, type ReactNode } from 'react'
 import { hexToString, type Hex } from 'viem'
-import { useConfig, useConnection, useConnections, type Connector } from 'wagmi'
+import { useAccount, useConfig, useConnections, type Connector } from 'wagmi'
 
 import { DEFAULT_SESSION_EXPIRATION, LocalStorageKey, WEB_SDK_VERSION } from '../../constants/index.js'
 import { AnalyticsContextProvider } from '../../contexts/Analytics.js'
@@ -31,7 +32,6 @@ import {
   type ModalPosition
 } from '../../types.js'
 import { isJSON } from '../../utils/helpers.js'
-import { ChainId } from '../../utils/networks.js'
 import { getModalPositionCss } from '../../utils/styling.js'
 import { Connect } from '../Connect/Connect.js'
 import { EpicAuthProvider } from '../EpicAuthProvider/index.js'
@@ -47,8 +47,6 @@ export type SequenceConnectInlineProviderProps = {
   children: ReactNode
   config: ConnectConfig
 }
-
-const DEFAULT_DISPLAYED_ASSETS: DisplayedAsset[] = []
 
 const resolveInlineBackground = (theme: Theme | undefined) => {
   if (theme && typeof theme === 'object' && 'colors' in theme) {
@@ -78,17 +76,16 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
     enabledProviders,
     isV3WalletSignedIn,
     isAuthStatusLoading,
-    walletConfigurationSignIn,
-    sdkConfig
+    walletConfigurationSignIn
   } = useResolvedConnectConfig(incomingConfig)
 
   const {
     defaultTheme = 'dark',
     signIn = {},
     position = 'center',
-    displayedAssets: displayedAssetsSetting = DEFAULT_DISPLAYED_ASSETS,
+    displayedAssets: displayedAssetsSetting = [],
     readOnlyNetworks,
-    ethAuth: ethAuthConfig,
+    ethAuth = {} as EthAuthSettings,
     disableAnalytics = false,
     hideExternalConnectOptions = false,
     hideConnectedWallets = false,
@@ -99,15 +96,13 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
 
   const defaultAppName = signIn.projectName || 'app'
 
-  const isEthAuthEnabled = ethAuthConfig !== false
-  const ethAuth: EthAuthSettings | undefined = isEthAuthEnabled ? (ethAuthConfig ?? {}) : undefined
-  const { expiry = DEFAULT_SESSION_EXPIRATION, app = defaultAppName, origin, nonce } = ethAuth ?? {}
+  const { expiry = DEFAULT_SESSION_EXPIRATION, app = defaultAppName, origin, nonce } = ethAuth
 
   const [theme, setTheme] = useState<Exclude<Theme, undefined>>(defaultTheme || 'dark')
   const [modalPosition, setModalPosition] = useState<ModalPosition>(position)
   const [displayedAssets, setDisplayedAssets] = useState<DisplayedAsset[]>(displayedAssetsSetting)
   const [analytics, setAnalytics] = useState<SequenceClient['analytics']>()
-  const { address, isConnected } = useConnection()
+  const { address, isConnected } = useAccount()
   const wagmiConfig = useConfig()
   useSyncWagmiChains(config, wagmiConfig)
   const storage = useStorage()
@@ -203,18 +198,13 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
     // EthAuth
     // note: keep an eye out for potential race-conditions, though they shouldn't occur.
     // If there are race conditions, the settings could be a function executed prior to being passed to wagmi
-    if (isEthAuthEnabled) {
-      storage?.setItem(LocalStorageKey.EthAuthSettings, {
-        expiry,
-        app,
-        origin: origin || location.origin,
-        nonce
-      })
-    } else {
-      storage?.removeItem(LocalStorageKey.EthAuthSettings)
-      storage?.removeItem(LocalStorageKey.EthAuthProof)
-    }
-  }, [theme, isEthAuthEnabled, storage, expiry, app, origin, nonce])
+    storage?.setItem(LocalStorageKey.EthAuthSettings, {
+      expiry,
+      app,
+      origin: origin || location.origin,
+      nonce
+    })
+  }, [theme, ethAuth])
 
   useEffect(() => {
     setDisplayedAssets(displayedAssetsSetting)
@@ -276,7 +266,6 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                               isAuthStatusLoading={isAuthStatusLoading}
                               enabledProviders={enabledProviders}
                               walletConfigurationSignIn={walletConfigurationSignIn}
-                              sdkConfig={sdkConfig}
                             />
                           )}
                         </ThemeProvider>

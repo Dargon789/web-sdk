@@ -8,13 +8,13 @@ import {
   validateEthProof
 } from '@0xsequence/connect'
 import { Button, Card, Switch, Text } from '@0xsequence/design-system'
-import { allNetworks, ChainId } from '@0xsequence/connect'
+import { allNetworks, ChainId } from '@0xsequence/network'
 import { useOpenWalletModal } from '@0xsequence/wallet-widget'
 import { Alert, CardButton, Header, WalletListItem, type AlertProps } from 'example-shared-components'
 import React, { useEffect } from 'react'
 import { encodeFunctionData, formatUnits, parseAbi, zeroAddress } from 'viem'
 import { createSiweMessage, generateSiweNonce } from 'viem/siwe'
-import { useChainId, useConnection, usePublicClient, useSendTransaction, useWalletClient, useWriteContract } from 'wagmi'
+import { useAccount, useChainId, usePublicClient, useSendTransaction, useWalletClient, useWriteContract } from 'wagmi'
 
 import { sponsoredContractAddresses } from '../config'
 import { messageToSign } from '../constants'
@@ -25,7 +25,7 @@ import { Select } from './Select'
 
 export const Connected = () => {
   const { setOpenConnectModal } = useOpenConnectModal()
-  const { address } = useConnection()
+  const { address } = useAccount()
 
   const { setOpenWalletModal } = useOpenWalletModal()
 
