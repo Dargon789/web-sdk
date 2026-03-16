@@ -284,7 +284,7 @@ const config = createConfig('waas', {
 ## Local Development
 
 <div align="center">
-  <img src="public/docs/web-sdk-demo.png">
+  <img src="https://raw.githubusercontent.com/0xsequence/web-sdk/master/public/docs/web-sdk-demo.png">
 </div>
 
 The React example can be used to test the library locally.
