@@ -6,10 +6,10 @@ We provide your users with a smooth and secure onboarding experience. With our r
 
 ## 📦 Our Toolkit
 
-- **[@0xsequence/connect](https://www.npmjs.com/package/@0xsequence/connect/v/0.0.0-20250924112110)** - Connect and authentication
-- **[@0xsequence/checkout](https://www.npmjs.com/package/@0xsequence/checkout/v/0.0.0-20250924112110)** - Payment and checkout flows
-- **[@0xsequence/hooks](https://www.npmjs.com/package/@0xsequence/hooks/v/0.0.0-20250924112110)** - React hooks for Web3 functionality
-- **[@0xsequence/wallet-widget](https://www.npmjs.com/package/@0xsequence/wallet-widget/v/0.0.0-20250924112110)** - Production-ready wallet widget
+- **[@0xsequence/connect](https://www.npmjs.com/package/@0xsequence/connect)** - Connect and authentication
+- **[@0xsequence/checkout](https://www.npmjs.com/package/@0xsequence/checkout)** - Payment and checkout flows
+- **[@0xsequence/hooks](https://www.npmjs.com/package/@0xsequence/hooks)** - React hooks for Web3 functionality
+- **[@0xsequence/wallet-widget](https://www.npmjs.com/package/@0xsequence/wallet-widget)** - Production-ready wallet widget
 - **[@0xsequence/marketplace-sdk](https://www.npmjs.com/package/@0xsequence/marketplace-sdk)** - Marketplace UI and functionality
 
 ## ✨ Key Features
