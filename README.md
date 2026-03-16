@@ -178,7 +178,7 @@ export function App() {
 ### Opening the Sign in Modal
 
 <div align="center">
-  <img src="public/docs/sign-in-modal.png">
+  <img src="https://raw.githubusercontent.com/0xsequence/web-sdk/master/public/docs/sign-in-modal.png">
 </div>
 
 ```tsx
