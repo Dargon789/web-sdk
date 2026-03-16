@@ -219,9 +219,11 @@ const {
   refetchLinkedWallets
 } = useWallets()
 
-await setActiveWallet('<wallet-address>')
-await disconnectWallet('<wallet-address>')
-await refetchLinkedWallets()
+async function updateWallets() {
+  await setActiveWallet('<wallet-address>')
+  await disconnectWallet('<wallet-address>')
+  await refetchLinkedWallets()
+}
 ```
 
 ### `useTheme`
