@@ -1,18 +1,8 @@
-import {
-  ArrowRightIcon,
-  Card,
-  IconButton,
-  ModalPrimitive,
-  Scroll,
-  SearchIcon,
-  SearchInput,
-  Text,
-  useTheme
-} from '@0xsequence/design-system'
-import type { ExtendedConnector } from '@0xsequence/web-sdk-core'
+import { ArrowRightIcon, Card, DialogPrimitive, IconButton, Scroll, SearchInput, Text, useTheme } from '@0xsequence/design-system'
 import Fuse from 'fuse.js'
 import { useState } from 'react'
 
+import type { ExtendedConnector } from '../../types.js'
 import { getLogo } from '../ConnectButton/index.js'
 
 interface ExtendedWalletListProps {
@@ -88,9 +78,9 @@ export const ExtendedWalletList = ({
         {isInline ? (
           <Text>{title}</Text>
         ) : (
-          <ModalPrimitive.Title asChild>
+          <DialogPrimitive.Title asChild>
             <Text>{title}</Text>
-          </ModalPrimitive.Title>
+          </DialogPrimitive.Title>
         )}
       </div>
       {searchable && (
@@ -98,7 +88,6 @@ export const ExtendedWalletList = ({
           <SearchInput
             autoFocus
             name="search"
-            leftIcon={SearchIcon}
             value={search}
             onChange={ev => setSearch(ev.target.value)}
             placeholder="Search"

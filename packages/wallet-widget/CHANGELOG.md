@@ -1,5 +1,23 @@
 # @0xsequence/kit-wallet
 
+## 6.0.2
+
+### Patch Changes
+
+- Fix for chain switch
+- Updated dependencies
+  - @0xsequence/connect@6.0.2
+  - @0xsequence/hooks@6.0.2
+
+## 6.0.1
+
+### Patch Changes
+
+- Minor fixes
+- Updated dependencies
+  - @0xsequence/connect@6.0.1
+  - @0xsequence/hooks@6.0.1
+
 ## 6.0.0
 
 ### Major Changes

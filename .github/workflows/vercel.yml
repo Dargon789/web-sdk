@@ -2,15 +2,12 @@
 name: Deploy to Vercel
 permissions:
   contents: read
-
 # This specifies when the workflow should run.
 on:
   # The workflow will run on every 'push' to the 'main' branch.
-  push:
-    branches:
+  push: web-sdk
+  branches:
       - master
-      - main
-      
   # This allows you to manually trigger the workflow from the GitHub Actions page.
   workflow_dispatch:
 # These are environment variables passed to the Vercel CLI.
@@ -79,6 +76,6 @@ strategy:
   matrix:
     node-version: [18.x, 20.x, 22.x]
     name: Deploy to Vercel
-    run: vercel deploy --prebuilt
+     run: vercel deploy --prebuilt
      env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
