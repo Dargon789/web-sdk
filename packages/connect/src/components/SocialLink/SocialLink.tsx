@@ -278,13 +278,41 @@ const DEVICE_EMOJIS = [
   ...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷🕸🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐓🦃🦚🦜🦢🦩🕊🐇🦝🦨🦡🦦🦥🐁🐀🐿🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿🍀🎍🎋🍃👣🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🥭🍍🥥🥝🍅🥑🥦🥬🥒🌶🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🥪🥙🧆🌮🌯🥗🥘🥫🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜👀👂👃👄👅👆👇👈👉👊👋👌👍👎👏👐👑👒👓🎯🎰🎱🎲🎳👾👯👺👻👽🏂🏃🏄'
 ]
 
+function secureRandomInt(maxExclusive: number): number {
+  if (maxExclusive <= 0) {
+    throw new Error('maxExclusive must be positive')
+  }
+
+  const globalCrypto =
+    (typeof window !== 'undefined' && window.crypto) ||
+    (typeof self !== 'undefined' && (self as unknown as { crypto?: Crypto }).crypto)
+
+  // Fallback to Math.random() if crypto is not available (older or non-browser environments)
+  if (!globalCrypto || !globalCrypto.getRandomValues) {
+    return Math.floor(Math.random() * maxExclusive)
+  }
+
+  const range = 0xffffffff + 1 // 2^32
+  const threshold = range - (range % maxExclusive)
+  const buffer = new Uint32Array(1)
+
+  // Rejection sampling to avoid modulo bias
+  while (true) {
+    globalCrypto.getRandomValues(buffer)
+    const randomValue = buffer[0]
+    if (randomValue < threshold) {
+      return randomValue % maxExclusive
+    }
+  }
+}
+
 function randomName() {
   const wordlistSize = english.length
   const words = english
 
-  const randomEmoji = DEVICE_EMOJIS[Math.floor(Math.random() * DEVICE_EMOJIS.length)]
-  const randomWord1 = words[Math.floor(Math.random() * wordlistSize)]
-  const randomWord2 = words[Math.floor(Math.random() * wordlistSize)]
+  const randomEmoji = DEVICE_EMOJIS[secureRandomInt(DEVICE_EMOJIS.length)]
+  const randomWord1 = words[secureRandomInt(wordlistSize)]
+  const randomWord2 = words[secureRandomInt(wordlistSize)]
 
   return `${randomEmoji} ${randomWord1} ${randomWord2}`
 }
