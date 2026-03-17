@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   ChevronRightIcon,
   CopyIcon,
@@ -9,29 +10,22 @@ import {
   Text,
   NumericInput,
   TextInput,
+  vars,
   Spinner,
   Card
 } from '@0xsequence/design-system'
-import { ContractType, ContractVerificationStatus, TokenBalance } from '@0xsequence/indexer'
-import {
-  getNativeTokenInfoByChainId,
-  useAnalyticsContext,
-  ExtendedConnector,
-  truncateAtMiddle,
-  useCheckWaasFeeOptions,
-  useWaasFeeOptions
-} from '@0xsequence/kit'
-import { useGetTokenBalancesDetails } from '@0xsequence/kit-hooks'
+import { TokenBalance } from '@0xsequence/indexer'
+import { getNativeTokenInfoByChainId, ExtendedConnector } from '@0xsequence/kit'
+import { useAnalyticsContext } from '@0xsequence/kit/contexts'
+import { useCollectibleBalance } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
-import { useRef, useState, ChangeEvent, useEffect } from 'react'
+import React, { useRef, useState, ChangeEvent, useEffect } from 'react'
 import { useAccount, useChainId, useSwitchChain, useConfig, useSendTransaction } from 'wagmi'
 
 import { ERC_1155_ABI, ERC_721_ABI, HEADER_HEIGHT } from '../constants'
-import { useNavigationContext } from '../contexts/Navigation'
 import { useNavigation } from '../hooks'
 import { SendItemInfo } from '../shared/SendItemInfo'
-import { TransactionConfirmation } from '../shared/TransactionConfirmation'
-import { limitDecimals, isEthAddress } from '../utils'
+import { limitDecimals, isEthAddress, truncateAtMiddle } from '../utils'
 
 interface SendCollectibleProps {
   chainId: number
@@ -41,12 +35,12 @@ interface SendCollectibleProps {
 
 export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendCollectibleProps) => {
   const { setNavigation } = useNavigation()
-  const { setIsBackButtonEnabled } = useNavigationContext()
   const { analytics } = useAnalyticsContext()
   const { chains } = useConfig()
   const connectedChainId = useChainId()
   const { address: accountAddress = '', connector } = useAccount()
-  const isConnectorSequenceBased = !!(connector as ExtendedConnector)?._wallet?.isSequenceBased
+  /* @ts-ignore-next-line */
+  const isConnectorSequenceBased = !!connector?._wallet?.isSequenceBased
   const isCorrectChainId = connectedChainId === chainId
   const showSwitchNetwork = !isCorrectChainId && !isConnectorSequenceBased
   const { switchChain } = useSwitchChain()
@@ -56,35 +50,14 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   const [showAmountControls, setShowAmountControls] = useState<boolean>(false)
   const { sendTransaction } = useSendTransaction()
   const [isSendTxnPending, setIsSendTxnPending] = useState(false)
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [feeOptions, setFeeOptions] = useState<
-    | {
-        options: any[]
-        chainId: number
-      }
-    | undefined
-  >()
-  const [isCheckingFeeOptions, setIsCheckingFeeOptions] = useState(false)
-  const [selectedFeeTokenAddress, setSelectedFeeTokenAddress] = useState<string | null>(null)
-  const checkFeeOptions = useCheckWaasFeeOptions()
-  const [pendingFeeOption, confirmFeeOption, _rejectFeeOption] = useWaasFeeOptions()
-
-  const { data: dataTokens, isPending: isPendingBalances } = useGetTokenBalancesDetails({
-    filter: {
-      accountAddresses: [accountAddress],
-      contractStatus: ContractVerificationStatus.ALL,
-      contractWhitelist: [contractAddress],
-      omitNativeBalances: false
-    },
-    chainIds: [chainId]
+  const { data: tokenBalance, isPending: isPendingBalances } = useCollectibleBalance({
+    accountAddress,
+    chainId,
+    contractAddress,
+    tokenId,
+    verifiedOnly: false
   })
-
-  const tokenBalance = dataTokens && dataTokens.length > 0 ? dataTokens.find(balance => balance.tokenID === tokenId) : undefined
-
-  let contractType: ContractType | undefined
-  if (tokenBalance) {
-    contractType = tokenBalance.contractType
-  }
+  const { contractType } = tokenBalance as TokenBalance
 
   useEffect(() => {
     if (tokenBalance) {
@@ -92,23 +65,13 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
         setAmount('1')
         setShowAmountControls(false)
       } else if (contractType === 'ERC1155') {
-        if (Number(ethers.formatUnits(tokenBalance?.balance || 0, decimals)) >= 1) {
+        if (Number(ethers.utils.formatUnits(tokenBalance?.balance || 0, decimals)) >= 1) {
           setAmount('1')
         }
         setShowAmountControls(true)
       }
     }
   }, [tokenBalance])
-
-  useEffect(() => {
-    if (pendingFeeOption && selectedFeeTokenAddress !== null) {
-      confirmFeeOption(pendingFeeOption.id, selectedFeeTokenAddress)
-    }
-  }, [pendingFeeOption, selectedFeeTokenAddress])
-
-  useEffect(() => {
-    setIsBackButtonEnabled(!showConfirmation)
-  }, [showConfirmation, setIsBackButtonEnabled])
 
   const nativeTokenInfo = getNativeTokenInfoByChainId(chainId, chains)
 
@@ -122,10 +85,10 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   const name = tokenBalance?.tokenMetadata?.name || 'Unknown'
   const imageUrl = tokenBalance?.tokenMetadata?.image || tokenBalance?.contractInfo?.logoURI || ''
   const amountToSendFormatted = amount === '' ? '0' : amount
-  const amountRaw = ethers.parseUnits(amountToSendFormatted, decimals)
+  const amountRaw = ethers.utils.parseUnits(amountToSendFormatted, decimals)
 
-  const insufficientFunds = amountRaw > BigInt(tokenBalance?.balance || '0')
-  const isNonZeroAmount = amountRaw > 0n
+  const insufficientFunds = amountRaw.gt(tokenBalance?.balance || '0')
+  const isNonZeroAmount = amountRaw.gt(0)
 
   const handleChangeAmount = (ev: ChangeEvent<HTMLInputElement>) => {
     const { value } = ev.target
@@ -147,7 +110,7 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   const handleAddOne = () => {
     amountInputRef.current?.focus()
     const incrementedAmount = Number(amount) + 1
-    const maxAmount = Number(ethers.formatUnits(tokenBalance?.balance || 0, decimals))
+    const maxAmount = Number(ethers.utils.formatUnits(tokenBalance?.balance || 0, decimals))
 
     const newAmount = Math.min(incrementedAmount, maxAmount).toString()
 
@@ -156,7 +119,7 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
 
   const handleMax = () => {
     amountInputRef.current?.focus()
-    const maxAmount = ethers.formatUnits(tokenBalance?.balance || 0, decimals).toString()
+    const maxAmount = ethers.utils.formatUnits(tokenBalance?.balance || 0, decimals).toString()
 
     setAmount(maxAmount)
   }
@@ -170,78 +133,14 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
     setToAddress('')
   }
 
-  const handleSendClick = async (e: ChangeEvent<HTMLFormElement>) => {
+  const executeTransaction = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    setIsCheckingFeeOptions(true)
-
-    const sendAmount = ethers.parseUnits(amountToSendFormatted, decimals)
-    let transaction
-
-    switch (contractType) {
-      case 'ERC721':
-        transaction = {
-          to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
-          data: new ethers.Interface(ERC_721_ABI).encodeFunctionData('safeTransferFrom', [
-            accountAddress,
-            toAddress,
-            tokenId
-          ]) as `0x${string}`
-        }
-        break
-      case 'ERC1155':
-      default:
-        transaction = {
-          to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
-          data: new ethers.Interface(ERC_1155_ABI).encodeFunctionData('safeBatchTransferFrom', [
-            accountAddress,
-            toAddress,
-            [tokenId],
-            [ethers.toQuantity(sendAmount)],
-            new Uint8Array()
-          ]) as `0x${string}`
-        }
-    }
-
-    // Check fee options before showing confirmation
-    const feeOptionsResult = await checkFeeOptions({
-      transactions: [transaction],
-      chainId
-    })
-
-    setFeeOptions(
-      feeOptionsResult?.feeOptions
-        ? {
-            options: feeOptionsResult.feeOptions,
-            chainId
-          }
-        : undefined
-    )
-
-    setShowConfirmation(true)
-
-    setIsCheckingFeeOptions(false)
-  }
-
-  const executeTransaction = async () => {
     if (!isCorrectChainId && isConnectorSequenceBased) {
       switchChain({ chainId })
     }
 
-    const sendAmount = ethers.parseUnits(amountToSendFormatted, decimals)
-
-    const txOptions = {
-      onSettled: (result: any) => {
-        setIsBackButtonEnabled(true)
-
-        if (result) {
-          setNavigation({
-            location: 'home'
-          })
-        }
-        setIsSendTxnPending(false)
-      }
-    }
+    const sendAmount = ethers.utils.parseUnits(amountToSendFormatted, decimals)
 
     switch (contractType) {
       case 'ERC721':
@@ -256,15 +155,24 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
         // _from, _to, _id
         sendTransaction(
           {
-            to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
-            data: new ethers.Interface(ERC_721_ABI).encodeFunctionData('safeTransferFrom', [
+            to: (tokenBalance as TokenBalance).contractAddress as `0x${string}}`,
+            data: new ethers.utils.Interface(ERC_721_ABI).encodeFunctionData('safeTransferFrom', [
               accountAddress,
               toAddress,
               tokenId
             ]) as `0x${string}`,
             gas: null
           },
-          txOptions
+          {
+            onSettled: result => {
+              if (result) {
+                setNavigation({
+                  location: 'home'
+                })
+              }
+              setIsSendTxnPending(false)
+            }
+          }
         )
         break
       case 'ERC1155':
@@ -280,172 +188,162 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
         // _from, _to, _ids, _amounts, _data
         sendTransaction(
           {
-            to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
-            data: new ethers.Interface(ERC_1155_ABI).encodeFunctionData('safeBatchTransferFrom', [
+            to: (tokenBalance as TokenBalance).contractAddress as `0x${string}}`,
+            data: new ethers.utils.Interface(ERC_1155_ABI).encodeFunctionData('safeBatchTransferFrom', [
               accountAddress,
               toAddress,
               [tokenId],
-              [ethers.toQuantity(sendAmount)],
-              new Uint8Array()
+              [sendAmount.toHexString()],
+              []
             ]) as `0x${string}`,
             gas: null
           },
-          txOptions
+          {
+            onSettled: result => {
+              if (result) {
+                setNavigation({
+                  location: 'home'
+                })
+              }
+              setIsSendTxnPending(false)
+            }
+          }
         )
     }
   }
 
-  const maxAmount = ethers.formatUnits(tokenBalance?.balance || 0, decimals).toString()
+  const maxAmount = ethers.utils.formatUnits(tokenBalance?.balance || 0, decimals).toString()
 
   const isMinimum = Number(amount) === 0
   const isMaximum = Number(amount) >= Number(maxAmount)
 
   return (
-    <form
-      className="flex p-5 pt-3 gap-2 flex-col"
-      style={{
-        marginTop: HEADER_HEIGHT
-      }}
-      onSubmit={handleSendClick}
+    <Box
+      padding="5"
+      paddingTop="3"
+      gap="2"
+      flexDirection="column"
+      as="form"
+      onSubmit={executeTransaction}
+      pointerEvents={isSendTxnPending ? 'none' : 'auto'}
     >
-      {!showConfirmation && (
-        <>
-          <div className="flex bg-background-secondary rounded-xl p-4 gap-2 flex-col">
-            <SendItemInfo
-              imageUrl={imageUrl}
-              showSquareImage
-              decimals={decimals}
-              name={name}
-              symbol={''}
-              balance={tokenBalance?.balance || '0'}
-              chainId={chainId}
-            />
-            <NumericInput
-              ref={amountInputRef}
-              name="amount"
-              value={amount}
-              onChange={handleChangeAmount}
-              disabled={!showAmountControls}
-              controls={
-                <>
-                  {showAmountControls && (
-                    <div className="flex gap-2">
-                      <Button disabled={isMinimum} size="xs" onClick={handleSubtractOne} leftIcon={SubtractIcon} />
-                      <Button disabled={isMaximum} size="xs" onClick={handleAddOne} leftIcon={AddIcon} />
-                      <Button className="shrink-0" size="xs" shape="square" label="Max" onClick={handleMax} data-id="maxCoin" />
-                    </div>
-                  )}
-                </>
-              }
-            />
-            {insufficientFunds && (
-              <Text className="mt-2" variant="normal" color="negative" asChild>
-                <div>Insufficient Balance</div>
-              </Text>
-            )}
-          </div>
-          <div className="flex bg-background-secondary rounded-xl p-4 gap-2 flex-col">
-            <Text variant="normal" color="muted">
-              To
-            </Text>
-            {isEthAddress(toAddress) ? (
-              <Card
-                className="flex w-full flex-row justify-between items-center"
-                clickable
-                onClick={handleToAddressClear}
-                style={{ height: '52px' }}
-              >
-                <div className="flex flex-row justify-center items-center gap-2">
-                  <GradientAvatar size="sm" address={toAddress} />
-                  <Text color="primary" variant="normal">{`0x${truncateAtMiddle(toAddress.substring(2), 10)}`}</Text>
-                </div>
-                <CloseIcon className="text-white" size="sm" />
-              </Card>
-            ) : (
-              <TextInput
-                value={toAddress}
-                onChange={ev => setToAddress(ev.target.value)}
-                placeholder={`${nativeTokenInfo.name} Address (0x...)`}
-                name="to-address"
-                data-1p-ignore
-                controls={
-                  <Button
-                    className="shrink-0"
-                    size="xs"
-                    shape="square"
-                    label="Paste"
-                    onClick={handlePaste}
-                    data-id="to-address"
-                    leftIcon={CopyIcon}
-                  />
-                }
-              />
-            )}
-          </div>
-
-          {showSwitchNetwork && (
-            <div className="mt-3">
-              <Text className="mb-2" variant="small" color="negative">
-                The wallet is connected to the wrong network. Please switch network before proceeding
-              </Text>
-              <Button
-                className="mt-2 w-full"
-                variant="primary"
-                size="lg"
-                type="button"
-                label="Switch Network"
-                onClick={() => switchChain({ chainId })}
-                disabled={isCorrectChainId}
-              />
-            </div>
-          )}
-
-          <div className="flex items-center justify-center" style={{ height: '52px' }}>
-            {isCheckingFeeOptions ? (
-              <Spinner />
-            ) : (
-              <Button
-                className="text-primary mt-3 w-full"
-                variant="primary"
-                size="lg"
-                type="submit"
-                disabled={
-                  !isNonZeroAmount ||
-                  !isEthAddress(toAddress) ||
-                  insufficientFunds ||
-                  (!isCorrectChainId && !isConnectorSequenceBased)
-                }
-                label="Send"
-                rightIcon={ChevronRightIcon}
-              />
-            )}
-          </div>
-        </>
-      )}
-      {showConfirmation && (
-        <TransactionConfirmation
-          name={name}
-          symbol=""
+      <Box background="backgroundSecondary" borderRadius="md" padding="4" gap="2" flexDirection="column">
+        <SendItemInfo
           imageUrl={imageUrl}
-          amount={amountToSendFormatted}
-          toAddress={toAddress}
-          showSquareImage={true}
-          chainId={chainId}
-          balance={tokenBalance?.balance || '0'}
+          showSquareImage
           decimals={decimals}
-          feeOptions={feeOptions}
-          onSelectFeeOption={feeTokenAddress => {
-            setSelectedFeeTokenAddress(feeTokenAddress)
-          }}
-          isLoading={isSendTxnPending}
-          onConfirm={() => {
-            executeTransaction()
-          }}
-          onCancel={() => {
-            setShowConfirmation(false)
-          }}
+          name={name}
+          symbol={''}
+          balance={tokenBalance?.balance || '0'}
+          chainId={chainId}
         />
+        <NumericInput
+          ref={amountInputRef}
+          style={{ fontSize: vars.fontSizes.xlarge, fontWeight: vars.fontWeights.bold }}
+          name="amount"
+          value={amount}
+          onChange={handleChangeAmount}
+          disabled={!showAmountControls}
+          controls={
+            <>
+              {showAmountControls && (
+                <Box gap="2">
+                  <Button disabled={isMinimum} size="xs" onClick={handleSubtractOne} leftIcon={SubtractIcon} />
+                  <Button disabled={isMaximum} size="xs" onClick={handleAddOne} leftIcon={AddIcon} />
+                  <Button size="xs" shape="square" label="Max" onClick={handleMax} data-id="maxCoin" flexShrink="0" />
+                </Box>
+              )}
+            </>
+          }
+        />
+        {insufficientFunds && (
+          <Text as="div" variant="normal" color="negative" marginTop="2">
+            Insufficient Balance
+          </Text>
+        )}
+      </Box>
+      <Box background="backgroundSecondary" borderRadius="md" padding="4" gap="2" flexDirection="column">
+        <Text fontSize="normal" color="text50">
+          To
+        </Text>
+        {isEthAddress(toAddress) ? (
+          <Card
+            clickable
+            width="full"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+            onClick={handleToAddressClear}
+            style={{ height: '52px' }}
+          >
+            <Box flexDirection="row" justifyContent="center" alignItems="center" gap="2">
+              <GradientAvatar address={toAddress} style={{ width: '20px' }} />
+              <Text color="text100">{`0x${truncateAtMiddle(toAddress.substring(2), 8)}`}</Text>
+            </Box>
+            <CloseIcon size="xs" />
+          </Card>
+        ) : (
+          <TextInput
+            value={toAddress}
+            onChange={ev => setToAddress(ev.target.value)}
+            placeholder={`${nativeTokenInfo.name} Address (0x...)`}
+            name="to-address"
+            data-1p-ignore
+            controls={
+              <Button
+                size="xs"
+                shape="square"
+                label="Paste"
+                onClick={handlePaste}
+                data-id="to-address"
+                flexShrink="0"
+                leftIcon={CopyIcon}
+              />
+            }
+          />
+        )}
+      </Box>
+
+      {showSwitchNetwork && (
+        <Box marginTop="3">
+          <Text variant="small" color="negative" marginBottom="2">
+            The wallet is connected to the wrong network. Please switch network before proceeding
+          </Text>
+          <Button
+            marginTop="2"
+            width="full"
+            variant="primary"
+            type="button"
+            label="Switch Network"
+            onClick={() => switchChain({ chainId })}
+            disabled={isCorrectChainId}
+            style={{ height: '52px', borderRadius: vars.radii.md }}
+          />
+        </Box>
       )}
-    </form>
+
+      <Box style={{ height: '52px' }} alignItems="center" justifyContent="center">
+        {isSendTxnPending ? (
+          <Spinner />
+        ) : (
+          <Button
+            color="text100"
+            marginTop="3"
+            width="full"
+            variant="primary"
+            type="submit"
+            disabled={
+              !isNonZeroAmount ||
+              !isEthAddress(toAddress) ||
+              insufficientFunds ||
+              (!isCorrectChainId && !isConnectorSequenceBased)
+            }
+            label="Send"
+            rightIcon={ChevronRightIcon}
+            style={{ height: '52px', borderRadius: vars.radii.md }}
+          />
+        )}
+      </Box>
+    </Box>
   )
 }

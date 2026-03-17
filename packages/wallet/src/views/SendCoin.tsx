@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   ChevronRightIcon,
   CopyIcon,
@@ -7,30 +8,22 @@ import {
   Text,
   NumericInput,
   TextInput,
+  vars,
   Spinner,
   Card
 } from '@0xsequence/design-system'
-import { ContractVerificationStatus, TokenBalance } from '@0xsequence/indexer'
-import {
-  compareAddress,
-  getNativeTokenInfoByChainId,
-  useAnalyticsContext,
-  ExtendedConnector,
-  truncateAtMiddle,
-  useCheckWaasFeeOptions,
-  useWaasFeeOptions
-} from '@0xsequence/kit'
-import { useGetTokenBalancesSummary, useGetCoinPrices, useGetExchangeRate } from '@0xsequence/kit-hooks'
+import { TokenBalance } from '@0xsequence/indexer'
+import { getNativeTokenInfoByChainId, ExtendedConnector } from '@0xsequence/kit'
+import { useAnalyticsContext } from '@0xsequence/kit/contexts'
+import { useExchangeRate, useCoinPrices, useBalances } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
-import { useState, ChangeEvent, useRef, useEffect } from 'react'
+import React, { useState, ChangeEvent, useRef } from 'react'
 import { useAccount, useChainId, useSwitchChain, useConfig, useSendTransaction } from 'wagmi'
 
 import { ERC_20_ABI, HEADER_HEIGHT } from '../constants'
-import { useNavigationContext } from '../contexts/Navigation'
 import { useSettings, useNavigation } from '../hooks'
 import { SendItemInfo } from '../shared/SendItemInfo'
-import { TransactionConfirmation } from '../shared/TransactionConfirmation'
-import { computeBalanceFiat, limitDecimals, isEthAddress } from '../utils'
+import { compareAddress, computeBalanceFiat, limitDecimals, isEthAddress, truncateAtMiddle } from '../utils'
 
 interface SendCoinProps {
   chainId: number
@@ -39,12 +32,12 @@ interface SendCoinProps {
 
 export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const { setNavigation } = useNavigation()
-  const { setIsBackButtonEnabled } = useNavigationContext()
   const { analytics } = useAnalyticsContext()
   const { chains } = useConfig()
   const connectedChainId = useChainId()
   const { address: accountAddress = '', connector } = useAccount()
-  const isConnectorSequenceBased = !!(connector as ExtendedConnector)?._wallet?.isSequenceBased
+  /* @ts-ignore-next-line */
+  const isConnectorSequenceBased = !!connector?._wallet?.isSequenceBased
   const isCorrectChainId = connectedChainId === chainId
   const showSwitchNetwork = !isCorrectChainId && !isConnectorSequenceBased
   const { switchChainAsync } = useSwitchChain()
@@ -54,64 +47,35 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const [toAddress, setToAddress] = useState<string>('')
   const { sendTransaction } = useSendTransaction()
   const [isSendTxnPending, setIsSendTxnPending] = useState(false)
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [feeOptions, setFeeOptions] = useState<
-    | {
-        options: any[]
-        chainId: number
-      }
-    | undefined
-  >()
-  const [isCheckingFeeOptions, setIsCheckingFeeOptions] = useState(false)
-  const [selectedFeeTokenAddress, setSelectedFeeTokenAddress] = useState<string | null>(null)
-  const checkFeeOptions = useCheckWaasFeeOptions()
-  const [pendingFeeOption, confirmFeeOption, _rejectFeeOption] = useWaasFeeOptions()
-
-  const { data: balances = [], isPending: isPendingBalances } = useGetTokenBalancesSummary({
+  const { data: balances = [], isPending: isPendingBalances } = useBalances({
     chainIds: [chainId],
-    filter: {
-      accountAddresses: [accountAddress],
-      contractStatus: ContractVerificationStatus.ALL,
-      contractWhitelist: [contractAddress],
-      omitNativeBalances: false
-    }
+    accountAddress: accountAddress,
+    contractAddress
   })
   const nativeTokenInfo = getNativeTokenInfoByChainId(chainId, chains)
   const tokenBalance = (balances as TokenBalance[]).find(b => b.contractAddress === contractAddress)
-  const { data: coinPrices = [], isPending: isPendingCoinPrices } = useGetCoinPrices([
+  const { data: coinPrices = [], isPending: isPendingCoinPrices } = useCoinPrices([
     {
       chainId,
       contractAddress
     }
   ])
 
-  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
+  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useExchangeRate(fiatCurrency.symbol)
 
   const isPending = isPendingBalances || isPendingCoinPrices || isPendingConversionRate
-
-  // Handle fee option confirmation when pendingFeeOption is available
-  useEffect(() => {
-    if (pendingFeeOption && selectedFeeTokenAddress !== null) {
-      confirmFeeOption(pendingFeeOption.id, selectedFeeTokenAddress)
-    }
-  }, [pendingFeeOption, selectedFeeTokenAddress])
-
-  // Control back button when showing confirmation
-  useEffect(() => {
-    setIsBackButtonEnabled(!showConfirmation)
-  }, [showConfirmation, setIsBackButtonEnabled])
 
   if (isPending) {
     return null
   }
 
-  const isNativeCoin = compareAddress(contractAddress, ethers.ZeroAddress)
+  const isNativeCoin = compareAddress(contractAddress, ethers.constants.AddressZero)
   const decimals = isNativeCoin ? nativeTokenInfo.decimals : tokenBalance?.contractInfo?.decimals || 18
   const name = isNativeCoin ? nativeTokenInfo.name : tokenBalance?.contractInfo?.name || ''
   const imageUrl = isNativeCoin ? nativeTokenInfo.logoURI : tokenBalance?.contractInfo?.logoURI
   const symbol = isNativeCoin ? nativeTokenInfo.symbol : tokenBalance?.contractInfo?.symbol || ''
   const amountToSendFormatted = amount === '' ? '0' : amount
-  const amountRaw = ethers.parseUnits(amountToSendFormatted, decimals)
+  const amountRaw = ethers.utils.parseUnits(amountToSendFormatted, decimals)
 
   const amountToSendFiat = computeBalanceFiat({
     balance: {
@@ -123,8 +87,8 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
     decimals
   })
 
-  const insufficientFunds = amountRaw > BigInt(tokenBalance?.balance || '0')
-  const isNonZeroAmount = amountRaw > 0n
+  const insufficientFunds = amountRaw.gt(tokenBalance?.balance || '0')
+  const isNonZeroAmount = amountRaw.gt(0)
 
   const handleChangeAmount = (ev: ChangeEvent<HTMLInputElement>) => {
     const { value } = ev.target
@@ -137,7 +101,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
 
   const handleMax = () => {
     amountInputRef.current?.focus()
-    const maxAmount = ethers.formatUnits(tokenBalance?.balance || 0, decimals).toString()
+    const maxAmount = ethers.utils.formatUnits(tokenBalance?.balance || 0, decimals).toString()
 
     setAmount(maxAmount)
   }
@@ -151,253 +115,204 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
     setToAddress('')
   }
 
-  const handleSendClick = async (e: ChangeEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    setIsCheckingFeeOptions(true)
-
-    const sendAmount = ethers.parseUnits(amountToSendFormatted, decimals)
-    let transaction
-
-    if (isNativeCoin) {
-      transaction = {
-        to: toAddress as `0x${string}`,
-        value: BigInt(sendAmount.toString())
-      }
-    } else {
-      transaction = {
-        to: tokenBalance?.contractAddress as `0x${string}`,
-        data: new ethers.Interface(ERC_20_ABI).encodeFunctionData('transfer', [
-          toAddress,
-          ethers.toQuantity(sendAmount)
-        ]) as `0x${string}`
-      }
-    }
-
-    // Check fee options before showing confirmation
-    const feeOptionsResult = await checkFeeOptions({
-      transactions: [transaction],
-      chainId
-    })
-
-    setFeeOptions(
-      feeOptionsResult?.feeOptions
-        ? {
-            options: feeOptionsResult.feeOptions,
-            chainId
-          }
-        : undefined
-    )
-
-    setShowConfirmation(true)
-
-    setIsCheckingFeeOptions(false)
-  }
-
-  const executeTransaction = async () => {
+  const executeTransaction = async (e: ChangeEvent<HTMLFormElement>) => {
     if (!isCorrectChainId && isConnectorSequenceBased) {
       await switchChainAsync({ chainId })
     }
 
-    analytics?.track({
-      event: 'SEND_TRANSACTION_REQUEST',
-      props: {
-        walletClient: (connector as ExtendedConnector | undefined)?._wallet?.id || 'unknown',
-        source: 'sequence-kit/wallet'
-      }
-    })
+    e.preventDefault()
 
-    setIsSendTxnPending(true)
-
-    const sendAmount = ethers.parseUnits(amountToSendFormatted, decimals)
-
-    const txOptions = {
-      onSettled: (result: any) => {
-        setIsBackButtonEnabled(true)
-
-        if (result) {
-          setNavigation({
-            location: 'home'
-          })
-        }
-        setIsSendTxnPending(false)
-      }
-    }
+    const sendAmount = ethers.utils.parseUnits(amountToSendFormatted, decimals)
 
     if (isNativeCoin) {
+      analytics?.track({
+        event: 'SEND_TRANSACTION_REQUEST',
+        props: {
+          walletClient: (connector as ExtendedConnector | undefined)?._wallet?.id || 'unknown',
+          source: 'sequence-kit/wallet'
+        }
+      })
+      setIsSendTxnPending(true)
       sendTransaction(
         {
-          to: toAddress as `0x${string}`,
+          to: toAddress as `0x${string}}`,
           value: BigInt(sendAmount.toString()),
           gas: null
         },
-        txOptions
+        {
+          onSettled: result => {
+            if (result) {
+              setNavigation({
+                location: 'home'
+              })
+            }
+            setIsSendTxnPending(false)
+          }
+        }
       )
     } else {
+      analytics?.track({
+        event: 'SEND_TRANSACTION_REQUEST',
+        props: {
+          walletClient: (connector as ExtendedConnector | undefined)?._wallet?.id || 'unknown',
+          source: 'sequence-kit/wallet'
+        }
+      })
+      setIsSendTxnPending(true)
       sendTransaction(
         {
-          to: tokenBalance?.contractAddress as `0x${string}`,
-          data: new ethers.Interface(ERC_20_ABI).encodeFunctionData('transfer', [
+          to: tokenBalance?.contractAddress as `0x${string}}`,
+          data: new ethers.utils.Interface(ERC_20_ABI).encodeFunctionData('transfer', [
             toAddress,
-            ethers.toQuantity(sendAmount)
+            sendAmount.toHexString()
           ]) as `0x${string}`,
           gas: null
         },
-        txOptions
+        {
+          onSettled: result => {
+            if (result) {
+              setNavigation({
+                location: 'home'
+              })
+            }
+            setIsSendTxnPending(false)
+          }
+        }
       )
     }
   }
 
   return (
-    <form
-      className="flex p-5 pt-3 gap-2 flex-col"
-      style={{
-        marginTop: HEADER_HEIGHT
-      }}
-      onSubmit={handleSendClick}
+    <Box
+      padding="5"
+      paddingTop="3"
+      gap="2"
+      flexDirection="column"
+      as="form"
+      onSubmit={executeTransaction}
+      pointerEvents={isSendTxnPending ? 'none' : 'auto'}
     >
-      {!showConfirmation && (
-        <>
-          <div className="flex bg-background-secondary rounded-xl p-4 gap-2 flex-col">
-            <SendItemInfo
-              imageUrl={imageUrl}
-              decimals={decimals}
-              name={name}
-              symbol={symbol}
-              balance={tokenBalance?.balance || '0'}
-              fiatValue={computeBalanceFiat({
-                balance: tokenBalance as TokenBalance,
-                prices: coinPrices,
-                conversionRate,
-                decimals
-              })}
-              chainId={chainId}
-            />
-            <NumericInput
-              ref={amountInputRef}
-              name="amount"
-              value={amount}
-              onChange={handleChangeAmount}
-              controls={
-                <>
-                  <Text className="whitespace-nowrap" variant="small" color="muted">
-                    {`~${fiatCurrency.sign}${amountToSendFiat}`}
-                  </Text>
-                  <Button className="shrink-0" size="xs" shape="square" label="Max" onClick={handleMax} data-id="maxCoin" />
-                  <Text variant="xlarge" fontWeight="bold" color="primary">
-                    {symbol}
-                  </Text>
-                </>
-              }
-            />
-            {insufficientFunds && (
-              <Text className="mt-2" variant="normal" color="negative" asChild>
-                <div>Insufficient Funds</div>
-              </Text>
-            )}
-          </div>
-          <div className="flex bg-background-secondary rounded-xl p-4 gap-2 flex-col">
-            <Text variant="normal" color="muted">
-              To
-            </Text>
-            {isEthAddress(toAddress) ? (
-              <Card
-                className="flex w-full flex-row justify-between items-center"
-                clickable
-                onClick={handleToAddressClear}
-                style={{ height: '52px' }}
-              >
-                <div className="flex flex-row justify-center items-center gap-2">
-                  <GradientAvatar size="sm" address={toAddress} />
-                  <Text color="primary" variant="normal">{`0x${truncateAtMiddle(toAddress.substring(2), 10)}`}</Text>
-                </div>
-                <CloseIcon className="text-white" size="sm" />
-              </Card>
-            ) : (
-              <TextInput
-                value={toAddress}
-                onChange={ev => setToAddress(ev.target.value)}
-                placeholder={`${nativeTokenInfo.name} Address (0x...)`}
-                name="to-address"
-                data-1p-ignore
-                controls={
-                  <Button
-                    className="shrink-0"
-                    size="xs"
-                    shape="square"
-                    label="Paste"
-                    onClick={handlePaste}
-                    data-id="to-address"
-                    leftIcon={CopyIcon}
-                  />
-                }
-              />
-            )}
-          </div>
-
-          {showSwitchNetwork && (
-            <div className="mt-3">
-              <Text className="mb-2" variant="small" color="negative">
-                The wallet is connected to the wrong network. Please switch network before proceeding
-              </Text>
-              <Button
-                className="mt-2 w-full"
-                variant="primary"
-                size="lg"
-                type="button"
-                label="Switch Network"
-                onClick={async () => await switchChainAsync({ chainId })}
-                disabled={isCorrectChainId}
-              />
-            </div>
-          )}
-
-          <div className="flex items-center justify-center" style={{ height: '52px' }}>
-            {isCheckingFeeOptions ? (
-              <Spinner />
-            ) : (
-              <Button
-                className="text-primary mt-3 w-full"
-                variant="primary"
-                size="lg"
-                type="submit"
-                disabled={
-                  !isNonZeroAmount ||
-                  !isEthAddress(toAddress) ||
-                  insufficientFunds ||
-                  (!isCorrectChainId && !isConnectorSequenceBased)
-                }
-                label="Send"
-                rightIcon={ChevronRightIcon}
-              />
-            )}
-          </div>
-        </>
-      )}
-      {showConfirmation && (
-        <TransactionConfirmation
+      <Box background="backgroundSecondary" borderRadius="md" padding="4" gap="2" flexDirection="column">
+        <SendItemInfo
+          imageUrl={imageUrl}
+          decimals={decimals}
           name={name}
           symbol={symbol}
-          imageUrl={imageUrl}
-          amount={amountToSendFormatted}
-          toAddress={toAddress}
-          chainId={chainId}
           balance={tokenBalance?.balance || '0'}
-          decimals={decimals}
-          fiatValue={amountToSendFiat}
-          feeOptions={feeOptions}
-          onSelectFeeOption={feeTokenAddress => {
-            setSelectedFeeTokenAddress(feeTokenAddress)
-          }}
-          isLoading={isSendTxnPending}
-          onConfirm={() => {
-            executeTransaction()
-          }}
-          onCancel={() => {
-            setShowConfirmation(false)
-          }}
+          fiatValue={computeBalanceFiat({
+            balance: tokenBalance as TokenBalance,
+            prices: coinPrices,
+            conversionRate,
+            decimals
+          })}
+          chainId={chainId}
         />
+        <NumericInput
+          ref={amountInputRef}
+          style={{ fontSize: vars.fontSizes.xlarge, fontWeight: vars.fontWeights.bold }}
+          name="amount"
+          value={amount}
+          onChange={handleChangeAmount}
+          controls={
+            <>
+              <Text variant="small" color="text50" whiteSpace="nowrap">
+                {`~${fiatCurrency.sign}${amountToSendFiat}`}
+              </Text>
+              <Button size="xs" shape="square" label="Max" onClick={handleMax} data-id="maxCoin" flexShrink="0" />
+              <Text fontSize="xlarge" fontWeight="bold" color="text100">
+                {symbol}
+              </Text>
+            </>
+          }
+        />
+        {insufficientFunds && (
+          <Text as="div" variant="normal" color="negative" marginTop="2">
+            Insufficient Funds
+          </Text>
+        )}
+      </Box>
+      <Box background="backgroundSecondary" borderRadius="md" padding="4" gap="2" flexDirection="column">
+        <Text fontSize="normal" color="text50">
+          To
+        </Text>
+        {isEthAddress(toAddress) ? (
+          <Card
+            clickable
+            width="full"
+            flexDirection="row"
+            justifyContent="space-between"
+            alignItems="center"
+            onClick={handleToAddressClear}
+            style={{ height: '52px' }}
+          >
+            <Box flexDirection="row" justifyContent="center" alignItems="center" gap="2">
+              <GradientAvatar address={toAddress} style={{ width: '20px' }} />
+              <Text color="text100">{`0x${truncateAtMiddle(toAddress.substring(2), 8)}`}</Text>
+            </Box>
+            <CloseIcon size="xs" />
+          </Card>
+        ) : (
+          <TextInput
+            value={toAddress}
+            onChange={ev => setToAddress(ev.target.value)}
+            placeholder={`${nativeTokenInfo.name} Address (0x...)`}
+            name="to-address"
+            data-1p-ignore
+            controls={
+              <Button
+                size="xs"
+                shape="square"
+                label="Paste"
+                onClick={handlePaste}
+                data-id="to-address"
+                flexShrink="0"
+                leftIcon={CopyIcon}
+              />
+            }
+          />
+        )}
+      </Box>
+
+      {showSwitchNetwork && (
+        <Box marginTop="3">
+          <Text variant="small" color="negative" marginBottom="2">
+            The wallet is connected to the wrong network. Please switch network before proceeding
+          </Text>
+          <Button
+            marginTop="2"
+            width="full"
+            variant="primary"
+            type="button"
+            label="Switch Network"
+            onClick={async () => await switchChainAsync({ chainId })}
+            disabled={isCorrectChainId}
+            style={{ height: '52px', borderRadius: vars.radii.md }}
+          />
+        </Box>
       )}
-    </form>
+
+      <Box style={{ height: '52px' }} alignItems="center" justifyContent="center">
+        {isSendTxnPending ? (
+          <Spinner />
+        ) : (
+          <Button
+            color="text100"
+            marginTop="3"
+            width="full"
+            variant="primary"
+            type="submit"
+            disabled={
+              !isNonZeroAmount ||
+              !isEthAddress(toAddress) ||
+              insufficientFunds ||
+              (!isCorrectChainId && !isConnectorSequenceBased)
+            }
+            label="Send"
+            rightIcon={ChevronRightIcon}
+            style={{ height: '52px', borderRadius: vars.radii.md }}
+          />
+        )}
+      </Box>
+    </Box>
   )
 }

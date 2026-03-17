@@ -1,8 +1,7 @@
 'use client'
 
-import { Hex } from 'viem'
-
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
+import type { Hex } from 'viem'
 
 interface Transaction {
   to: Hex
@@ -12,20 +11,25 @@ interface Transaction {
 
 export interface SwapModalSettings {
   chainId: number
-  currencyAddress: string
-  currencyAmount: string
+  toTokenAddress: string
+  toTokenAmount: string
+  slippageBps?: number
   title?: string
   description?: string
   disableMainCurrency?: boolean
   postSwapTransactions?: Transaction[]
   blockConfirmations?: number
+  customSwapErrorMessage?: string
   onSuccess?: (txHash: string) => void
 }
 
 type SwapModalContext = {
+  isSwapModalOpen: boolean
   openSwapModal: (settings: SwapModalSettings) => void
   closeSwapModal: () => void
   swapModalSettings?: SwapModalSettings
 }
 
-export const [useSwapModalContext, SwapModalContextProvider] = createGenericContext<SwapModalContext>()
+const [useSwapModalContext, SwapModalContextProvider] = createGenericContext<SwapModalContext>()
+
+export { SwapModalContextProvider, useSwapModalContext }

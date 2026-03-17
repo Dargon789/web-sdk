@@ -1,22 +1,11 @@
 import { sequence } from '0xsequence'
-import { SequenceIndexer, TransactionReceipt, TransactionStatus } from '@0xsequence/indexer'
-import { FeeOption, SequenceWaaS } from '@0xsequence/waas'
-import { Hex, PublicClient, WalletClient } from 'viem'
+import { SequenceIndexer, TransactionStatus, TransactionReceipt } from '@0xsequence/indexer'
+import { SequenceWaaS } from '@0xsequence/waas'
+import { PublicClient, WalletClient, Hex } from 'viem'
 import { Connector } from 'wagmi'
 
 import { TRANSACTION_CONFIRMATIONS_DEFAULT } from '../constants'
 import { ExtendedConnector } from '../types'
-import { compareAddress } from '../utils/helpers'
-
-class FeeOptionInsufficientFundsError extends Error {
-  public readonly feeOptions: FeeOption[]
-
-  constructor(message: string, feeOptions: FeeOption[]) {
-    super(message)
-    this.name = 'FeeOptionInsufficientFundsError'
-    this.feeOptions = feeOptions
-  }
-}
 
 interface Transaction {
   to: Hex
@@ -69,45 +58,8 @@ export const sendTransactions = async ({
       network: chainId
     })
 
-    const isSponsored = resp.data.feeOptions.length == 0
-
-    let transactionsFeeOption
+    const transactionsFeeOption = resp.data.feeOptions[0]
     const transactionsFeeQuote = resp.data.feeQuote
-
-    const balances = await indexerClient.getTokenBalancesDetails({
-      filter: {
-        accountAddresses: [senderAddress],
-        omitNativeBalances: false
-      }
-    })
-
-    for (const feeOption of resp.data.feeOptions) {
-      const isNativeToken = feeOption.token.contractAddress == null
-
-      if (isNativeToken) {
-        const nativeTokenBalance = balances.nativeBalances?.[0].balance || '0'
-        if (BigInt(nativeTokenBalance) >= BigInt(feeOption.value)) {
-          transactionsFeeOption = feeOption
-          break
-        }
-      } else {
-        const erc20TokenBalance = balances.balances.find(b =>
-          compareAddress(b.contractAddress, feeOption.token.contractAddress || '')
-        )
-        const erc20TokenBalanceValue = erc20TokenBalance?.balance || '0'
-        if (BigInt(erc20TokenBalanceValue) >= BigInt(feeOption.value)) {
-          transactionsFeeOption = feeOption
-          break
-        }
-      }
-    }
-
-    if (!transactionsFeeOption && !isSponsored) {
-      throw new FeeOptionInsufficientFundsError(
-        `Transaction fee option with valid user balance not found: ${resp.data.feeOptions.map(f => f.token.symbol).join(', ')}`,
-        resp.data.feeOptions
-      )
-    }
 
     const response = await sequenceWaaS.sendTransaction({
       transactions,
@@ -118,6 +70,10 @@ export const sendTransactions = async ({
 
     if (response.code === 'transactionFailed') {
       throw new Error(response.data.error)
+    }
+
+    if (response.data.receipt.status === TransactionStatus.FAILED) {
+      throw new Error('Transaction failed')
     }
 
     const txnHash = response.data.txHash
@@ -227,7 +183,7 @@ export const waitForTransactionReceipt = async ({
   const receipt = await receiptPromise
 
   if (confirmations) {
-    const blockConfirmationPromise = new Promise<void>(resolve => {
+    const blockConfirmationPromise = new Promise<void>((resolve, reject) => {
       const unwatch = publicClient.watchBlocks({
         onBlock: ({ number: currentBlockNumber }) => {
           const confirmedBlocknumber = receipt.blockNumber + confirmations

@@ -1,13 +1,16 @@
+import { Box } from '@0xsequence/design-system'
 import { TokenBalance } from '@0xsequence/indexer'
-import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/kit'
-import { useGetContractInfo, useGetCoinPrices, useGetExchangeRate } from '@0xsequence/kit-hooks'
+import { getNativeTokenInfoByChainId } from '@0xsequence/kit'
+import { useContractInfo, useExchangeRate, useCoinPrices } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
+import React from 'react'
 import { useConfig } from 'wagmi'
 
 import { useSettings } from '../../../../../hooks'
-import { computeBalanceFiat, getPercentagePriceChange } from '../../../../../utils'
+import { computeBalanceFiat, formatDisplay, getPercentagePriceChange, compareAddress } from '../../../../../utils'
 
 import { CoinTileContent } from './CoinTileContent'
+
 interface CoinTileProps {
   balance: TokenBalance
 }
@@ -15,26 +18,23 @@ interface CoinTileProps {
 export const CoinTile = ({ balance }: CoinTileProps) => {
   const { chains } = useConfig()
   const { fiatCurrency } = useSettings()
-  const isNativeToken = compareAddress(balance.contractAddress, ethers.ZeroAddress)
+  const isNativeToken = compareAddress(balance.contractAddress, ethers.constants.AddressZero)
   const nativeTokenInfo = getNativeTokenInfoByChainId(balance.chainId, chains)
 
-  const { data: dataCoinPrices = [], isPending: isPendingCoinPrice } = useGetCoinPrices([
+  const { data: dataCoinPrices = [], isPending: isPendingCoinPrice } = useCoinPrices([
     {
       chainId: balance.chainId,
       contractAddress: balance.contractAddress
     }
   ])
 
-  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
+  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useExchangeRate(fiatCurrency.symbol)
 
-  const { data: contractInfo, isPending: isPendingContractInfo } = useGetContractInfo({
-    chainID: String(balance.chainId),
-    contractAddress: balance.contractAddress
-  })
+  const { data: contractInfo, isPending: isPendingContractInfo } = useContractInfo(balance.chainId, balance.contractAddress)
 
   const isPending = isPendingCoinPrice || isPendingConversionRate || isPendingContractInfo
   if (isPending) {
-    return <div className="bg-background-secondary w-full h-full rounded-xl" />
+    return <Box background="backgroundSecondary" width="full" height="full" borderRadius="md" />
   }
 
   if (isNativeToken) {
@@ -45,7 +45,7 @@ export const CoinTile = ({ balance }: CoinTileProps) => {
       decimals: nativeTokenInfo.decimals
     })
     const priceChangePercentage = getPercentagePriceChange(balance, dataCoinPrices)
-    const formattedBalance = ethers.formatUnits(balance.balance, nativeTokenInfo.decimals)
+    const formattedBalance = ethers.utils.formatUnits(balance.balance, nativeTokenInfo.decimals)
     const balanceDisplayed = formatDisplay(formattedBalance)
 
     return (
@@ -71,7 +71,7 @@ export const CoinTile = ({ balance }: CoinTileProps) => {
   })
   const priceChangePercentage = getPercentagePriceChange(balance, dataCoinPrices)
 
-  const formattedBalance = ethers.formatUnits(balance.balance, decimals)
+  const formattedBalance = ethers.utils.formatUnits(balance.balance, decimals)
   const balanceDisplayed = formatDisplay(formattedBalance)
 
   const name = contractInfo?.name || 'Unknown'

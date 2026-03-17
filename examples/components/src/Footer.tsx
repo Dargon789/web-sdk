@@ -1,4 +1,4 @@
-import { Button, Image, Text, useTheme } from '@0xsequence/design-system'
+import { Button, Image, Text } from '@0xsequence/design-system'
 
 interface BottomPageLink {
   label: string
@@ -12,7 +12,7 @@ export const bottomPageLinks: BottomPageLink[] = [
   },
   {
     label: 'About',
-    url: 'https://github.com/0xsequence/kit'
+    url: 'https://github.com/0xsequence/web-sdk'
   },
   {
     label: 'Blog',
@@ -24,7 +24,7 @@ export const bottomPageLinks: BottomPageLink[] = [
   },
   {
     label: 'Docs',
-    url: 'https://docs.sequence.xyz/wallet/connectors/kit/kit/overview'
+    url: 'https://docs.sequence.xyz/solutions/wallets/sequence-kit/overview'
   }
 ]
 
@@ -58,8 +58,6 @@ export const socialLinks: SocialLinks[] = [
 ]
 
 export const Footer = () => {
-  const { theme } = useTheme()
-
   const onClickLinkUrl = (url: string) => {
     if (typeof window !== 'undefined') {
       window.open(url)
@@ -96,15 +94,7 @@ export const Footer = () => {
                 }
               }}
             >
-              <Image
-                className="h-3"
-                src={socialLink.icon}
-                alt={socialLink.id}
-                style={{
-                  filter: theme === 'dark' ? 'invert(0)' : 'invert(1)'
-                }}
-                disableAnimation
-              />
+              <Image className="h-3" src={socialLink.icon} alt={socialLink.id} disableAnimation />
             </div>
           )
         })}

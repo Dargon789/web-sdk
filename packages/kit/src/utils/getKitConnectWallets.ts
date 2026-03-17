@@ -1,6 +1,29 @@
-import { CreateConnectorFn } from 'wagmi'
+import React from 'react'
+import { Connector, CreateConnectorFn } from 'wagmi'
 
-import { ExtendedConnector, Wallet } from '../types'
+import { LogoProps } from '@0xsequence/kit-connectors'
+
+export interface WalletProperties {
+  id: string
+  logoDark: React.FunctionComponent<LogoProps>
+  logoLight: React.FunctionComponent<LogoProps>
+  monochromeLogoDark?: React.FunctionComponent<LogoProps>
+  monochromeLogoLight?: React.FunctionComponent<LogoProps>
+  name: string
+  iconBackground?: string
+  hideConnectorId?: string | null
+  isSequenceBased?: boolean
+}
+
+export type Wallet = WalletProperties & {
+  createConnector: (projectAccessKey: string) => CreateConnectorFn
+}
+
+export interface WalletField {
+  _wallet: WalletProperties
+}
+
+export type ExtendedConnector = Connector & WalletField
 
 export const getKitConnectWallets = (projectAccessKey: string, wallets: Wallet[]): CreateConnectorFn[] => {
   const connectors: CreateConnectorFn[] = []

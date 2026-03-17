@@ -1,17 +1,12 @@
-import { SequenceAPIClient } from '@0xsequence/api'
 import { useMemo } from 'react'
-
-import { DEBUG } from '../env'
-
 import { useProjectAccessKey } from './useProjectAccessKey'
+import { SequenceAPIClient } from '@0xsequence/api'
 
 export const useAPIClient = () => {
   const projectAccessKey = useProjectAccessKey()
 
-  const clientUrl = DEBUG ? 'https://dev-api.sequence.app' : 'https://api.sequence.app'
-
   const apiClient = useMemo(() => {
-    return new SequenceAPIClient(clientUrl, projectAccessKey)
+    return new SequenceAPIClient('https://api.sequence.app', projectAccessKey)
   }, [projectAccessKey])
 
   return apiClient

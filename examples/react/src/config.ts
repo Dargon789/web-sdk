@@ -1,5 +1,9 @@
-import { KitConfig, createConfig, WalletType } from '@0xsequence/kit'
+import { SequenceCheckoutConfig } from '@0xsequence/checkout'
+import { ConnectConfig, createConfig, WalletType } from '@0xsequence/connect'
+import { immutable } from '@0xsequence/immutable-connector'
 import { ChainId } from '@0xsequence/network'
+import { Environment } from '@imtbl/config'
+import { passport } from '@imtbl/sdk'
 import { zeroAddress } from 'viem'
 
 const searchParams = new URLSearchParams(location.search)
@@ -9,20 +13,29 @@ const walletType: WalletType = searchParams.get('type') === 'universal' ? 'unive
 
 // append ?debug to url to enable debug mode
 const isDebugMode = searchParams.has('debug')
-const projectAccessKey = isDebugMode ? 'AQAAAAAAAAK2JvvZhWqZ51riasWBftkrVXE' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
+// @ts-ignore
+const isDev = __SEQUENCE_WEB_SDK_IS_DEV__
+const projectAccessKey = isDev ? 'AQAAAAAAAAbRfXdDS5e-ZD2pNeMcCtNnij4' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
 const walletConnectProjectId = 'c65a6cb1aa83c4e24500130f23a437d8'
 
 export const sponsoredContractAddresses: Record<number, `0x${string}`> = {
   [ChainId.ARBITRUM_NOVA]: '0x37470dac8a0255141745906c972e414b1409b470'
 }
 
-export const kitConfig: KitConfig = {
+export const connectConfig: ConnectConfig = {
   projectAccessKey,
   defaultTheme: 'dark',
   signIn: {
-    projectName: 'Kit Demo',
-    useMock: isDebugMode
+    projectName: 'Sequence Web SDK Demo',
+    useMock: isDebugMode,
+    showWalletAuthOptionsFirst: false
   },
+  // Custom css injected into shadow dom
+  // customCSS: `
+  //   span {
+  //     color: red !important;
+  //   }
+  // `,
   displayedAssets: [
     // Native token
     {
@@ -50,20 +63,47 @@ export const kitConfig: KitConfig = {
       chainId: ChainId.POLYGON
     }
   ],
-  readOnlyNetworks: [ChainId.OPTIMISM]
+  readOnlyNetworks: [ChainId.OPTIMISM],
+  env: isDev
+    ? {
+        indexerGatewayUrl: 'https://dev-indexer.sequence.app',
+        metadataUrl: 'https://dev-metadata.sequence.app',
+        apiUrl: 'https://dev-api.sequence.app',
+        indexerUrl: 'https://dev-indexer.sequence.app',
+        nodeGatewayUrl: 'https://dev-nodes.sequence.app',
+        trailsApiUrl: 'https://dev-trails-api.sequence-dev.app',
+        builderUrl: 'https://dev-api.sequence.build'
+      }
+    : undefined
 }
+
+export const passportInstance = new passport.Passport({
+  baseConfig: {
+    environment: Environment.SANDBOX,
+    publishableKey: 'pk_imapik-test-VEMeW7wUX7hE7LHg3FxY'
+  },
+  forceScwDeployBeforeMessageSignature: true,
+  clientId: 'ap8Gv3188GLFROiBFBNFz77DojRpqxnS',
+  redirectUri: `${window.location.origin}/auth-callback`,
+  logoutRedirectUri: `${window.location.origin}`,
+  audience: 'platform_api',
+  scope: 'openid offline_access email transact'
+})
 
 export const config =
   walletType === 'waas'
     ? createConfig('waas', {
-        ...kitConfig,
-        appName: 'Kit Demo',
+        ...connectConfig,
+        appName: 'Sequence Web SDK Demo',
         chainIds: [
           ChainId.ARBITRUM_NOVA,
           ChainId.ARBITRUM_SEPOLIA,
           ChainId.POLYGON,
           ChainId.IMMUTABLE_ZKEVM,
-          ChainId.IMMUTABLE_ZKEVM_TESTNET
+          ChainId.IMMUTABLE_ZKEVM_TESTNET,
+          ChainId.BASE_SEPOLIA,
+          ChainId.BASE,
+          ChainId.SEPOLIA
         ],
         defaultChainId: ChainId.ARBITRUM_NOVA,
         waasConfigKey: isDebugMode
@@ -71,6 +111,8 @@ export const config =
           : 'eyJwcm9qZWN0SWQiOjE2ODE1LCJlbWFpbFJlZ2lvbiI6ImNhLWNlbnRyYWwtMSIsImVtYWlsQ2xpZW50SWQiOiI2N2V2NXVvc3ZxMzVmcGI2OXI3NnJoYnVoIiwicnBjU2VydmVyIjoiaHR0cHM6Ly93YWFzLnNlcXVlbmNlLmFwcCJ9',
         enableConfirmationModal: localStorage.getItem('confirmationEnabled') === 'true',
 
+        guest: true,
+        email: true,
         google: {
           clientId: isDebugMode
             ? '603294233249-6h5saeg2uiu8akpcbar3r2aqjp6j7oem.apps.googleusercontent.com'
@@ -80,26 +122,45 @@ export const config =
           clientId: 'com.horizon.sequence.waas',
           redirectURI: window.location.origin + window.location.pathname
         },
+        X: {
+          clientId: 'MVZ6aHMyNmMtSF9mNHVldFR6TV86MTpjaQ',
+          redirectURI: window.location.origin + '/auth-callback-X'
+        },
         walletConnect: {
           projectId: walletConnectProjectId
-        }
+        },
+        additionalWallets: [
+          immutable({
+            passportInstance,
+            environment: Environment.SANDBOX
+          })
+        ]
       })
     : createConfig('universal', {
-        ...kitConfig,
-        appName: 'Kit Demo',
+        ...connectConfig,
+        appName: 'Sequence Web SDK Demo',
         chainIds: [
           ChainId.ARBITRUM_NOVA,
           ChainId.ARBITRUM,
           ChainId.ARBITRUM_SEPOLIA,
           ChainId.POLYGON,
           ChainId.IMMUTABLE_ZKEVM,
-          ChainId.IMMUTABLE_ZKEVM_TESTNET
+          ChainId.IMMUTABLE_ZKEVM_TESTNET,
+          ChainId.BASE_SEPOLIA,
+          ChainId.BASE,
+          ChainId.SEPOLIA
         ],
         defaultChainId: ChainId.ARBITRUM_NOVA,
 
         walletConnect: {
           projectId: walletConnectProjectId
-        }
+        },
+        additionalWallets: [
+          immutable({
+            passportInstance,
+            environment: Environment.SANDBOX
+          })
+        ]
       })
 
 export const getErc1155SaleContractConfig = (walletAddress: string) => ({
@@ -121,3 +182,11 @@ export const getErc1155SaleContractConfig = (walletAddress: string) => ({
     console.log('success')
   }
 })
+
+export const checkoutConfig: SequenceCheckoutConfig = {
+  env: isDev
+    ? {
+        forteWidgetUrl: 'https://payments.sandbox.lemmax.com/forte-payments-widget.js'
+      }
+    : undefined
+}

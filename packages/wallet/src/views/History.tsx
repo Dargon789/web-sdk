@@ -1,28 +1,30 @@
-import { useGetTransactionHistorySummary } from '@0xsequence/kit-hooks'
+import { Box } from '@0xsequence/design-system'
 import React from 'react'
 import { useAccount } from 'wagmi'
 
-import { useSettings } from '../hooks'
+import { useSettings, useTransactionHistorySummary } from '../hooks'
 import { TransactionHistoryList } from '../shared/TransactionHistoryList'
+import { useScrollbarWidth } from '../hooks/useScrollbarWidth'
 
 export const History = () => {
   const { selectedNetworks } = useSettings()
   const { address: accountAddress } = useAccount()
+  const scrollbarWidth = useScrollbarWidth()
 
-  const { data: transactionHistory = [], isPending: isPendingTransactionHistory } = useGetTransactionHistorySummary({
+  const { data: transactionHistory = [], isPending: isPendingTransactionHistory } = useTransactionHistorySummary({
     accountAddress: accountAddress || '',
     chainIds: selectedNetworks
   })
 
   return (
-    <div>
-      <div className="px-4 pb-5 pt-3">
+    <Box>
+      <Box paddingX="4" paddingBottom="5" paddingTop="3">
         <TransactionHistoryList
           transactions={transactionHistory}
           isPending={isPendingTransactionHistory}
           isFetchingNextPage={false}
         />
-      </div>
-    </div>
+      </Box>
+    </Box>
   )
 }

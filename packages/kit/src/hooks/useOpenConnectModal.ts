@@ -1,7 +1,9 @@
-import { useConnectModalContext } from '../contexts/ConnectModal'
+import { useSnapshot } from 'valtio'
+
+import { connectModalState, setOpenConnectModal } from '../states/ConnectModal'
 
 export const useOpenConnectModal = () => {
-  const { setOpenConnectModal, openConnectModalState } = useConnectModalContext()
+  const { openConnectModalState } = useSnapshot(connectModalState)
 
   return { setOpenConnectModal, openConnectModalState }
 }

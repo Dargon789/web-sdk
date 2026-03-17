@@ -1,13 +1,13 @@
-# Sequence Kit Next Example
+# Sequence Web SDK Next Example
 
-This demo showcases the sign in flow, the embedded wallet and the checkout component of Sequence Kit.
+This demo showcases the sign in flow, the embedded wallet and the checkout component of Sequence Web SDK.
 
-View the [demo here](https://0xsequence.github.io/kit)! 👀
+View the [demo here](https://0xsequence.github.io/web-sdk)! 👀
 
 ## Run Demo Locally
 
 <div align="center">
-  <img src="../../public/docs/kit-demo.png">
+  <img src="../../public/docs/web-sdk-demo.png">
 </div>
 
 The React example can be used to test the library locally.
@@ -20,4 +20,4 @@ The React example can be used to test the library locally.
 
 Apache-2.0
 
-Copyright (c) 2017-present Horizon Blockchain Games Inc. / https://horizon.io
+Copyright (c) 2017-present Sequence Platforms ULC. / https://sequence.xyz

@@ -1,114 +1,49 @@
-import { SequenceWaaS, SignInResponse } from '@0xsequence/waas'
 import { useState } from 'react'
+import { ExtendedConnector } from '../utils'
 
-// import { EmailWaasOptions } from '../connectors/email/emailWaas'
-import { randomName } from '../connectors/wagmiConnectors'
-import { ExtendedConnector } from '../types'
-
-interface SuccessResultV1 {
-  version: 1
-  idToken: string
-}
-
-interface SuccessResultV2 {
-  version: 2
-  signInResponse: SignInResponse
-}
-
-export function useEmailAuth({
-  connector,
-  onSuccess
-}: {
-  connector?: ExtendedConnector
-  onSuccess: (result: SuccessResultV1 | SuccessResultV2) => void
-}) {
+export function useEmailAuth({ connector, onSuccess }: { connector?: ExtendedConnector; onSuccess: (idToken: string) => void }) {
   if (!connector) {
     return {
       inProgress: false,
       loading: false,
       error: undefined,
-      initiateAuth: async (_email: string) => {},
-      sendChallengeAnswer: async (_answer: string) => {},
-      resetError: () => {}
+      initiateAuth: async (email: string) => {},
+      sendChallengeAnswer: async (answer: string) => {}
     }
   }
 
-  const [_email, setEmail] = useState('')
-  const [error, setError] = useState<Error | undefined>()
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState<unknown>()
   const [loading, setLoading] = useState(false)
-  const [instance, _setInstance] = useState('')
-  const [respondWithCode, setRespondWithCode] = useState<((code: string) => Promise<void>) | null>()
-
-  const getSequenceWaas = () => {
-    if (!connector) {
-      throw new Error('Connector is not defined')
-    }
-
-    const sequenceWaas: SequenceWaaS | undefined = (connector as any).sequenceWaas
-
-    if (!sequenceWaas) {
-      throw new Error('Connector does not support SequenceWaaS')
-    }
-
-    return sequenceWaas
-  }
+  const [instance, setInstance] = useState('')
 
   const initiateAuth = async (email: string) => {
-    // const params = (connector as any).params as EmailWaasOptions
-    const waas = getSequenceWaas()
-
     setLoading(true)
-    setError(undefined)
-
-    waas.onEmailAuthCodeRequired(async respondWithCode => {
-      setRespondWithCode(() => respondWithCode)
-    })
-
-    waas
-      .signIn({ email }, randomName())
-      .then(signInResponse => {
-        onSuccess({ version: 2, signInResponse })
-
-        if (signInResponse.email) {
-          setEmail(signInResponse.email)
-        }
-      })
-      .catch(err => {
-        setError(err)
-      })
-
-    setLoading(false)
-  }
-
-  const sendChallengeAnswer = async (answer: string) => {
-    // const params = (connector as any).params as EmailWaasOptions
-    // const waas = getSequenceWaas()
-
-    setLoading(true)
-    setError(undefined)
-
-    // version 2
-    if (!respondWithCode) {
-      throw new Error('Email v2 auth, respondWithCode is not defined')
-    }
 
     try {
-      await respondWithCode(answer)
-    } catch (err: any) {
-      setError(err)
+      const connectorAny: any = connector
+      const { instance } = await connectorAny.sequenceWaas?.email.initiateAuth({ email })
+      setInstance(instance)
+      setEmail(email)
+    } catch (e: any) {
+      setError(e.message || 'Unknown error')
     } finally {
       setLoading(false)
     }
   }
 
-  const cancel = () => {
-    setLoading(false)
-    setRespondWithCode(null)
-    setError(undefined)
-  }
+  const sendChallengeAnswer = async (answer: string) => {
+    setLoading(true)
 
-  const resetError = () => {
-    setError(undefined)
+    try {
+      const connectorAny: any = connector
+      const sessionHash = await connectorAny.sequenceWaas?.getSessionHash()
+      const { idToken } = await connectorAny.sequenceWaas?.email.finalizeAuth({ instance, answer, email, sessionHash })
+      onSuccess(idToken)
+    } catch (e: any) {
+      setError(e.message || 'Unknown error')
+      setLoading(false)
+    }
   }
 
   return {
@@ -116,8 +51,6 @@ export function useEmailAuth({
     loading,
     error,
     initiateAuth,
-    sendChallengeAnswer,
-    cancel,
-    resetError
+    sendChallengeAnswer: instance ? sendChallengeAnswer : undefined
   }
 }

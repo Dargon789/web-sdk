@@ -1,6 +1,6 @@
-import { Hex } from 'viem'
-
-import { createGenericContext } from './genericContext'
+import { TransactionOnRampProvider } from '@0xsequence/marketplace'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
+import type { Hex } from 'viem'
 
 export interface AddFundsSettings {
   walletAddress: string | Hex
@@ -14,12 +14,17 @@ export interface AddFundsSettings {
   onOrderCreated?: (data: any) => void
   onOrderSuccessful?: (data: any) => void
   onOrderFailed?: (data: any) => void
+  provider?: TransactionOnRampProvider
+  cryptoAmount?: string
 }
 
 type AddFundsModalContext = {
+  isAddFundsModalOpen: boolean
   triggerAddFunds: (settings: AddFundsSettings) => void
   closeAddFunds: () => void
   addFundsSettings?: AddFundsSettings
 }
 
-export const [useAddFundsModalContext, AddFundsContextProvider] = createGenericContext<AddFundsModalContext>()
+const [useAddFundsModalContext, AddFundsContextProvider] = createGenericContext<AddFundsModalContext>()
+
+export { AddFundsContextProvider, useAddFundsModalContext }

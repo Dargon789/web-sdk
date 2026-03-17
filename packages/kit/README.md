@@ -21,11 +21,11 @@ View the [demo](https://0xsequence.github.io/kit)! 👀
 To install this package:
 
 ```bash
-npm install @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+npm install @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query @react-oauth/google react-apple-signin-auth
 # or
-pnpm install @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+pnpm install @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query @react-oauth/google react-apple-signin-auth
 # or
-yarn add @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+yarn add @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query @react-oauth/google react-apple-signin-auth
 ```
 
 ### Setting up the Library
@@ -133,6 +133,8 @@ import { KitProvider, getDefaultConnectors, getDefaultChains } from '@0xsequence
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createConfig, http, WagmiProvider } from 'wagmi'
 import { mainnet, polygon, Chain } from 'wagmi/chains'
+
+import '@0xsequence/kit/styles.css'
 
 const projectAccessKey = 'xyz'
 
@@ -250,7 +252,6 @@ The settings are described in more detailed in the Sequence Kit documentation.
         chainId: 137
       }
     ],
-    readOnlyNetworks: [10],
   }
 
   <KitProvider config={kitConfig}>

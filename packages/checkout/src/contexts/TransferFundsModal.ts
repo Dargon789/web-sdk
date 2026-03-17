@@ -1,6 +1,5 @@
-import { Hex } from 'viem'
-
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from '@0xsequence/web-sdk-core'
+import type { Hex } from 'viem'
 
 export interface TransferFundsSettings {
   walletAddress: string | Hex
@@ -13,4 +12,6 @@ type TransferFundsModalContext = {
   transferFundsSettings?: TransferFundsSettings
 }
 
-export const [useTransferFundsModalContext, TransferFundsContextProvider] = createGenericContext<TransferFundsModalContext>()
+const [useTransferFundsModalContext, TransferFundsContextProvider] = createGenericContext<TransferFundsModalContext>()
+
+export { TransferFundsContextProvider, useTransferFundsModalContext }

@@ -1,13 +1,13 @@
-import { SearchIcon, Skeleton, Text, TextInput } from '@0xsequence/design-system'
-import { getNativeTokenInfoByChainId, ContractVerificationStatus, compareAddress } from '@0xsequence/kit'
-import { useGetTokenBalancesSummary, useGetCoinPrices, useGetExchangeRate } from '@0xsequence/kit-hooks'
+import { Box, SearchIcon, Skeleton, Text, TextInput } from '@0xsequence/design-system'
+import { getNativeTokenInfoByChainId } from '@0xsequence/kit'
+import { useExchangeRate, useCoinPrices, useBalances } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
 import Fuse from 'fuse.js'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useAccount, useConfig } from 'wagmi'
 
 import { useSettings } from '../../hooks'
-import { computeBalanceFiat } from '../../utils'
+import { compareAddress, computeBalanceFiat } from '../../utils'
 
 import { BalanceItem } from './components/BalanceItem'
 import { WalletLink } from './components/WalletLink'
@@ -18,26 +18,25 @@ export const SearchWallet = () => {
   const [search, setSearch] = useState('')
   const { address: accountAddress } = useAccount()
 
-  const { data: tokenBalancesData, isPending: isPendingTokenBalances } = useGetTokenBalancesSummary({
+  const { data: tokenBalancesData, isPending: isPendingTokenBalances } = useBalances({
     chainIds: selectedNetworks,
-    filter: {
-      accountAddresses: accountAddress ? [accountAddress] : [],
-      contractStatus: hideUnlistedTokens ? ContractVerificationStatus.VERIFIED : ContractVerificationStatus.ALL,
-      omitNativeBalances: false
-    }
+    accountAddress: accountAddress || '',
+    verifiedOnly: hideUnlistedTokens
   })
 
   const coinBalancesUnordered =
-    tokenBalancesData?.filter(b => b.contractType === 'ERC20' || compareAddress(b.contractAddress, ethers.ZeroAddress)) || []
+    tokenBalancesData?.filter(
+      b => b.contractType === 'ERC20' || compareAddress(b.contractAddress, ethers.constants.AddressZero)
+    ) || []
 
-  const { data: coinPrices = [], isPending: isPendingCoinPrices } = useGetCoinPrices(
+  const { data: coinPrices = [], isPending: isPendingCoinPrices } = useCoinPrices(
     coinBalancesUnordered.map(token => ({
       chainId: token.chainId,
       contractAddress: token.contractAddress
     }))
   )
 
-  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
+  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useExchangeRate(fiatCurrency.symbol)
 
   const coinBalances = coinBalancesUnordered.sort((a, b) => {
     const isHigherFiat =
@@ -54,7 +53,7 @@ export const SearchWallet = () => {
           balance: a,
           prices: coinPrices,
           conversionRate,
-          decimals: a.contractInfo?.decimals || 18
+          decimals: b.contractInfo?.decimals || 18
         })
       )
     return isHigherFiat
@@ -80,7 +79,7 @@ export const SearchWallet = () => {
   })
 
   const indexedCoinBalances: IndexedData[] = coinBalances.map((balance, index) => {
-    if (compareAddress(balance.contractAddress, ethers.ZeroAddress)) {
+    if (compareAddress(balance.contractAddress, ethers.constants.AddressZero)) {
       const nativeTokenInfo = getNativeTokenInfoByChainId(balance.chainId, chains)
 
       return {
@@ -114,8 +113,16 @@ export const SearchWallet = () => {
   ).slice(0, 5)
 
   return (
-    <div className="flex px-4 pb-5 pt-3 flex-col gap-10 items-center justify-center">
-      <div className="w-full">
+    <Box
+      paddingX="4"
+      paddingBottom="5"
+      paddingTop="3"
+      flexDirection="column"
+      gap="10"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <Box width="full">
         <TextInput
           autoFocus
           name="search wallet"
@@ -125,31 +132,8 @@ export const SearchWallet = () => {
           placeholder="Search your wallet"
           data-1p-ignore
         />
-      </div>
-      <div className="flex w-full flex-col items-center justify-center gap-5">
-        <WalletLink
-          toLocation={{
-            location: 'search-view-all',
-            params: {
-              defaultTab: 'coins'
-            }
-          }}
-          label={`Coins (${coinBalancesAmount})`}
-        />
-        {isPending ? (
-          Array(5)
-            .fill(null)
-            .map((_, i) => <Skeleton className="w-full h-8" key={i} />)
-        ) : foundCoinBalances.length === 0 ? (
-          <Text color="primary">No coins found</Text>
-        ) : (
-          foundCoinBalances.map((indexItem, index) => {
-            const balance = coinBalances[indexItem.index]
-            return <BalanceItem key={index} balance={balance} />
-          })
-        )}
-      </div>
-      <div className="flex w-full flex-col items-center justify-center gap-5">
+      </Box>
+      <Box width="full" flexDirection="column" alignItems="center" justifyContent="center" gap="5">
         <WalletLink
           toLocation={{
             location: 'search-view-all',
@@ -162,16 +146,39 @@ export const SearchWallet = () => {
         {isPending ? (
           Array(5)
             .fill(null)
-            .map((_, i) => <Skeleton className="w-full h-8" key={i} />)
+            .map((_, i) => <Skeleton key={i} width="full" height="8" />)
         ) : foundCollectionBalances.length === 0 ? (
-          <Text color="primary">No collections found</Text>
+          <Text color="text100">No collections found</Text>
         ) : (
           foundCollectionBalances.map((indexedItem, index) => {
             const balance = collectionBalances[indexedItem.index]
             return <BalanceItem key={index} balance={balance} />
           })
         )}
-      </div>
-    </div>
+      </Box>
+      <Box width="full" flexDirection="column" alignItems="center" justifyContent="center" gap="5">
+        <WalletLink
+          toLocation={{
+            location: 'search-view-all',
+            params: {
+              defaultTab: 'coins'
+            }
+          }}
+          label={`Coins (${coinBalancesAmount})`}
+        />
+        {isPending ? (
+          Array(5)
+            .fill(null)
+            .map((_, i) => <Skeleton key={i} width="full" height="8" />)
+        ) : foundCoinBalances.length === 0 ? (
+          <Text color="text100">No coins found</Text>
+        ) : (
+          foundCoinBalances.map((indexItem, index) => {
+            const balance = coinBalances[indexItem.index]
+            return <BalanceItem key={index} balance={balance} />
+          })
+        )}
+      </Box>
+    </Box>
   )
 }

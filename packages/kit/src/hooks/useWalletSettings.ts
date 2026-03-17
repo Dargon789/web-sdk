@@ -1,11 +1,11 @@
-import { useWalletConfigContext } from '../contexts/WalletSettings'
+import { useSnapshot } from 'valtio'
+import { setDisplayedAssets, walletSettingsState } from '../states/WalletSettings'
 
 export const useWalletSettings = () => {
-  const { setDisplayedAssets, displayedAssets, readOnlyNetworks } = useWalletConfigContext()
+  const { displayedAssets } = useSnapshot(walletSettingsState)
 
   return {
     displayedAssets,
-    readOnlyNetworks,
     setDisplayedAssets
   }
 }

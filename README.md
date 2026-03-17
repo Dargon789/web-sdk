@@ -1,32 +1,26 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/0xsequence/web-sdk/master/public/docs/kit-logo-in-one.png">
-</div>
-
 # Sequence Web SDK 🧰
 
-[![npm version](https://badge.fury.io/js/@0xsequence%2Fkit.svg)](https://badge.fury.io/js/@0xsequence%2Fkit)
+[![npm version](https://badge.fury.io/js/@0xsequence%2Fconnect.svg)](https://badge.fury.io/js/@0xsequence%2Fconnect)
 
-Easily integrate web3 wallets in your app with Sequence Kit 🧰. Based on [wagmi](https://wagmi.sh/), and supporting all wagmi features.
+Easily integrate web3 wallets in your app with Sequence Web SDK 🧰. Based on [wagmi](https://wagmi.sh/), and supporting all wagmi features.
 
 - Connect via social logins eg: facebook, google, discord, etc...! 🔐🪪
 - Connect to popular web3 wallets eg: walletConnect, metamask ! 🦊 ⛓️
 - Full-fledged embedded wallet for coins and collectibles 👛 🖼️ 🪙
 
-View the [demo](https://0xsequence.github.io/web-sdk)! 👀
+View the [demo](https://web-sdk.sequence-demos.xyz/)! 👀
+
+## [Migration Guide from kit v4 to web-sdk v5](MIGRATION.md)
 
 ## Quick Start
 
 ### Installing the Library
 
-`@0xsequence/kit` is the core package. Any extra modules require this package to be installed first.
+`@0xsequence/connect` is the core package. Any extra modules require this package to be installed first.
 To install this package:
 
 ```bash
-npm install @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
-# or
-pnpm install @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
-# or
-yarn add @0xsequence/kit wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
+npm install @0xsequence/connect @0xsequence/hooks wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
 ```
 
 ### Setting up the Library
@@ -46,6 +40,7 @@ interface CreateConfigOptions {
   disableAnalytics?: boolean
   defaultTheme?: Theme
   position?: ModalPosition
+  customCSS?: string // Injected into shadow dom
   signIn?: {
     logoUrl?: string
     projectName?: string
@@ -68,6 +63,8 @@ interface CreateConfigOptions {
         projectId: string
       }
 
+  guest?: boolean
+
   google?:
     | false
     | {
@@ -81,6 +78,13 @@ interface CreateConfigOptions {
         redirectURI: string
       }
 
+  X?:
+    | boolean
+    | {
+        clientId: string
+        redirectURI: string
+      }
+      
   email?:
     | boolean
     | {
@@ -90,16 +94,18 @@ interface CreateConfigOptions {
 ```
 
 ```js
-import { SequenceKit, createConfig } from '@0xsequence/kit'
+import { SequenceConnect, createConfig } from '@0xsequence/connect'
 
 import Content from './components/Content'
 
 const config = createConfig('waas', {
   projectAccessKey: '<your-project-access-key>',
-  chainIds: [1, 137]
-  defaultChainId: 1
+  chainIds: [1, 137],
+  defaultChainId: 1,
   appName: 'Demo Dapp',
   waasConfigKey: '<your-waas-config-key>',
+
+  guest: true,
 
   google: {
     clientId: '<your-google-client-id>'
@@ -107,32 +113,68 @@ const config = createConfig('waas', {
 
   apple: {
     clientId: '<your-apple-client-id>',
-    redirectUrl: '...'
+    redirectURI: '...'
   },
+
+  X: {
+    clientId: '<your-X-client-id>',
+    redirectURI: '...'
+  },
+
 
   walletConnect: {
     projectId: '<your-wallet-connect-id>'
-  }
+  },
+
+  email: true
 })
 
 function App() {
   return (
-    <SequenceKit config={config}>
+    <SequenceConnect config={config}>
       <Content />
-    </SequenceKit>
+    </SequenceConnect>
+  )
+}
+```
+
+#### Note about X (formerly Twitter) authentication. X authentication specifically needs a callback route; either a frontend page or a backend endpoint. An frontend example callback page is below:
+Please ensure that the redirect uri and the callback page route is identical or X will refuse the authentication
+
+```js
+export function XAuthCallback() {
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search)
+
+    const payload = {
+      code: query.get('code'),
+      state: query.get('state')
+    }
+
+    if (window.opener) {
+      window.opener.postMessage({ type: 'OAUTH_RETURN', data: payload }, '*')
+    }
+
+    window.close()
+  }, [])
+
+  return (
+    <h3>
+      you may now close this window.
+    </h3>
   )
 }
 ```
 
 #### Need more customization?
 
-React apps must be wrapped by a WagmiProvider and the KitProvider components. It is important that the Wagmi wrapper comes before the Sequence Kit wrapper.
+React apps must be wrapped by a WagmiProvider and the SequenceConnectProvider components. It is important that the Wagmi wrapper comes before the SequenceConnectProvider wrapper.
 
 ```js
 import Content from './components/Content'
-import { KitProvider, getDefaultConnectors, getDefaultChains } from '@0xsequence/kit'
-import { KitWalletProvider } from '@0xsequence/kit-wallet'
-import { KitCheckoutProvider } from '@0xsequence/kit-checkout'
+import { SequenceConnectProvider, getDefaultConnectors, getDefaultChains } from '@0xsequence/connect'
+import { SequenceWalletProvider } from '@0xsequence/wallet-widget'
+import { SequenceCheckoutProvider } from '@0xsequence/checkout'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createConfig, http, WagmiProvider } from 'wagmi'
 import { mainnet, polygon, Chain } from 'wagmi/chains'
@@ -158,14 +200,16 @@ const connectors = getDefaultConnectors('universal', {
   }
 })
 
-/* 
+/*
   const connectors = getDefaultWaasConnectors('{
     projectAccessKey,
     defaultChainId: 137,
     appName: 'Demo Dapp',
 
     waasConfigKey: '<your-waas-config-key>',
-    
+
+    guest: true
+
     google: {
       clientId
     },
@@ -178,6 +222,8 @@ const connectors = getDefaultConnectors('universal', {
     walletConnect: {
       projectId: '<your-wallet-connect-id>'
     }
+
+    email: true
   })
   */
 
@@ -187,7 +233,7 @@ const wagmiConfig = createConfig({
   connectors
 })
 
-const kitConfig = {
+const connectConfig = {
   projectAccessKey: '...'
 }
 
@@ -197,15 +243,15 @@ function App() {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <KitProvider config={kitConfig}>
+        <SequenceConnectProvider config={connectConfig}>
           {/* If you want to use wallet modal to show assets etc. */}
-          <KitWalletProvider>
+          <SequenceWalletProvider>
             {/* If you want to use checkout functionalities */}
-            <KitCheckoutProvider>
+            <SequenceCheckoutProvider>
               <Content />
-            </KitCheckoutProvider>
-          </KitWalletProvider>
-        </KitProvider>
+            </SequenceCheckoutProvider>
+          </SequenceWalletProvider>
+        </SequenceConnectProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )
@@ -221,13 +267,13 @@ function App() {
 Wallet selection is done through a modal which can be called programmatically. Kit allows multiple connection, so it can be called again to connect more wallets.
 
 ```js
-import { useOpenConnectModal } from '@0xsequence/kit'
+import { useOpenConnectModal } from '@0xsequence/connect'
 import { useDisconnect, useAccount } from 'wagmi'
 
 const MyReactComponent = () => {
   const { setOpenConnectModal } = useOpenConnectModal()
 
-  const { wallets } = useKitWallets()
+  const { wallets } = useWallets()
 
   const onClick = () => {
     setOpenConnectModal(true)
@@ -244,30 +290,30 @@ const MyReactComponent = () => {
 Use the `useOpenConnectModal` to change to open or close the connection modal.
 
 ```js
-import { useOpenConnectModal } from '@0xsequence/kit'
+import { useOpenConnectModal } from '@0xsequence/connect'
 // ...
 const { setOpenConnectModal } = useOpenConnectModal()
 setOpenConnectModal(true)
 ```
 
-### useKitWallets
+### useWallets
 
-Use the `useKitWallets` hook to manage multiple connected wallets in your application and see linked wallets of the connected embedded wallet. This hook is particularly useful when working with a combination of embedded and external wallets.
+Use the `useWallets` hook to manage multiple connected wallets in your application and see linked wallets of the connected embedded wallet. This hook is particularly useful when working with a combination of embedded and external wallets.
 
 ```js
-import { useKitWallets } from '@0xsequence/kit'
+import { useWallets } from '@0xsequence/connect'
 
 const {
   wallets, // Array of connected wallets
   linkedWallets, // Array of linked wallets (for embedded wallets)
   setActiveWallet, // Function to set a wallet as active
   disconnectWallet // Function to disconnect a wallet
-} = useKitWallets()
+} = useWallets()
 
 /**
  * Interface representing a connected wallet
  */
-interface KitWallet {
+interface ConnectedWallet {
   /** Unique identifier */
   id: string
   /** Display name of the wallet */
@@ -292,7 +338,7 @@ await disconnectWallet(walletAddress)
 Use the `useTheme` hook to get information about the current theme, such as light or dark.
 
 ```js
-import { useTheme } from '@0xsequence/kit'
+import { useTheme } from '@0xsequence/connect'
 const { theme, setTheme } = useTheme()
 
 setTheme('light')
@@ -300,13 +346,13 @@ setTheme('light')
 
 ## Customization
 
-The `KitProvider` wrapper can accept an optional config object.
+The `SequenceConnectProvider` wrapper can accept an optional config object.
 
-The settings are described in more detailed in the Sequence Kit documentation.
+The settings are described in more detailed in the Sequence Web SDK documentation.
 
 ```js
 
-  const kitConfig = {
+  const connectConfig = {
     defaultTheme: 'light',
     position: 'top-left',
     signIn: {
@@ -316,7 +362,7 @@ The settings are described in more detailed in the Sequence Kit documentation.
     // limits the digital assets displayed on the assets summary screen
     displayedAssets: [
       {
-        contractAddress: ethers.ZeroAddress,
+        contractAddress: zeroAddress,
         chainId: 137,
       },
       {
@@ -324,43 +370,43 @@ The settings are described in more detailed in the Sequence Kit documentation.
         chainId: 137
       }
     ],
-    readOnlyNetworks: [10], // Display assets in wallet (kit/wallet) from Optimism (chain ID 10) in addition to the networks specified in chainIds
+    readOnlyNetworks: [10], // Display assets in wallet from Optimism (chain ID 10) in addition to the networks specified in chainIds
   }
 
-  <KitProvider config={kitConfig}>
+  <SequenceConnectProvider config={connectConfig}>
     <App />
-  <KitProvider>
+  <SequenceConnectProvider>
 ```
 
 ## Packages
 
-| Package                                                                                     | Description                                                     | Docs                                                                                   |
-| ------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [@0xsequence/kit](https://github.com/0xsequence/kit/tree/master/packages/kit)               | Core package for Sequence Kit                                   | [Read more](https://github.com/0xsequence/kit/blob/master/packages/kit/README.md)      |
-| [@0xsequence/kit-wallet](https://github.com/0xsequence/kit/tree/master/packages/wallet)     | Embedded wallets for viewing and sending coins and collectibles | [Read more](https://github.com/0xsequence/kit/blob/master/packages/wallet/README.md)   |
-| [@0xsequence/kit-checkout](https://github.com/0xsequence/kit/tree/master/packages/checkout) | Checkout modal with fiat onramp                                 | [Read more](https://github.com/0xsequence/kit/blob/master/packages/checkout/README.md) |
+| Package                                                                                               | Description                                                     | Docs                                                                                            |
+| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [@0xsequence/connect](https://github.com/0xsequence/web-sdk/tree/master/packages/connect)             | Core package for Sequence Web SDK                               | [Read more](https://github.com/0xsequence/web-sdk/blob/master/packages/connect/README.md)       |
+| [@0xsequence/wallet-widget](https://github.com/0xsequence/web-sdk/tree/master/packages/wallet-widget) | Embedded wallets for viewing and sending coins and collectibles | [Read more](https://github.com/0xsequence/web-sdk/blob/master/packages/wallet-widget/README.md) |
+| [@0xsequence/checkout](https://github.com/0xsequence/web-sdk/tree/master/packages/checkout)           | Checkout modal with fiat onramp                                 | [Read more](https://github.com/0xsequence/web-sdk/blob/master/packages/checkout/README.md)      |
 
 ## Examples
 
-| Application                                                                                   | Description                                                            | Docs                                                                                |
-| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [@0xsequence/kit-example-react](https://github.com/0xsequence/kit/tree/master/examples/react) | React example application showing sign in, wallet and checkout         | [Read more](https://github.com/0xsequence/kit/blob/master/examples/react/README.md) |
-| [@0xsequence/kit-example-next](https://github.com/0xsequence/kit/tree/master/examples/next)   | Next example application showing sign in, wallet and checkout with SSR | [Read more](https://github.com/0xsequence/kit/blob/master/examples/next/README.md)  |
+| Application                                                                       | Description                                                            | Docs                                                                                    |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [example-react](https://github.com/0xsequence/web-sdk/tree/master/examples/react) | React example application showing sign in, wallet and checkout         | [Read more](https://github.com/0xsequence/web-sdk/blob/master/examples/react/README.md) |
+| [example-next](https://github.com/0xsequence/web-sdk/tree/master/examples/next)   | Next example application showing sign in, wallet and checkout with SSR | [Read more](https://github.com/0xsequence/web-sdk/blob/master/examples/next/README.md)  |
 
 ## Local Development
 
 <div align="center">
-  <img src="public/docs/kit-demo.png">
+  <img src="public/docs/web-sdk-demo.png">
 </div>
 
 The React example can be used to test the library locally.
 
-1. Replace the kit dependencies to the ones of the workspace in order to use hot reload.:
+1. Replace the web-sdk dependencies to the ones of the workspace in order to use hot reload.:
 
 ```js
-"@0xsequence/kit": "workspace:*",
-"@0xsequence/kit-checkout": "workspace:*",
-"@0xsequence/kit-wallet": "workspace:*",
+"@0xsequence/connect": "workspace:*",
+"@0xsequence/checkout": "workspace:*",
+"@0xsequence/wallet-widget": "workspace:*",
 ```
 
 2. `pnpm install`
@@ -369,10 +415,10 @@ The React example can be used to test the library locally.
 
 ## What to do next?
 
-Now that the core package is installed, you can install the [embedded wallet](https://github.com/0xsequence/kit/tree/master/packages/wallet) or take a look at the [checkout](https://github.com/0xsequence/kit/tree/master/packages/checkout).
+Now that the core package is installed, you can install the [embedded wallet](https://github.com/0xsequence/web-sdk/tree/master/packages/wallet-widget) or take a look at the [checkout](https://github.com/0xsequence/web-sdk/tree/master/packages/checkout).
 
 ## LICENSE
 
 Apache-2.0
 
-Copyright (c) 2017-present Horizon Blockchain Games Inc. / https://horizon.io
+Copyright (c) 2017-present Sequence Platforms ULC. / https://sequence.xyz

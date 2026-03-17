@@ -1,171 +1,54 @@
-'use client'
-
-import { ArrowRightIcon, Divider, Text, TextInput, Spinner, Image, IconButton, ModalPrimitive } from '@0xsequence/design-system'
-import { genUserId } from '@databeat/tracker'
-import { clsx } from 'clsx'
+import {
+  Box,
+  Button,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Divider,
+  Text,
+  TextInput,
+  Spinner,
+  Image,
+  IconButton
+} from '@0xsequence/design-system'
 import React, { useState, useEffect } from 'react'
 import { appleAuthHelpers, useScript } from 'react-apple-signin-auth'
-import { useConnect, useConnections, useSignMessage } from 'wagmi'
+import { useConnect, useAccount } from 'wagmi'
 
 import { LocalStorageKey } from '../../constants'
-import { CHAIN_ID_FOR_SIGNATURE } from '../../constants/walletLinking'
-import { useAnalyticsContext } from '../../contexts/Analytics'
-import { useKitWallets } from '../../hooks/useKitWallets'
 import { useStorage } from '../../hooks/useStorage'
 import { useEmailAuth } from '../../hooks/useWaasEmailAuth'
 import { FormattedEmailConflictInfo } from '../../hooks/useWaasEmailConflict'
-import { useWaasLinkWallet } from '../../hooks/useWaasLinkWallet'
 import { ExtendedConnector, KitConfig, LogoProps } from '../../types'
 import { isEmailValid } from '../../utils/helpers'
-import { AppleWaasConnectButton, ConnectButton, GoogleWaasConnectButton, ShowAllWalletsButton } from '../ConnectButton'
+import { AppleWaasConnectButton, ConnectButton, EmailConnectButton, GoogleWaasConnectButton } from '../ConnectButton'
 import { KitConnectProviderProps } from '../KitProvider/KitProvider'
 import { PoweredBySequence } from '../SequenceLogo'
 
 import { Banner } from './Banner'
-import { ConnectedWallets } from './ConnectedWallets'
 import { EmailWaasVerify } from './EmailWaasVerify'
 import { ExtendedWalletList } from './ExtendedWalletList'
-
-const MAX_ITEM_PER_ROW = 4
-export const SEQUENCE_UNIVERSAL_CONNECTOR_NAME = 'Sequence'
 
 interface ConnectWalletContentProps extends KitConnectProviderProps {
   emailConflictInfo?: FormattedEmailConflictInfo | null
   onClose: () => void
-  isPreview?: boolean
+  googleUseRedirectMode?: boolean
+  googleRedirectModeLoginUri?: string
 }
 
 export const Connect = (props: ConnectWalletContentProps) => {
   useScript(appleAuthHelpers.APPLE_SCRIPT_SRC)
 
-  const { analytics } = useAnalyticsContext()
-
-  const { onClose, emailConflictInfo, config = {} as KitConfig, isPreview = false } = props
-  const { signIn = {} } = config
+  const { onClose, emailConflictInfo, config = {}, googleUseRedirectMode, googleRedirectModeLoginUri } = props
+  const { signIn = {} } = config as KitConfig
+  const { isConnected } = useAccount()
   const storage = useStorage()
 
-  const descriptiveSocials = !!config?.signIn?.descriptiveSocials
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const projectName = config?.signIn?.projectName
-
   const [email, setEmail] = useState('')
+  const [showEmailInput, setShowEmailInput] = useState<boolean>(false)
   const [showEmailWaasPinInput, setShowEmailWaasPinInput] = useState(false)
-
-  const [showExtendedList, setShowExtendedList] = useState<null | 'social' | 'wallet'>(null)
-  const { status, connectors, connect } = useConnect()
-  const connections = useConnections()
-  const { signMessageAsync } = useSignMessage()
-  const { wallets, linkedWallets, disconnectWallet, refetchLinkedWallets } = useKitWallets()
-
+  const [showExtendedList, setShowExtendedList] = useState<boolean>(false)
+  const { connectors, connect } = useConnect()
   const hasInjectedSequenceConnector = connectors.some(c => c.id === 'app.sequence')
-
-  const hasConnectedSequenceUniversal = connections.some(c => c.connector.name === SEQUENCE_UNIVERSAL_CONNECTOR_NAME)
-  const hasConnectedSocialOrSequenceUniversal =
-    connections.some(c => (c.connector as ExtendedConnector)?._wallet?.type === 'social') || hasConnectedSequenceUniversal
-
-  const waasConnection = connections.find(c => (c.connector as ExtendedConnector)?.type === 'sequence-waas')
-
-  // Setup wallet linking
-  const { linkWallet, removeLinkedWallet } = useWaasLinkWallet(waasConnection?.connector)
-
-  const [lastConnectedWallet, setLastConnectedWallet] = useState<`0x${string}` | undefined>(undefined)
-  const [isSigningLinkMessage, setIsSigningLinkMessage] = useState(false)
-
-  const handleUnlinkWallet = async (address: string) => {
-    try {
-      await removeLinkedWallet(address)
-
-      const parentWallet = wallets.find(w => w.isEmbedded)?.address
-
-      try {
-        analytics?.track({
-          event: 'UNLINK_WALLET',
-          props: {
-            parentWalletAddress: parentWallet ? getUserIdForEvent(parentWallet) : '',
-            linkedWalletAddress: getUserIdForEvent(address),
-            linkedWalletType: linkedWallets?.find(lw => lw.linkedWalletAddress === address)?.walletType || '',
-            source: 'sequence-kit/core'
-          }
-        })
-      } catch (e) {
-        console.warn('unlink analytics error:', e)
-      }
-
-      refetchLinkedWallets()
-    } catch (e) {
-      console.warn('unlink error:', e)
-    }
-  }
-
-  useEffect(() => {
-    if (!lastConnectedWallet) {
-      return
-    }
-    const tryLinkWallet = async () => {
-      const nonWaasWallets = connections.filter(c => (c.connector as ExtendedConnector)?.type !== 'sequence-waas')
-
-      const nonLinkedWallets = nonWaasWallets.filter(
-        c => !linkedWallets?.find(lw => lw.linkedWalletAddress === c.accounts[0].toLowerCase())
-      )
-
-      if (nonLinkedWallets.map(w => w.accounts[0]).includes(lastConnectedWallet as `0x${string}`)) {
-        const waasWalletAddress = waasConnection?.accounts[0]
-
-        if (!waasWalletAddress) {
-          return
-        }
-
-        const childWalletAddress = lastConnectedWallet
-        const childMessage = `Link to parent wallet with address ${waasWalletAddress}`
-
-        setIsSigningLinkMessage(true)
-        let childSignature
-        try {
-          childSignature = await signMessageAsync({ account: lastConnectedWallet, message: childMessage })
-
-          if (!childSignature) {
-            return
-          }
-
-          await linkWallet({
-            signatureChainId: CHAIN_ID_FOR_SIGNATURE,
-            connectorName: connections.find(c => c.accounts[0] === lastConnectedWallet)?.connector?.name || '',
-            childWalletAddress,
-            childMessage,
-            childSignature
-          })
-
-          try {
-            analytics?.track({
-              event: 'LINK_WALLET',
-              props: {
-                parentWalletAddress: getUserIdForEvent(waasWalletAddress),
-                linkedWalletAddress: getUserIdForEvent(childWalletAddress),
-                linkedWalletType: connections.find(c => c.accounts[0] === lastConnectedWallet)?.connector?.name || '',
-                source: 'sequence-kit/core'
-              }
-            })
-          } catch (e) {
-            console.warn('link analytics error:', e)
-          }
-
-          refetchLinkedWallets()
-        } catch (e) {
-          console.log(e)
-        }
-      }
-
-      setIsSigningLinkMessage(false)
-      setLastConnectedWallet(undefined)
-      onClose()
-    }
-    if (connections && connections.length > 1 && waasConnection !== undefined) {
-      tryLinkWallet()
-    } else {
-      setLastConnectedWallet(undefined)
-      onClose()
-    }
-  }, [connections, lastConnectedWallet])
 
   const baseWalletConnectors = (connectors as ExtendedConnector[])
     .filter(c => {
@@ -179,6 +62,7 @@ export const Connect = (props: ConnectWalletContentProps) => {
 
       return true
     })
+
   const mockConnector = baseWalletConnectors.find(connector => {
     return connector._wallet.id === 'mock'
   })
@@ -190,9 +74,6 @@ export const Connect = (props: ConnectWalletContentProps) => {
     .filter(connector => {
       if (connector.id === 'com.coinbase.wallet') {
         return !connectors.find(connector => (connector as ExtendedConnector)?._wallet?.id === 'coinbase-wallet')
-      }
-      if (connector.id === 'io.metamask') {
-        return !connectors.find(connector => (connector as ExtendedConnector)?._wallet?.id === 'metamask-wallet')
       }
 
       return true
@@ -214,36 +95,26 @@ export const Connect = (props: ConnectWalletContentProps) => {
       }
     })
 
-  const socialAuthConnectors = (connectors as ExtendedConnector[])
-    .filter(c => c._wallet?.type === 'social')
-    .filter(c => !c._wallet.id.includes('email'))
-  const walletConnectors = [...baseWalletConnectors, ...injectedConnectors].filter(c =>
-    hasConnectedSequenceUniversal ? c.name !== SEQUENCE_UNIVERSAL_CONNECTOR_NAME : true
-  )
-  const emailConnector = (connectors as ExtendedConnector[]).find(c => c._wallet.id.includes('email'))
+  const socialAuthConnectors = (connectors as ExtendedConnector[]).filter(c => c._wallet?.type === 'social')
+  const walletConnectors = [...baseWalletConnectors, ...injectedConnectors]
+  const emailConnector = socialAuthConnectors.find(c => c._wallet.id.includes('email'))
+  const isEmailOnly = emailConnector && socialAuthConnectors.length === 1
+  const displayExtendedListButton = walletConnectors.length > 7
 
   const onChangeEmail: React.ChangeEventHandler<HTMLInputElement> = ev => {
     setEmail(ev.target.value)
   }
 
+  // Close after successful connection
   useEffect(() => {
-    setIsLoading(status === 'pending' || status === 'success')
-  }, [status])
-
-  const handleConnect = async (connector: ExtendedConnector) => {
-    connect(
-      { connector },
-      {
-        onSettled: result => {
-          setLastConnectedWallet(result?.accounts[0])
-        }
-      }
-    )
-  }
+    if (isConnected) {
+      onClose()
+    }
+  }, [isConnected])
 
   const onConnect = (connector: ExtendedConnector) => {
     if (signIn.useMock && mockConnector) {
-      handleConnect(mockConnector)
+      connect({ connector: mockConnector })
       return
     }
 
@@ -255,18 +126,14 @@ export const Connect = (props: ConnectWalletContentProps) => {
       }
     }
 
-    handleConnect(connector)
+    connect({ connector })
   }
 
   const onConnectInlineEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!isEmailValid(email)) {
-      return
-    }
-
     if (signIn.useMock && mockConnector) {
-      handleConnect(mockConnector)
+      connect({ connector: mockConnector })
       return
     }
 
@@ -277,13 +144,13 @@ export const Connect = (props: ConnectWalletContentProps) => {
 
       if (emailConnector._wallet.id === 'email-waas') {
         try {
-          await sendEmailCode()
+          await initiateEmailAuth(email)
           setShowEmailWaasPinInput(true)
         } catch (e) {
           console.log(e)
         }
       } else {
-        handleConnect(emailConnector)
+        connect({ connector: emailConnector })
       }
     }
   }
@@ -293,8 +160,7 @@ export const Connect = (props: ConnectWalletContentProps) => {
     loading: emailAuthLoading,
     error: emailAuthError,
     initiateAuth: initiateEmailAuth,
-    sendChallengeAnswer,
-    resetError
+    sendChallengeAnswer
   } = useEmailAuth({
     connector: emailConnector,
     onSuccess: async result => {
@@ -308,14 +174,10 @@ export const Connect = (props: ConnectWalletContentProps) => {
           storage?.setItem(LocalStorageKey.WaasEmailIdToken, result.idToken)
         }
 
-        handleConnect(emailConnector)
+        connect({ connector: emailConnector })
       }
     }
   })
-
-  const sendEmailCode = async () => {
-    await initiateEmailAuth(email)
-  }
 
   // Hide the email input if there is an email conflict
   useEffect(() => {
@@ -324,197 +186,111 @@ export const Connect = (props: ConnectWalletContentProps) => {
     }
   }, [emailConflictInfo])
 
-  const showSocialConnectorSection = socialAuthConnectors.length > 0
-  const showEmailInputSection = !!emailConnector
-
-  const showMoreSocialOptions = socialAuthConnectors.length > MAX_ITEM_PER_ROW
-  const showMoreWalletOptions = walletConnectors.length > MAX_ITEM_PER_ROW
-  const socialConnectorsPerRow = showMoreSocialOptions && !descriptiveSocials ? MAX_ITEM_PER_ROW - 1 : socialAuthConnectors.length
-  const walletConnectorsPerRow = showMoreWalletOptions ? MAX_ITEM_PER_ROW - 1 : walletConnectors.length
+  if (showEmailWaasPinInput) {
+    return <EmailWaasVerify error={emailAuthError} isLoading={emailAuthLoading} onConfirm={sendChallengeAnswer} />
+  }
 
   if (showExtendedList) {
-    const SEARCHABLE_TRESHOLD = 8
-    const connectors = showExtendedList === 'social' ? socialAuthConnectors : walletConnectors
-    const searchable = connectors.length > SEARCHABLE_TRESHOLD
-
     return (
-      <ExtendedWalletList
-        searchable={searchable}
-        onGoBack={() => setShowExtendedList(null)}
-        onConnect={onConnect}
-        connectors={connectors}
-        title={showExtendedList === 'social' ? 'Continue with a social account' : 'Choose a wallet'}
-      />
+      <>
+        <Box position="absolute" top="4">
+          <IconButton icon={ChevronLeftIcon} onClick={() => setShowExtendedList(false)} size="xs" />
+        </Box>
+        <ExtendedWalletList connectors={walletConnectors} onConnect={onConnect} />
+      </>
     )
   }
 
   return (
-    <div className="p-4">
-      <div
-        className="flex flex-col justify-center text-primary items-center font-medium"
-        style={{
-          marginTop: '4px'
-        }}
-      >
-        <TitleWrapper isPreview={isPreview}>
-          <Text color="secondary">
-            {isLoading
-              ? `Connecting...`
-              : hasConnectedSocialOrSequenceUniversal
-                ? 'Wallets'
-                : `Sign in ${projectName ? `to ${projectName}` : ''}`}
-          </Text>
-        </TitleWrapper>
+    <>
+      <Banner config={config as KitConfig} />
 
-        {isSigningLinkMessage && (
-          <div className="mt-4">
-            <Text variant="small" color="muted">
-              Confirm the signature request to link your account
-            </Text>
-          </div>
+      <Box marginTop="6">
+        {emailConnector && (showEmailInput || isEmailOnly) ? (
+          <form onSubmit={onConnectInlineEmail}>
+            <TextInput onChange={onChangeEmail} value={email} name="email" placeholder="Enter email" data-1p-ignore />
+            <Box alignItems="center" justifyContent="center" marginTop="4">
+              {!emailAuthInProgress && (
+                <Box gap="2" width="full">
+                  {!isEmailOnly && <Button label="Back" width="full" onClick={() => setShowEmailInput(false)} />}
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={!isEmailValid(email)}
+                    width="full"
+                    label="Continue"
+                    rightIcon={ChevronRightIcon}
+                  />
+                </Box>
+              )}
+              {emailAuthInProgress && <Spinner />}
+            </Box>
+          </form>
+        ) : (
+          <>
+            {socialAuthConnectors.length > 0 && (
+              <Box marginTop="2" gap="2" flexDirection="row" justifyContent="center" alignItems="center" flexWrap="wrap">
+                {socialAuthConnectors.map(connector => {
+                  return (
+                    <Box key={connector.uid} aspectRatio="1/1" alignItems="center" justifyContent="center">
+                      {connector._wallet.id === 'google-waas' ? (
+                        <GoogleWaasConnectButton
+                          connector={connector}
+                          onConnect={onConnect}
+                          googleUseRedirectMode={googleUseRedirectMode}
+                          googleRedirectModeLoginUri={googleRedirectModeLoginUri}
+                        />
+                      ) : connector._wallet.id === 'apple-waas' ? (
+                        <AppleWaasConnectButton connector={connector} onConnect={onConnect} />
+                      ) : connector._wallet.id.includes('email') ? (
+                        <EmailConnectButton onClick={() => setShowEmailInput(true)} />
+                      ) : (
+                        <ConnectButton connector={connector} onConnect={onConnect} />
+                      )}
+                    </Box>
+                  )
+                })}
+              </Box>
+            )}
+          </>
         )}
-      </div>
-      {isLoading ? (
-        <div className="flex justify-center items-center pt-4">
-          <Spinner />
-        </div>
-      ) : (
-        <>
-          {wallets.length > 0 && !showEmailWaasPinInput && (
-            <>
-              <ConnectedWallets
-                wallets={wallets}
-                linkedWallets={linkedWallets}
-                disconnectWallet={disconnectWallet}
-                unlinkWallet={handleUnlinkWallet}
-              />
 
+        {walletConnectors.length > 0 && !showEmailInput && (
+          <>
+            {socialAuthConnectors.length > 0 && (
               <>
-                <Divider className="text-background-raised w-full" />
-                <div className="flex justify-center">
-                  <Text variant="small" color="muted">
-                    {!hasConnectedSocialOrSequenceUniversal ? 'Connect with a social account' : 'Connect another wallet'}
+                <Divider color="backgroundSecondary" />
+                <Box justifyContent="center" alignItems="center">
+                  <Text variant="small" color="text50">
+                    or select a wallet
                   </Text>
-                </div>
+                </Box>
               </>
-            </>
-          )}
-          {showEmailWaasPinInput ? (
-            <EmailWaasVerify
-              sendEmailCode={sendEmailCode}
-              error={emailAuthError}
-              isLoading={emailAuthLoading}
-              onConfirm={sendChallengeAnswer}
-              resetError={resetError}
-            />
-          ) : (
-            <>
-              {!hasConnectedSocialOrSequenceUniversal && (
-                <>
-                  <Banner config={config as KitConfig} />
+            )}
 
-                  <div className="flex mt-6 gap-6 flex-col">
-                    <>
-                      {showSocialConnectorSection && (
-                        <div className="flex gap-2 justify-center items-center">
-                          {socialAuthConnectors.slice(0, socialConnectorsPerRow).map(connector => {
-                            return (
-                              <div className="w-full" key={connector.uid}>
-                                {connector._wallet.id === 'google-waas' ? (
-                                  <GoogleWaasConnectButton
-                                    isDescriptive={descriptiveSocials}
-                                    connector={connector}
-                                    onConnect={onConnect}
-                                  />
-                                ) : connector._wallet.id === 'apple-waas' ? (
-                                  <AppleWaasConnectButton
-                                    isDescriptive={descriptiveSocials}
-                                    connector={connector}
-                                    onConnect={onConnect}
-                                  />
-                                ) : (
-                                  <ConnectButton isDescriptive={descriptiveSocials} connector={connector} onConnect={onConnect} />
-                                )}
-                              </div>
-                            )
-                          })}
-                          {showMoreSocialOptions && (
-                            <div className="w-full">
-                              <ShowAllWalletsButton onClick={() => setShowExtendedList('social')} />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {showSocialConnectorSection && showEmailInputSection && (
-                        <div className="flex gap-4 flex-row justify-center items-center">
-                          <Divider className="mx-0 my-0 text-background-secondary grow" />
-                          <Text className="leading-4 h-4 text-sm" variant="normal" fontWeight="medium" color="muted">
-                            or
-                          </Text>
-                          <Divider className="mx-0 my-0 text-background-secondary grow" />
-                        </div>
-                      )}
-                      {showEmailInputSection && (
-                        <>
-                          <form onSubmit={onConnectInlineEmail}>
-                            <TextInput
-                              autoFocus
-                              onChange={onChangeEmail}
-                              value={email}
-                              name="email"
-                              placeholder="Email address"
-                              controls={
-                                <>
-                                  {emailAuthInProgress ? (
-                                    <Spinner />
-                                  ) : (
-                                    <IconButton type="submit" size="xs" icon={ArrowRightIcon} disabled={!isEmailValid(email)} />
-                                  )}
-                                </>
-                              }
-                              data-1p-ignore
-                            />
-                          </form>
-                        </>
-                      )}
-                    </>
-                  </div>
-                </>
-              )}
-              {walletConnectors.length > 0 && (
-                <>
-                  <div
-                    className={clsx(
-                      'flex gap-2 flex-row justify-center items-center',
-                      hasConnectedSequenceUniversal ? 'mt-4' : 'mt-6'
-                    )}
-                  >
-                    {walletConnectors.slice(0, walletConnectorsPerRow).map(connector => {
-                      return <ConnectButton key={connector.uid} connector={connector} onConnect={onConnect} />
-                    })}
-                    {showMoreWalletOptions && <ShowAllWalletsButton onClick={() => setShowExtendedList('wallet')} />}
-                  </div>
-                </>
-              )}
-              <div className="mt-6">
-                <PoweredBySequence />
-              </div>
-            </>
-          )}
-        </>
-      )}
-    </div>
+            <Box marginTop="2" gap="2" flexDirection="row" justifyContent="center" alignItems="center">
+              {walletConnectors.slice(0, 7).map(connector => {
+                return <ConnectButton key={connector.uid} connector={connector} onConnect={onConnect} />
+              })}
+            </Box>
+
+            {displayExtendedListButton && (
+              <Box marginTop="4" justifyContent="center">
+                <Button
+                  shape="square"
+                  size="xs"
+                  onClick={() => setShowExtendedList(true)}
+                  label="More options"
+                  rightIcon={ChevronRightIcon}
+                />
+              </Box>
+            )}
+          </>
+        )}
+      </Box>
+
+      <PoweredBySequence />
+    </>
   )
-}
-
-const TitleWrapper = ({ children, isPreview }: { children: React.ReactNode; isPreview: boolean }) => {
-  if (isPreview) {
-    return <>{children}</>
-  }
-
-  return <ModalPrimitive.Title asChild>{children}</ModalPrimitive.Title>
-}
-
-const getUserIdForEvent = (address: string) => {
-  return genUserId(address.toLowerCase(), false, { privacy: { userIdHash: true } }).userId
 }

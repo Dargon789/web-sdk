@@ -1,35 +1,48 @@
-import { NetworkImage, Text } from '@0xsequence/design-system'
-import { getNetwork, getNetworkColor, getNetworkBackgroundColor } from '@0xsequence/kit'
 import React from 'react'
+import { Box, Image, Text } from '@0xsequence/design-system'
+import { getNativeTokenInfoByChainId, getNetwork, getNetworkColor, getNetworkBackgroundColor } from '@0xsequence/kit'
+import { useConfig } from 'wagmi'
+
+import { capitalize } from '../utils'
+import { networks } from '@0xsequence/network'
 
 interface NetworkBadgeProps {
   chainId: number
 }
 
 export const NetworkBadge = ({ chainId }: NetworkBadgeProps) => {
+  const { chains } = useConfig()
   const network = getNetwork(chainId)
+  const nativeTokenInfo = getNativeTokenInfoByChainId(chainId, chains)
   const chainColor = getNetworkColor(chainId)
   const chainBGColor = getNetworkBackgroundColor(chainId)
 
   return (
-    <div
-      className="flex h-6 px-2 gap-1 rounded-sm flex-row justify-center items-center w-fit"
+    <Box
+      height="6"
+      paddingY="1"
+      paddingLeft="1.5"
+      paddingRight="2"
+      gap="1"
       style={{
         background: chainBGColor
       }}
+      borderRadius="xs"
+      flexDirection="row"
+      justifyContent="center"
+      alignItems="center"
+      width="fit"
     >
-      <NetworkImage chainId={chainId} size="xs" />
+      <Image style={{ width: '14px' }} src={nativeTokenInfo.logoURI} />
       <Text
-        variant="xsmall"
         fontWeight="bold"
-        capitalize
-        ellipsis
+        fontSize="xsmall"
         style={{
           color: chainColor
         }}
       >
-        {network.title ?? network.name}
+        {capitalize(network.title ?? network.name)}
       </Text>
-    </div>
+    </Box>
   )
 }

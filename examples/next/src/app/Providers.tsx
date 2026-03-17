@@ -1,11 +1,11 @@
 'use client'
 
-import { SequenceKit } from '@0xsequence/kit'
-import { KitCheckoutProvider } from '@0xsequence/kit-checkout'
-import { KitWalletProvider } from '@0xsequence/kit-wallet'
+import { SequenceCheckoutProvider } from '@0xsequence/checkout'
+import { SequenceConnect } from '@0xsequence/connect'
+import { SequenceWalletProvider } from '@0xsequence/wallet-widget'
 import { State } from 'wagmi'
 
-import { config } from '../config'
+import { checkoutConfig, config } from '../config'
 
 export interface ProvidersProps {
   children: React.ReactNode
@@ -16,10 +16,10 @@ export const Providers = (props: ProvidersProps) => {
   const { children, initialState } = props
 
   return (
-    <SequenceKit config={config} initialState={initialState}>
-      <KitWalletProvider>
-        <KitCheckoutProvider>{children}</KitCheckoutProvider>
-      </KitWalletProvider>
-    </SequenceKit>
+    <SequenceConnect config={config} initialState={initialState}>
+      <SequenceWalletProvider>
+        <SequenceCheckoutProvider config={checkoutConfig}>{children}</SequenceCheckoutProvider>
+      </SequenceWalletProvider>
+    </SequenceConnect>
   )
 }

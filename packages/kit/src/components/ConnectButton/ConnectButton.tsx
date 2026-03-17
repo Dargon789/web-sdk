@@ -1,4 +1,4 @@
-import { Card, EllipsisIcon, Text, Tooltip, useTheme } from '@0xsequence/design-system'
+import { Box, Card, EmailIcon, Tooltip, useTheme } from '@0xsequence/design-system'
 import { GoogleLogin } from '@react-oauth/google'
 import { useEffect, useState } from 'react'
 import { appleAuthHelpers } from 'react-apple-signin-auth'
@@ -7,12 +7,10 @@ import { LocalStorageKey } from '../../constants'
 import { useStorage, useStorageItem } from '../../hooks/useStorage'
 import { ExtendedConnector, WalletProperties } from '../../types'
 
-const BUTTON_HEIGHT = '52px'
-const BUTTON_HEIGHT_DESCRIPTIVE = '44px'
-const iconSizeClasses = 'w-8 h-8'
-const iconDescriptiveSizeClasses = 'w-6 h-6'
+const BUTTON_SIZE = '14'
+const ICON_SIZE = '10'
 
-export const getLogo = (theme: any, walletProps: WalletProperties) =>
+const getLogo = (theme: any, walletProps: WalletProperties) =>
   theme === 'dark'
     ? walletProps.logoDark || walletProps.monochromeLogoDark
     : walletProps.logoLight || walletProps.monochromeLogoLight
@@ -21,74 +19,37 @@ interface ConnectButtonProps {
   connector: ExtendedConnector
   label?: string
   onConnect: (connector: ExtendedConnector) => void
-  isDescriptive?: boolean
+  googleUseRedirectMode?: boolean
+  googleRedirectModeLoginUri?: string
 }
 
 export const ConnectButton = (props: ConnectButtonProps) => {
   const { connector, label, onConnect } = props
   const { theme } = useTheme()
   const walletProps = connector._wallet
-  const isDescriptive = props.isDescriptive || false
 
   const Logo = getLogo(theme, walletProps)
-
-  if (isDescriptive) {
-    return (
-      <Tooltip message={label || walletProps.name}>
-        <Card
-          className="flex gap-1 justify-center items-center w-full"
-          clickable
-          onClick={() => onConnect(connector)}
-          style={{ height: BUTTON_HEIGHT_DESCRIPTIVE }}
-        >
-          <Logo className={iconDescriptiveSizeClasses} />
-          <Text color="primary" variant="normal" fontWeight="bold">
-            Continue with {label || walletProps.name}
-          </Text>
-        </Card>
-      </Tooltip>
-    )
-  }
 
   return (
     <Tooltip message={label || walletProps.name}>
       <Card
-        className="flex justify-center items-center w-full"
         clickable
+        width={BUTTON_SIZE}
+        height={BUTTON_SIZE}
+        padding="2"
+        borderRadius="xs"
+        justifyContent="center"
+        alignItems="center"
         onClick={() => onConnect(connector)}
-        style={{
-          height: BUTTON_HEIGHT
-        }}
       >
-        <Logo className={iconSizeClasses} />
-      </Card>
-    </Tooltip>
-  )
-}
-
-interface ShowAllWalletsButtonProps {
-  onClick: () => void
-}
-
-export const ShowAllWalletsButton = ({ onClick }: ShowAllWalletsButtonProps) => {
-  return (
-    <Tooltip message="Show more">
-      <Card
-        className="flex justify-center items-center w-full"
-        clickable
-        onClick={onClick}
-        style={{
-          height: BUTTON_HEIGHT
-        }}
-      >
-        <EllipsisIcon className="text-primary" size="xl" />
+        <Box as={Logo} width={ICON_SIZE} height={ICON_SIZE} />
       </Card>
     </Tooltip>
   )
 }
 
 export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
-  const { connector, onConnect, isDescriptive = false } = props
+  const { connector, onConnect, googleUseRedirectMode, googleRedirectModeLoginUri } = props
   const storage = useStorage()
 
   const [enableGoogleTooltip, setEnableGoogleTooltip] = useState(false)
@@ -103,47 +64,30 @@ export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
     }, 300)
   })
 
-  const WaasLoginContent = () => {
-    if (isDescriptive) {
-      return (
-        <div className="flex gap-1 justify-center items-center bg-background-secondary absolute pointer-events-none w-full h-full top-0 right-0">
-          <Logo className={iconDescriptiveSizeClasses} />
-          <Text color="primary" variant="normal" fontWeight="bold">
-            Continue with Google
-          </Text>
-        </div>
-      )
-    }
-
-    return (
-      <div className="flex bg-background-secondary justify-center items-center absolute pointer-events-none w-full h-full top-0 right-0">
-        <Logo className={iconSizeClasses} />
-      </div>
-    )
-  }
-
-  const buttonHeight = isDescriptive ? BUTTON_HEIGHT_DESCRIPTIVE : BUTTON_HEIGHT
-
   return (
     <Tooltip message="Google" disabled={!enableGoogleTooltip}>
       <Card
-        className="bg-transparent p-0 w-full relative"
         clickable
-        style={{
-          height: buttonHeight
-        }}
+        background="transparent"
+        borderRadius="xs"
+        padding="0"
+        width={BUTTON_SIZE}
+        height={BUTTON_SIZE}
+        position="relative"
       >
-        <div
-          className="flex flex-row h-full overflow-hidden items-center justify-center"
-          style={{
-            opacity: 0.0000001,
-            transform: 'scale(100)'
-          }}
+        <Box
+          width="full"
+          height="full"
+          overflow="hidden"
+          borderRadius="sm"
+          alignItems="center"
+          justifyContent="center"
+          style={{ opacity: 0.0000001, transform: 'scale(1.4)' }}
         >
           <GoogleLogin
-            width="56"
             type="icon"
             size="large"
+            width="56"
             onSuccess={credentialResponse => {
               if (credentialResponse.credential) {
                 storage?.setItem(LocalStorageKey.WaasGoogleIdToken, credentialResponse.credential)
@@ -153,10 +97,25 @@ export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
             onError={() => {
               console.log('Login Failed')
             }}
+            ux_mode={googleUseRedirectMode ? 'redirect' : 'popup'}
+            login_uri={googleRedirectModeLoginUri}
           />
-        </div>
-
-        <WaasLoginContent />
+        </Box>
+        <Box
+          background="backgroundSecondary"
+          borderRadius="xs"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          position="absolute"
+          pointerEvents="none"
+          width="full"
+          height="full"
+          top="0"
+          right="0"
+        >
+          <Box as={Logo} width={ICON_SIZE} height={ICON_SIZE} />
+        </Box>
       </Card>
     </Tooltip>
   )
@@ -171,7 +130,6 @@ export const AppleWaasConnectButton = (props: ConnectButtonProps) => {
 
   return appleClientId && appleRedirectUri ? (
     <ConnectButton
-      {...props}
       connector={connector}
       onConnect={() => {
         appleAuthHelpers.signIn({
@@ -194,4 +152,29 @@ export const AppleWaasConnectButton = (props: ConnectButtonProps) => {
       }}
     />
   ) : null
+}
+
+interface EmailConnectButtonProps {
+  onClick: () => void
+}
+
+export const EmailConnectButton = (props: EmailConnectButtonProps) => {
+  const { onClick } = props
+
+  return (
+    <Tooltip message={'Email'}>
+      <Card
+        clickable
+        width={BUTTON_SIZE}
+        height={BUTTON_SIZE}
+        padding="2"
+        borderRadius="xs"
+        justifyContent="center"
+        alignItems="center"
+        onClick={onClick}
+      >
+        <EmailIcon size="xl" color="text100" />
+      </Card>
+    </Tooltip>
+  )
 }

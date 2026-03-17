@@ -1,13 +1,13 @@
 import {
-  Image,
-  Text,
-  GradientAvatar,
-  truncateAddress,
-  NetworkImage,
-  Card,
   Button,
+  Card,
   ChevronDownIcon,
-  SignoutIcon
+  GradientAvatar,
+  Image,
+  NetworkImage,
+  SignoutIcon,
+  Text,
+  truncateAddress
 } from '@0xsequence/design-system'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import { useState } from 'react'
@@ -20,16 +20,7 @@ export const Header = () => {
       style={{ borderBottom: '1px solid #222' }}
     >
       <div className="flex flex-row items-center justify-center gap-3">
-        <Image style={{ width: '36px' }} src="images/kit-logo.svg" alt="Sequence kit" disableAnimation />
-        <Image
-          style={{
-            width: '24px'
-            // filter: theme === 'dark' ? 'invert(0)' : 'invert(1)'
-          }}
-          src="images/kit-logo-text.svg"
-          alt="Sequence Kit Text Logo"
-          disableAnimation
-        />
+        <Image src="images/sequence-websdk-dark.svg" alt="Sequence Web SDK Logo" disableAnimation />
       </div>
       <div className="flex gap-2 items-center">
         <NetworkSelect />
@@ -108,6 +99,13 @@ const NetworkSelect = () => {
   const { switchChain } = useSwitchChain()
   const [isOpen, toggleOpen] = useState(false)
 
+  const modifiedChains = chains.map(chain => {
+    if (chain.id === 8453) {
+      return { ...chain, name: 'Base' };
+    }
+    return chain;
+  });
+
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={toggleOpen}>
       <PopoverPrimitive.Trigger asChild>
@@ -117,7 +115,7 @@ const NetworkSelect = () => {
         >
           <div className="flex items-center gap-2">
             <NetworkImage chainId={chainId} size="sm" />
-            <Text display={{ sm: 'none', lg: 'block' }} variant="normal" fontWeight="bold" color="primary">
+            <Text className="hidden lg:block" variant="normal" fontWeight="bold" color="primary">
               {chains.find(chain => chain.id === chainId)?.name || chainId}
             </Text>
           </div>

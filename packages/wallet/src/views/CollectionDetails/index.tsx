@@ -1,12 +1,13 @@
-import { Image, Text, TokenImage } from '@0xsequence/design-system'
+import { Box, Image, Text, TokenImage, vars } from '@0xsequence/design-system'
 import { TokenBalance } from '@0xsequence/indexer'
-import { formatDisplay, ContractVerificationStatus } from '@0xsequence/kit'
-import { useGetTokenBalancesDetails } from '@0xsequence/kit-hooks'
+import { useCollectionBalance } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
+import React from 'react'
 import { useAccount } from 'wagmi'
 
 import { useNavigation } from '../../hooks'
 import { NetworkBadge } from '../../shared/NetworkBadge'
+import { formatDisplay } from '../../utils'
 
 import { CollectionDetailsSkeleton } from './Skeleton'
 
@@ -18,14 +19,10 @@ interface CollectionDetailsProps {
 export const CollectionDetails = ({ chainId, contractAddress }: CollectionDetailsProps) => {
   const { setNavigation } = useNavigation()
   const { address: accountAddress } = useAccount()
-  const { data: collectionBalanceData, isPending: isPendingCollectionBalance } = useGetTokenBalancesDetails({
-    chainIds: [chainId],
-    filter: {
-      accountAddresses: accountAddress ? [accountAddress] : [],
-      contractStatus: ContractVerificationStatus.ALL,
-      contractWhitelist: [contractAddress],
-      omitNativeBalances: true
-    }
+  const { data: collectionBalanceData, isPending: isPendingCollectionBalance } = useCollectionBalance({
+    chainId,
+    accountAddress: accountAddress || '',
+    contractAddress
   })
 
   const contractInfo = collectionBalanceData?.[0]?.contractInfo
@@ -42,58 +39,78 @@ export const CollectionDetails = ({ chainId, contractAddress }: CollectionDetail
         params: {
           contractAddress: balance.contractAddress,
           chainId: balance.chainId,
-          tokenId: balance.tokenID || ''
+          tokenId: balance.tokenID
         }
       })
   }
 
   return (
-    <div className="flex px-4 pb-5 pt-3 mt-8 flex-col items-center justify-center gap-10">
-      <div className="flex flex-col gap-2 justify-center items-center">
+    <Box
+      paddingX="4"
+      paddingBottom="5"
+      paddingTop="3"
+      marginTop="8"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      gap="10"
+    >
+      <Box flexDirection="column" gap="2" justifyContent="center" alignItems="center">
         <TokenImage src={collectionLogoURI} size="lg" />
-        <Text variant="large" fontWeight="bold" color="primary">
+        <Text fontWeight="bold" fontSize="large" color="text100">
           {contractInfo?.name || 'Unknown'}
         </Text>
         <NetworkBadge chainId={chainId} />
-        <Text variant="normal" fontWeight="medium" color="muted">{`${
+        <Text fontWeight="medium" fontSize="normal" color="text50">{`${
           collectionBalanceData?.length || 0
         } Unique Collectibles`}</Text>
-      </div>
-      <div className="w-full">
-        <Text variant="normal" fontWeight="medium" color="muted">
+      </Box>
+      <Box width="full">
+        <Text fontWeight="medium" fontSize="normal" color="text50">
           {`Owned (${collectionBalanceData?.length || 0})`}
         </Text>
-        <div
-          className="w-full mt-3 grid gap-2"
+        <Box
           style={{
-            gridTemplateColumns: `calc(50% - 4px) calc(50% - 4px)`
+            display: 'grid',
+            gridTemplateColumns: `calc(50% - ${vars.space[1]}) calc(50% - ${vars.space[1]})`,
+            gap: vars.space[2]
           }}
+          width="full"
+          marginTop="3"
         >
           {collectionBalanceData?.map((balance, index) => {
             const unformattedBalance = balance.balance
             const decimals = balance?.tokenMetadata?.decimals || 0
-            const formattedBalance = formatDisplay(ethers.formatUnits(unformattedBalance, decimals))
+            const formattedBalance = formatDisplay(ethers.utils.formatUnits(unformattedBalance, decimals))
 
             return (
-              <div className="select-none cursor-pointer" key={index} onClick={() => onClickItem(balance)}>
-                <div className="flex bg-background-secondary aspect-square w-full rounded-xl justify-center items-center mb-2">
-                  <Image className="rounded-lg" style={{ height: '100%' }} src={balance.tokenMetadata?.image} />
-                </div>
-                <div>
-                  <Text variant="normal" fontWeight="bold" color="primary">
+              <Box key={index} onClick={() => onClickItem(balance)} userSelect="none" cursor="pointer" opacity={{ hover: '80' }}>
+                <Box
+                  background="backgroundSecondary"
+                  aspectRatio="1/1"
+                  width="full"
+                  borderRadius="md"
+                  justifyContent="center"
+                  alignItems="center"
+                  marginBottom="2"
+                >
+                  <Image style={{ height: '100%' }} src={balance.tokenMetadata?.image} />
+                </Box>
+                <Box>
+                  <Text fontWeight="bold" fontSize="normal" color="text100">
                     {`${balance.tokenMetadata?.name}`}
                   </Text>
-                </div>
-                <div>
-                  <Text className="mt-1" variant="normal" fontWeight="medium" color="muted">
+                </Box>
+                <Box>
+                  <Text marginTop="1" fontWeight="medium" fontSize="normal" color="text50">
                     {formattedBalance} Owned
                   </Text>
-                </div>
-              </div>
+                </Box>
+              </Box>
             )
           })}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   )
 }

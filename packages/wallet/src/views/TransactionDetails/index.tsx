@@ -1,6 +1,7 @@
 import { Token } from '@0xsequence/api'
 import {
   ArrowRightIcon,
+  Box,
   Button,
   Divider,
   GradientAvatar,
@@ -11,15 +12,17 @@ import {
   TokenImage
 } from '@0xsequence/design-system'
 import { Transaction, TxnTransfer } from '@0xsequence/indexer'
-import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/kit'
-import { useGetCoinPrices, useGetCollectiblePrices, useGetExchangeRate } from '@0xsequence/kit-hooks'
+import { getNativeTokenInfoByChainId } from '@0xsequence/kit'
+import { useExchangeRate, useCoinPrices, useCollectiblePrices } from '@0xsequence/kit/hooks'
 import dayjs from 'dayjs'
 import { ethers } from 'ethers'
+import React from 'react'
 import { useConfig } from 'wagmi'
 
 import { useSettings } from '../../hooks'
 import { CopyButton } from '../../shared/CopyButton'
 import { NetworkBadge } from '../../shared/NetworkBadge'
+import { compareAddress, formatDisplay } from '../../utils'
 
 interface TransactionDetailProps {
   transaction: Transaction
@@ -49,7 +52,7 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
         }
       })
     } else {
-      const contractAddress = transfer?.contractInfo?.address || ethers.ZeroAddress
+      const contractAddress = transfer?.contractInfo?.address || ethers.constants.AddressZero
       const foundCoin = coins.find(
         coin => coin.chainId === transaction.chainId && compareAddress(coin.contractAddress, contractAddress)
       )
@@ -62,11 +65,11 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
     }
   })
 
-  const { data: coinPricesData, isPending: isPendingCoinPrices } = useGetCoinPrices(coins)
+  const { data: coinPricesData, isPending: isPendingCoinPrices } = useCoinPrices(coins)
 
-  const { data: collectiblePricesData, isPending: isPendingCollectiblePrices } = useGetCollectiblePrices(collectibles)
+  const { data: collectiblePricesData, isPending: isPendingCollectiblePrices } = useCollectiblePrices(collectibles)
 
-  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
+  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useExchangeRate(fiatCurrency.symbol)
 
   const arePricesLoading =
     (coins.length > 0 && isPendingCoinPrices) ||
@@ -90,7 +93,7 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
     const recipientAddress = transfer.to
     const recipientAddressFormatted =
       recipientAddress.substring(0, 10) + '...' + recipientAddress.substring(transfer.to.length - 4, transfer.to.length)
-    const isNativeToken = compareAddress(transfer?.contractInfo?.address || '', ethers.ZeroAddress)
+    const isNativeToken = compareAddress(transfer?.contractInfo?.address || '', ethers.constants.AddressZero)
     const logoURI = isNativeToken ? nativeTokenInfo.logoURI : transfer?.contractInfo?.logoURI
     const symbol = isNativeToken ? nativeTokenInfo.symbol : transfer?.contractInfo?.symbol || ''
 
@@ -102,7 +105,7 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
           const collectibleDecimals = transfer?.tokenMetadata?.[tokenId]?.decimals || 0
           const coinDecimals = isNativeToken ? nativeTokenInfo.decimals : transfer?.contractInfo?.decimals || 0
           const decimals = isCollectible ? collectibleDecimals : coinDecimals
-          const formattedBalance = ethers.formatUnits(amount, decimals)
+          const formattedBalance = ethers.utils.formatUnits(amount, decimals)
           const balanceDisplayed = formatDisplay(formattedBalance)
           const fiatPrice = isCollectible
             ? collectiblePricesData?.find(
@@ -113,43 +116,57 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
               )?.price?.value
             : coinPricesData?.find(
                 coin =>
-                  compareAddress(coin.token.contractAddress, transfer.contractInfo?.address || ethers.ZeroAddress) &&
+                  compareAddress(coin.token.contractAddress, transfer.contractInfo?.address || ethers.constants.AddressZero) &&
                   coin.token.chainId === transaction.chainId
               )?.price?.value
 
           const fiatValue = (parseFloat(formattedBalance) * (conversionRate * (fiatPrice || 0))).toFixed(2)
 
           return (
-            <div className="flex w-full flex-row gap-2 justify-between items-center" key={index}>
-              <div
-                className="flex flex-row justify-start items-center gap-2 h-12 rounded-xl bg-button-glass p-2"
+            <Box key={index} width="full" flexDirection="row" gap="2" justifyContent="space-between" alignItems="center">
+              <Box
+                flexDirection="row"
+                justifyContent="flex-start"
+                alignItems="center"
+                gap="2"
+                height="12"
+                borderRadius="md"
+                background="buttonGlass"
+                padding="2"
                 style={{ flexBasis: '100%' }}
               >
                 <TokenImage src={logoURI} symbol={symbol} size="sm" />
-                <div className="flex gap-0.5 flex-col items-start justify-center">
-                  <Text variant="xsmall" fontWeight="bold" color="primary">
+                <Box gap="0.5" flexDirection="column" alignItems="flex-start" justifyContent="center">
+                  <Text fontWeight="bold" fontSize="xsmall" color="text100">
                     {`${balanceDisplayed} ${symbol}`}
                   </Text>
                   {arePricesLoading ? (
                     <Skeleton style={{ width: '44px', height: '12px' }} />
                   ) : (
-                    <Text variant="xsmall" fontWeight="bold" color="muted">
+                    <Text fontWeight="bold" fontSize="xsmall" color="text50">
                       {fiatPrice ? `${fiatCurrency.sign}${fiatValue}` : ''}
                     </Text>
                   )}
-                </div>
-              </div>
-              <ArrowRightIcon className="text-muted" style={{ width: '16px' }} />
-              <div
-                className="flex flex-row justify-start items-center gap-2 h-12 rounded-xl bg-button-glass p-2"
+                </Box>
+              </Box>
+              <ArrowRightIcon color="text50" style={{ width: '16px' }} />
+              <Box
+                flexDirection="row"
+                justifyContent="flex-start"
+                alignItems="center"
+                gap="2"
+                height="12"
+                borderRadius="md"
+                background="buttonGlass"
+                padding="2"
                 style={{ flexBasis: '100%' }}
               >
-                <GradientAvatar size="sm" address={recipientAddress} />
-                <Text variant="xsmall" fontWeight="bold" color="primary">
+                <GradientAvatar address={recipientAddress} style={{ width: '20px' }} />
+                <Text fontWeight="bold" fontSize="xsmall" color="text100">
                   {recipientAddressFormatted}
                 </Text>
-              </div>
-            </div>
+              </Box>
+            </Box>
           )
         })}
       </>
@@ -157,57 +174,67 @@ export const TransactionDetails = ({ transaction }: TransactionDetailProps) => {
   }
 
   return (
-    <div className="flex p-5 pt-3 flex-col items-center justify-center gap-10 mt-5">
-      <div className="flex mt-6 flex-col justify-center items-center gap-1">
-        <Text variant="normal" fontWeight="medium" color="primary">
+    <Box padding="5" paddingTop="3" flexDirection="column" alignItems="center" justifyContent="center" gap="10" marginTop="5">
+      <Box marginTop="6" flexDirection="column" justifyContent="center" alignItems="center" gap="1">
+        <Text fontSize="normal" fontWeight="medium">
           Transaction details
         </Text>
-        <Text className="mb-1" variant="small" fontWeight="medium" color="muted">
+        <Text marginBottom="1" fontSize="small" fontWeight="medium" color="text50">
           {date}
         </Text>
         <NetworkBadge chainId={transaction.chainId} />
-      </div>
-      <div className="flex flex-col items-center justify-center gap-4 w-full p-4 bg-background-secondary rounded-xl">
-        <div className="flex w-full gap-1 flex-row items-center justify-start">
-          <Text variant="normal" fontWeight="medium" color="muted">
+      </Box>
+      <Box
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        gap="4"
+        width="full"
+        padding="4"
+        background="backgroundSecondary"
+        borderRadius="md"
+      >
+        <Box width="full" gap="1" flexDirection="row" alignItems="center" justifyContent="flex-start">
+          <Text fontSize="normal" fontWeight="medium" color="text50">
             Transfer
           </Text>
           <NetworkImage chainId={transaction.chainId} size="xs" />
-        </div>
+        </Box>
         {transaction.transfers?.map((transfer, index) => (
-          <div className="flex w-full flex-col justify-center items-center gap-4" key={`transfer-${index}`}>
+          <Box width="full" flexDirection="column" justifyContent="center" alignItems="center" gap="4" key={`transfer-${index}`}>
             <Transfer transfer={transfer} />
-          </div>
+          </Box>
         ))}
-      </div>
+      </Box>
+
       <Button
-        className="w-full rounded-xl"
         onClick={onClickBlockExplorer}
+        width="full"
+        borderRadius="md"
         rightIcon={LinkIcon}
         label={`View on ${nativeTokenInfo.blockExplorerName}`}
       />
-      <div>
-        <Divider className="w-full my-2" />
-        <div className="flex w-full flex-col gap-2 justify-center items-start">
-          <Text variant="normal" color="muted" fontWeight="medium">
+      <Box>
+        <Box width="full" flexDirection="column" gap="2" justifyContent="center" alignItems="flex-start">
+          <Divider width="full" margin="0" style={{ marginBottom: '-4px' }} />
+          <Text color="text50" fontSize="normal" fontWeight="medium">
             Status
           </Text>
-          <Text variant="normal" fontWeight="medium" color="primary">
+          <Text fontSize="normal" fontWeight="medium" color="text100">
             Complete
           </Text>
-        </div>
-
-        <Divider className="w-full my-2" />
-        <div className="flex w-full flex-col gap-2 justify-center items-start">
-          <Text variant="normal" color="muted" fontWeight="medium">
+        </Box>
+        <Box width="full" flexDirection="column" gap="2" justifyContent="center" alignItems="flex-start">
+          <Divider width="full" margin="0" style={{ marginBottom: '-4px' }} />
+          <Text color="text50" fontSize="normal" fontWeight="medium">
             Transaction Hash
           </Text>
-          <Text variant="normal" color="primary" fontWeight="medium" style={{ overflowWrap: 'anywhere' }}>
+          <Text color="text100" fontSize="normal" fontWeight="medium" style={{ overflowWrap: 'anywhere' }}>
             {transaction.txnHash}
           </Text>
-          <CopyButton className="mt-2" buttonVariant="with-label" text={transaction.txnHash} />
-        </div>
-      </div>
-    </div>
+          <CopyButton marginTop="2" buttonVariant="with-label" text={transaction.txnHash} />
+        </Box>
+      </Box>
+    </Box>
   )
 }

@@ -1,4 +1,4 @@
-# Sequence Kit Checkout
+# Sequence Web SDK Checkout
 
 Sequence Checkout provides a seamless and flexible payment experience for interacting with NFTs, cryptocurrencies, and fiat currencies. It supports multiple payment options, including cryptocurrency transfers, currency swaps, and even credit card payments for whitelisted contracts.
 
@@ -13,25 +13,25 @@ Sequence Checkout provides a seamless and flexible payment experience for intera
 First install the package:
 
 ```bash
-npm install @0xsequence/kit-checkout
+npm install @0xsequence/checkout
 # or
-pnpm install @0xsequence/kit-checkout
+pnpm install @0xsequence/checkout
 # or
-yarn add @0xsequence/kit-checkout
+yarn add @0xsequence/checkout
 ```
 
-Then the wallet provider module must placed below the Sequence Kit Core provider.
+Then the wallet provider module must placed below the Sequence Web SDK Core provider.
 
 ```js
-import { KitCheckoutProvider } from '@0xsequence/kit-checkout'
+import { SequenceCheckoutProvider } from '@0xsequence/checkout'
 
 const App = () => {
   return (
-    <SequenceKit config={config}>
-      <KitCheckoutProvider>
+    <SequenceConnect config={config}>
+      <SequenceCheckoutProvider>
         <Page />
-      </KitCheckoutProvider>
-    </SequenceKit>
+      </SequenceCheckoutProvider>
+    </SequenceConnect>
   )
 }
 ```
@@ -46,10 +46,10 @@ Sequence Pay Checkout allows users to purchase NFTs using various payment method
 
 ## Basic Usage
 
-To enable this functionality in your app, use the `useSelectPaymentModal` hook from the `@0xsequence/kit-checkout` package. The following code demonstrates how to set up the checkout modal and trigger it on a button click:
+To enable this functionality in your app, use the `useSelectPaymentModal` hook from the `@0xsequence/checkout` package. The following code demonstrates how to set up the checkout modal and trigger it on a button click:
 
 ```js
-import { useSelectPaymentModal, type SelectPaymentSettings } from '@0xsequence/kit-checkout'
+import { useSelectPaymentModal, type SelectPaymentSettings } from '@0xsequence/checkout'
 
 const MyComponent = () => {
   const { openSelectPaymentModal } = useSelectPaymentModal()
@@ -102,7 +102,7 @@ const MyComponent = () => {
       collectionAddress,
       creditCardProviders: ['sardine'],
       copyrightText: 'ⓒ2024 Sequence',
-      onSuccess: (txnHash: string) => {
+      onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
       },
       onError: (error: Error) => {
@@ -134,47 +134,6 @@ const MyComponent = () => {
 - **blockConfirmations**: The number of block confirmations required for the transaction to be considered successful and trigger `onSuccess`.
 - **onError**: Callback function triggered if an error has occurred before or after sending the transaction.
 
-## Utility functions
-
-The `@0xsequence/kit-checkout` library indeed simplifies the integration of Web3 payment solutions by providing utility functions. One such function, `useERC1155SaleContractPaymentModal`, is tailored for use cases involving the minting of ERC-1155 tokens. This function works in conjunction with Sequence's wallet ecosystem and its deployable smart contract infrastructure, such as the ERC-1155 sale contract available through the [Sequence Builder](https://sequence.build).
-
-```js
-import { useERC1155SaleContractCheckout } from "@0xsequence/kit-checkout";
-import { useAccount } from "wagmi";
-
-const MyComponent = () => {
-  const { address: userAddress } = useAccount();
-  const { openCheckoutModal } = useERC1155SaleContractCheckout({
-    chain: 80001, // chainId of the chain the collectible is on
-    contractAddress: "0x0327b2f274e04d292e74a06809bcd687c63a4ba4", // address of the contract handling the minting function
-    wallet: userAddress!, // address of the recipient
-    collectionAddress: "0x888a322db4b8033bac3ff84412738c096f87f9d0", // address of the collection contract
-    items: [
-      // array of collectibles to purchase
-      {
-        tokenId: "0",
-        quantity: "1",
-      },
-    ],
-    onSuccess: (txnHash: string) => {
-      console.log("success!", txnHash);
-    },
-    onError: (error: Error) => {
-      console.error(error);
-    },
-  });
-
-  const onClick = () => {
-    if (!userAddress) {
-      return;
-    }
-    openCheckoutModal();
-  };
-
-  return <button onClick={onClick}>Buy ERC-1155 collectible!</button>;
-};
-```
-
 # Swap
 
 <div align="center">
@@ -188,7 +147,7 @@ The **Swap Modal** allows users to swap one currency for another (e.g., ETH to U
 Here’s an example of how to use the Swap Modal with the `useSwapModal` hook:
 
 ```js
-import { useSwapModal, type SwapModalSettings } from '@0xsequence/kit-checkout'
+import { useSwapModal, type SwapModalSettings } from '@0xsequence/checkout'
 
 const MyComponent = () => {
   const { openSwapModal } = useSwapModal()
@@ -197,10 +156,7 @@ const MyComponent = () => {
     const chainId = 137
     const currencyAddress = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
     const currencyAmount = '20000'
-
-    const contractAbiInterface = new ethers.Interface(['function demo()'])
-
-    const data = contractAbiInterface.encodeFunctionData('demo', []) as `0x${string}`
+    const data = encodeFunctionData({ abi: parseAbi(['function demo()']), functionName: 'demo', args: []})
 
     const swapModalSettings: SwapModalSettings = {
       onSuccess: () => {
@@ -243,7 +199,7 @@ const MyComponent = () => {
 The Fiat Onramp feature allows users to convert traditional fiat currencies (e.g., USD) into cryptocurrencies. This feature makes it easier for non-crypto users to interact with decentralized applications (dApps) by onboarding them directly through fiat payments.
 
 ```js
-import { useAddFundsModal } from '@0xsequence/kit-checkout'
+import { useAddFundsModal } from '@0xsequence/checkout'
 
 const MyComponent = () => {
   const { triggerAddFunds } = useAddFundsModal()
@@ -255,5 +211,58 @@ const MyComponent = () => {
   }
 
   return <button onClick={onClick}>Add Funds</button>
+}
+```
+
+## Custom Checkout UIs
+
+Fully customized checkout UIs can be created with the `useCheckoutUI` hook. The hook will return three objects `orderSummary`, `creditCardPayment` and `cryptoPayment` which serve to create the order summary section, credit card payment section and crypto payment section of a checkout UI. API calls are done within the hook and all that if left to build is placing the information and actions.
+
+Each section comes with its own loading, error and data states.
+
+```js
+import { useCheckoutUI } from '@0xsequence/checkout'
+
+const CustomCheckoutUI = () => {
+  const checkoutUIParams = {
+    collectible,
+    chain: chainId,
+    totalPriceRaw: price,
+    targetContractAddress: salesContractAddress,
+    recipientAddress: address || '',
+    currencyAddress,
+    collectionAddress,
+    creditCardProvider: 'transak' as CreditCardProviders,
+    transakConfig: {
+      contractId,
+      apiKey: '5911d9ec-46b5-48fa-a755-d59a715ff0cf'
+    },
+    onSuccess: (txnHash?: string) => {
+      console.log('success!', txnHash)
+    },
+    onError: (error: Error) => {
+      console.error(error)
+    },
+    txData: purchaseTransactionData
+  }
+
+  const { orderSummary, creditCardPayment, cryptoPayment } = useCheckoutUI(checkoutUIParams)
+
+  const isLoading = orderSummary.isLoading || creditCardPayment.isLoading || cryptoPayment.isLoading
+
+  const error = orderSummary.error || creditCardPayment.error || cryptoPayment.error
+
+  if (isLoading) {
+    return <div>loading...</div>
+  }
+  if (error)  {
+    return <div>an error has occurred</div>
+  }
+
+  return (
+    <CustomOrderSummaryComponent data={orderSummary.data}>
+    <CustomCreditCardComponent data={creditCardPayment.data}>
+    <CustomCryptoPaymentComponent data={cryptoPayment.data} purchaseAction={cryptoPayment.purchaseAction}>
+  )
 }
 ```
