@@ -7,6 +7,7 @@ import {
   TRANSACTION_CONFIRMATIONS_DEFAULT,
   useAnalyticsContext
 } from '@0xsequence/connect'
+import { findSupportedNetwork } from '@0xsequence/connect'
 import { AddIcon, Button, ChevronDownIcon, Spinner, Text, TokenImage, WarningIcon } from '@0xsequence/design-system'
 import {
   DEFAULT_SLIPPAGE_BPS,
@@ -18,10 +19,9 @@ import {
   useIndexerClient
 } from '@0xsequence/hooks'
 import { TransactionOnRampProvider } from '@0xsequence/marketplace'
-import { findSupportedNetwork } from '@0xsequence/network'
 import { useEffect, useState, type RefObject } from 'react'
 import { encodeFunctionData, formatUnits, zeroAddress, type Hex } from 'viem'
-import { useAccount, useChainId, usePublicClient, useReadContract, useSwitchChain, useWalletClient } from 'wagmi'
+import { useChainId, useConnection, usePublicClient, useReadContract, useSwitchChain, useWalletClient } from 'wagmi'
 
 import { ERC_20_CONTRACT_ABI } from '../../../../constants/abi.js'
 import { EVENT_SOURCE } from '../../../../constants/index.js'
@@ -85,7 +85,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
   const network = findSupportedNetwork(chain)
   const chainId = network?.chainId || 137
 
-  const { address: userAddress, connector } = useAccount()
+  const { address: userAddress, connector } = useConnection()
   const {
     data: walletClient,
     isLoading: isLoadingWalletClient,
@@ -165,12 +165,28 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     }
   )
 
+  const isTargetWalletClientReady = !!walletClient
+  const isTargetPublicClientReady = publicClient?.chain?.id === chainId
+
   useEffect(() => {
-    if (isSwitchingChainRef.current && connectedChainId == Number(chainId) && !isLoadingWalletClient) {
+    if (
+      isSwitchingChainRef.current &&
+      connectedChainId === chainId &&
+      !isLoadingWalletClient &&
+      isTargetWalletClientReady &&
+      isTargetPublicClientReady
+    ) {
       isSwitchingChainRef.current = false
       onClickPurchase()
     }
-  }, [connectedChainId, chainId, isLoadingWalletClient, isSwitchingChainRef.current])
+  }, [
+    connectedChainId,
+    chainId,
+    isLoadingWalletClient,
+    isSwitchingChainRef,
+    isTargetWalletClientReady,
+    isTargetPublicClientReady
+  ])
 
   const isNotEnoughBalanceError =
     typeof swapQuoteError?.cause === 'string' && swapQuoteError?.cause?.includes('not enough balance for swap')
@@ -230,19 +246,8 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
   const priceFiat = (fiatExchangeRate * Number(formattedPrice)).toFixed(2)
 
   const onPurchaseMainCurrency = async () => {
-    if (!walletClient || isErrorWalletClient || errorWalletClient) {
-      throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
-        cause: errorWalletClient
-      })
-    }
     if (!userAddress) {
       throw new Error('User address is not available. Please ensure your wallet is connected.')
-    }
-    if (!publicClient) {
-      throw new Error('Public client is not available. Please check your network connection.')
-    }
-    if (!indexerClient) {
-      throw new Error('Indexer client is not available. Please check your network connection.')
     }
     if (!connector) {
       throw new Error('Wallet connector is not available. Please ensure your wallet is properly connected.')
@@ -256,6 +261,18 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
         await switchChain({ chainId })
         isSwitchingChainRef.current = true
         return
+      }
+
+      if (!walletClient || isErrorWalletClient || errorWalletClient) {
+        throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
+          cause: errorWalletClient
+        })
+      }
+      if (!publicClient || publicClient.chain?.id !== chainId) {
+        throw new Error('Public client is not ready for the selected network. Please try again.')
+      }
+      if (!indexerClient) {
+        throw new Error('Indexer client is not available. Please check your network connection.')
       }
 
       const approveTxData = encodeFunctionData({
@@ -380,14 +397,8 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
   }
 
   const onClickPurchaseSwap = async () => {
-    if (!walletClient) {
-      throw new Error('Wallet client is not available. Please ensure your wallet is connected.')
-    }
     if (!userAddress) {
       throw new Error('User address is not available. Please ensure your wallet is connected.')
-    }
-    if (!publicClient) {
-      throw new Error('Public client is not available. Please check your network connection.')
     }
     if (!connector) {
       throw new Error('Wallet connector is not available. Please ensure your wallet is properly connected.')
@@ -404,6 +415,18 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
         await switchChain({ chainId })
         isSwitchingChainRef.current = true
         return
+      }
+
+      if (!walletClient || isErrorWalletClient || errorWalletClient) {
+        throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
+          cause: errorWalletClient
+        })
+      }
+      if (!publicClient || publicClient.chain?.id !== chainId) {
+        throw new Error('Public client is not ready for the selected network. Please try again.')
+      }
+      if (!indexerClient) {
+        throw new Error('Indexer client is not available. Please check your network connection.')
       }
 
       const approveTxData = encodeFunctionData({
@@ -597,12 +620,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
         }}
         className="flex flex-row gap-2 justify-between items-center p-2 bg-button-glass rounded-full cursor-pointer select-none"
       >
-        <TokenImage
-          disableAnimation
-          size="sm"
-          src={selectedCurrencyInfo?.logoURI}
-          withNetwork={Number(selectedCurrency.chainId)}
-        />
+        <TokenImage size="sm" src={selectedCurrencyInfo?.logoURI} withNetwork={Number(selectedCurrency.chainId)} />
         <Text variant="small" color="text100" fontWeight="bold">
           {selectedCurrencyInfo?.symbol}
         </Text>
@@ -663,14 +681,10 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
           </div>
         </div>
         {onRampProvider !== TransactionOnRampProvider.unknown && (
-          <Button
-            label="Add Funds"
-            className="w-full"
-            shape="square"
-            variant="glass"
-            leftIcon={() => <AddIcon size="md" />}
-            onClick={onClickAddFunds}
-          ></Button>
+          <Button className="w-full" shape="square" variant="ghost" onClick={onClickAddFunds}>
+            <AddIcon size="md" />
+            Add Funds
+          </Button>
         )}
       </div>
     )
@@ -799,12 +813,13 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
 
         <Button
           disabled={isPurchasing || isErrorSwapQuote || isSwitchingChainRef.current}
-          label={getConfirmButtonText()}
           className="w-full"
           shape="square"
           variant="primary"
           onClick={onClickPurchase}
-        ></Button>
+        >
+          {getConfirmButtonText()}
+        </Button>
       </div>
     </div>
   )

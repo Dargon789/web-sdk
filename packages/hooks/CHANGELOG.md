@@ -1,5 +1,61 @@
 # @0xsequence/hooks
 
+## 6.0.2
+
+### Patch Changes
+
+- Fix for chain switch
+
+## 6.0.1
+
+### Patch Changes
+
+- Minor fixes
+
+## 6.0.0
+
+### Major Changes
+
+- 3313726: Connect package improvements for v6
+
+### Patch Changes
+
+- 3313726: ethauth fixes
+- 3313726: 6.0.0 beta fixes
+- 3313726: Ecosystem wallet config update
+- 3313726: ethauth support
+- 6.0.0 release
+
+## 6.0.0-beta.4
+
+### Patch Changes
+
+- Ecosystem wallet config update
+
+## 6.0.0-beta.3
+
+### Patch Changes
+
+- ethauth fixes
+
+## 6.0.0-beta.2
+
+### Patch Changes
+
+- ethauth support
+
+## 6.0.0-beta.1
+
+### Patch Changes
+
+- 6.0.0 beta fixes
+
+## 6.0.0-beta.0
+
+### Major Changes
+
+- Connect package improvements for v6
+
 ## 5.4.8
 
 ### Patch Changes

@@ -1,12 +1,12 @@
+import { findSupportedNetwork } from '@0xsequence/connect'
 import { Button, Spinner, Text } from '@0xsequence/design-system'
 import { useClearCachedBalances, useGetContractInfo } from '@0xsequence/hooks'
-import { findSupportedNetwork } from '@0xsequence/network'
-import { useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 
 import type { CheckoutSettings } from '../../../../contexts/CheckoutModal.js'
 import { useCheckoutModal, useSelectPaymentModal } from '../../../../hooks/index.js'
 
-type BasePaymentProviderOptions = 'transak'
+type BasePaymentProviderOptions = 'sardine' | 'transak'
 
 interface PayWithCreditCardTabProps {
   skipOnCloseCallback: () => void
@@ -22,6 +22,7 @@ export const PayWithCreditCardTab = ({ skipOnCloseCallback }: PayWithCreditCardT
     txData,
     collectibles,
     collectionAddress,
+    sardineConfig,
     onSuccess = () => {},
     onError = () => {},
     onClose = () => {},
@@ -30,7 +31,7 @@ export const PayWithCreditCardTab = ({ skipOnCloseCallback }: PayWithCreditCardT
     ...rest
   } = selectPaymentSettings!
 
-  const { address: userAddress } = useAccount()
+  const { address: userAddress } = useConnection()
   const { clearCachedBalances } = useClearCachedBalances()
   const { triggerCheckout } = useCheckoutModal()
   const network = findSupportedNetwork(chain)
@@ -51,6 +52,7 @@ export const PayWithCreditCardTab = ({ skipOnCloseCallback }: PayWithCreditCardT
           onClickCustomProvider()
         }
         return
+      case 'sardine':
       case 'transak':
       case 'forte':
         onPurchase()
@@ -94,8 +96,7 @@ export const PayWithCreditCardTab = ({ skipOnCloseCallback }: PayWithCreditCardT
         nftDecimals: collectible.decimals === undefined ? undefined : String(collectible.decimals),
         provider: selectedPaymentProvider as BasePaymentProviderOptions,
         calldata: txData,
-        onSuccessChecker: selectPaymentSettings?.onSuccessChecker,
-        approvedSpenderAddress,
+        approvedSpenderAddress: sardineConfig?.approvedSpenderAddress || approvedSpenderAddress,
         ...rest
       }
     }
@@ -115,6 +116,8 @@ export const PayWithCreditCardTab = ({ skipOnCloseCallback }: PayWithCreditCardT
 
   const getProviderName = () => {
     switch (selectedPaymentProvider) {
+      case 'sardine':
+        return 'Sardine'
       case 'transak':
         return 'Transak'
       case 'forte':
@@ -129,7 +132,9 @@ export const PayWithCreditCardTab = ({ skipOnCloseCallback }: PayWithCreditCardT
         Buy directly with your debit or credit card {getProviderName() ? `through ${getProviderName()}` : ''}
       </Text>
       <div className="flex flex-col justify-center items-center gap-2 w-full h-full">
-        <Button className="w-full" shape="square" onClick={payWithSelectedProvider} label="Continue" variant="primary" />
+        <Button className="w-full" shape="square" onClick={payWithSelectedProvider} variant="primary">
+          Continue
+        </Button>
       </div>
     </div>
   )

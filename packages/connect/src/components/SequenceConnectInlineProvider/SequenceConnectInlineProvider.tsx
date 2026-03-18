@@ -1,14 +1,13 @@
 'use client'
 
-import { Button, Card, Modal, ModalPrimitive, Text, ThemeProvider, type Theme } from '@0xsequence/design-system'
+import { Button, Card, DialogPrimitive, Modal, Spinner, Text, ThemeProvider, type Theme } from '@0xsequence/design-system'
 import { SequenceHooksProvider } from '@0xsequence/hooks'
-import { ChainId } from '@0xsequence/network'
 import { SequenceClient, setupAnalytics, type Analytics } from '@0xsequence/provider'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AnimatePresence } from 'motion/react'
 import React, { useEffect, useState, type ReactNode } from 'react'
 import { hexToString, type Hex } from 'viem'
-import { useAccount, useConfig, useConnections, type Connector } from 'wagmi'
+import { useConfig, useConnection, useConnections, type Connector } from 'wagmi'
 
 import { DEFAULT_SESSION_EXPIRATION, LocalStorageKey, WEB_SDK_VERSION } from '../../constants/index.js'
 import { AnalyticsContextProvider } from '../../contexts/Analytics.js'
@@ -17,7 +16,9 @@ import { ConnectModalContextProvider } from '../../contexts/ConnectModal.js'
 import { SocialLinkContextProvider } from '../../contexts/SocialLink.js'
 import { ThemeContextProvider } from '../../contexts/Theme.js'
 import { WalletConfigContextProvider } from '../../contexts/WalletConfig.js'
+import { useResolvedConnectConfig } from '../../hooks/useResolvedConnectConfig.js'
 import { useStorage } from '../../hooks/useStorage.js'
+import { useSyncWagmiChains } from '../../hooks/useSyncWagmiChains.js'
 import { useWaasConfirmationHandler } from '../../hooks/useWaasConfirmationHandler.js'
 import { useEmailConflict } from '../../hooks/useWaasEmailConflict.js'
 import { styleProperties } from '../../styleProperties.js'
@@ -30,6 +31,7 @@ import {
   type ModalPosition
 } from '../../types.js'
 import { isJSON } from '../../utils/helpers.js'
+import { ChainId } from '../../utils/networks.js'
 import { getModalPositionCss } from '../../utils/styling.js'
 import { Connect } from '../Connect/Connect.js'
 import { EpicAuthProvider } from '../EpicAuthProvider/index.js'
@@ -46,21 +48,47 @@ export type SequenceConnectInlineProviderProps = {
   config: ConnectConfig
 }
 
+const DEFAULT_DISPLAYED_ASSETS: DisplayedAsset[] = []
+
+const resolveInlineBackground = (theme: Theme | undefined) => {
+  if (theme && typeof theme === 'object' && 'colors' in theme) {
+    const background = (theme as any).colors?.backgroundPrimary
+    if (background) {
+      return background as string
+    }
+  }
+
+  if (typeof theme === 'string') {
+    return theme === 'light' ? '#f6f6f6' : '#000'
+  }
+
+  return '#000'
+}
+
 /**
  * Inline version of SequenceConnectProvider component.
  * This component renders the connect UI inline within your layout instead of in a modal.
  * Ideal for embedded wallet experiences or custom layouts.
  */
 export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProviderProps) => {
-  const { config, children } = props
+  const { config: incomingConfig, children } = props
+  const {
+    resolvedConfig: config,
+    isLoading: isWalletConfigLoading,
+    enabledProviders,
+    isV3WalletSignedIn,
+    isAuthStatusLoading,
+    walletConfigurationSignIn,
+    sdkConfig
+  } = useResolvedConnectConfig(incomingConfig)
 
   const {
     defaultTheme = 'dark',
     signIn = {},
     position = 'center',
-    displayedAssets: displayedAssetsSetting = [],
+    displayedAssets: displayedAssetsSetting = DEFAULT_DISPLAYED_ASSETS,
     readOnlyNetworks,
-    ethAuth = {} as EthAuthSettings,
+    ethAuth: ethAuthConfig,
     disableAnalytics = false,
     hideExternalConnectOptions = false,
     hideConnectedWallets = false,
@@ -71,19 +99,24 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
 
   const defaultAppName = signIn.projectName || 'app'
 
-  const { expiry = DEFAULT_SESSION_EXPIRATION, app = defaultAppName, origin, nonce } = ethAuth
+  const isEthAuthEnabled = ethAuthConfig !== false
+  const ethAuth: EthAuthSettings | undefined = isEthAuthEnabled ? (ethAuthConfig ?? {}) : undefined
+  const { expiry = DEFAULT_SESSION_EXPIRATION, app = defaultAppName, origin, nonce } = ethAuth ?? {}
 
   const [theme, setTheme] = useState<Exclude<Theme, undefined>>(defaultTheme || 'dark')
   const [modalPosition, setModalPosition] = useState<ModalPosition>(position)
   const [displayedAssets, setDisplayedAssets] = useState<DisplayedAsset[]>(displayedAssetsSetting)
   const [analytics, setAnalytics] = useState<SequenceClient['analytics']>()
-  const { address, isConnected } = useAccount()
+  const { address, isConnected } = useConnection()
   const wagmiConfig = useConfig()
+  useSyncWagmiChains(config, wagmiConfig)
   const storage = useStorage()
   const connections = useConnections()
   const waasConnector: Connector | undefined = connections.find(c => c.connector.id.includes('waas'))?.connector
 
   const [isWalletWidgetOpen, setIsWalletWidgetOpen] = useState<boolean>(false)
+
+  const inlineBackground = resolveInlineBackground(theme)
 
   useEffect(() => {
     const handleWalletModalStateChange = (event: Event) => {
@@ -144,7 +177,7 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
     if (!disableAnalytics) {
       getAnalyticsClient(config.projectAccessKey)
     }
-  }, [])
+  }, [disableAnalytics, config.projectAccessKey])
 
   useEffect(() => {
     if (theme !== defaultTheme) {
@@ -170,16 +203,21 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
     // EthAuth
     // note: keep an eye out for potential race-conditions, though they shouldn't occur.
     // If there are race conditions, the settings could be a function executed prior to being passed to wagmi
-    storage?.setItem(LocalStorageKey.EthAuthSettings, {
-      expiry,
-      app,
-      origin: origin || location.origin,
-      nonce
-    })
-  }, [theme, ethAuth])
+    if (isEthAuthEnabled) {
+      storage?.setItem(LocalStorageKey.EthAuthSettings, {
+        expiry,
+        app,
+        origin: origin || location.origin,
+        nonce
+      })
+    } else {
+      storage?.removeItem(LocalStorageKey.EthAuthSettings)
+      storage?.removeItem(LocalStorageKey.EthAuthProof)
+    }
+  }, [theme, isEthAuthEnabled, storage, expiry, app, origin, nonce])
 
   useEffect(() => {
-    setDisplayedAssets(displayedAssets)
+    setDisplayedAssets(displayedAssetsSetting)
   }, [displayedAssetsSetting])
 
   const { isEmailConflictOpen, emailConflictInfo, toggleEmailConflictModal } = useEmailConflict()
@@ -219,10 +257,28 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                 <AnalyticsContextProvider value={{ setAnalytics, analytics }}>
                   <SocialLinkContextProvider value={{ isSocialLinkOpen, waasConfigKey, setIsSocialLinkOpen }}>
                     <EpicAuthProvider>
-                      <div id="kit-provider" className="h-full w-full flex flex-col">
+                      <div id="kit-provider" className="h-full w-full flex flex-col" style={{ background: inlineBackground }}>
                         <style>{styles + styleProperties + (customCSS ? `\n\n${customCSS}` : '')}</style>
-                        <ThemeProvider root="#kit-provider" scope="kit" theme={theme}>
-                          <Connect onClose={() => {}} emailConflictInfo={emailConflictInfo} isInline {...props} />
+                        <ThemeProvider root="#kit-provider" theme={theme}>
+                          {isWalletConfigLoading || isAuthStatusLoading ? (
+                            <div className="flex py-8 justify-center items-center">
+                              <Spinner size="lg" />
+                            </div>
+                          ) : (
+                            <Connect
+                              onClose={() => {}}
+                              emailConflictInfo={emailConflictInfo}
+                              isInline
+                              {...props}
+                              config={incomingConfig}
+                              resolvedConfig={config}
+                              isV3WalletSignedIn={isV3WalletSignedIn}
+                              isAuthStatusLoading={isAuthStatusLoading}
+                              enabledProviders={enabledProviders}
+                              walletConfigurationSignIn={walletConfigurationSignIn}
+                              sdkConfig={sdkConfig}
+                            />
+                          )}
                         </ThemeProvider>
                       </div>
 
@@ -250,14 +306,14 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                                     marginTop: '4px'
                                   }}
                                 >
-                                  <ModalPrimitive.Title asChild>
+                                  <DialogPrimitive.Title asChild>
                                     <Text className="mb-5" variant="large" asChild>
                                       <h1>
                                         Confirm{' '}
                                         {pendingRequestConfirmation.type === 'signMessage' ? 'signing message' : 'transaction'}
                                       </h1>
                                     </Text>
-                                  </ModalPrimitive.Title>
+                                  </DialogPrimitive.Title>
 
                                   {pendingRequestConfirmation.type === 'signMessage' && pendingRequestConfirmation.message && (
                                     <div className="flex flex-col w-full">
@@ -302,21 +358,23 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                                       className="w-full"
                                       shape="square"
                                       size="lg"
-                                      label="Reject"
                                       onClick={() => {
                                         rejectPendingRequest(pendingRequestConfirmation?.id)
                                       }}
-                                    />
+                                    >
+                                      Reject
+                                    </Button>
                                     <Button
                                       className="flex items-center text-center w-full"
                                       shape="square"
                                       size="lg"
-                                      label="Confirm"
                                       variant="primary"
                                       onClick={() => {
                                         confirmPendingRequest(pendingRequestConfirmation?.id)
                                       }}
-                                    />
+                                    >
+                                      Confirm
+                                    </Button>
                                   </div>
                                 </div>
 
@@ -336,9 +394,9 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                               }}
                             >
                               <div className="p-4">
-                                <ModalPrimitive.Title asChild>
+                                <DialogPrimitive.Title asChild>
                                   <PageHeading>Email already in use</PageHeading>
-                                </ModalPrimitive.Title>
+                                </DialogPrimitive.Title>
                                 <div>
                                   <Text className="text-center" variant="normal" color="secondary">
                                     Another account with this email address{' '}
@@ -348,11 +406,12 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                                   </Text>
                                   <div className="flex mt-4 gap-2 items-center justify-center">
                                     <Button
-                                      label="OK"
                                       onClick={() => {
                                         toggleEmailConflictModal(false)
                                       }}
-                                    />
+                                    >
+                                      OK
+                                    </Button>
                                   </div>
                                 </div>
                               </div>

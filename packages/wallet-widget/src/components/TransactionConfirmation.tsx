@@ -1,9 +1,9 @@
-import { truncateAtMiddle } from '@0xsequence/connect'
 import { Button, Card, ChevronRightIcon, GradientAvatar, Spinner, Text } from '@0xsequence/design-system'
 import { useIndexerClient } from '@0xsequence/hooks'
+import { truncateAtMiddle } from '@0xsequence/web-sdk-core'
 import { useQuery } from '@tanstack/react-query'
 import React, { useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 
 import { FeeOptionSelector, type FeeOption } from './FeeOptionSelector.js'
 import { SendItemInfo } from './SendItemInfo.js'
@@ -34,7 +34,7 @@ interface TransactionConfirmationProps {
 }
 
 const useFeeOptionBalances = (feeOptions: TransactionConfirmationProps['feeOptions'], chainId: number) => {
-  const { address: accountAddress } = useAccount()
+  const { address: accountAddress } = useConnection()
   const indexerClient = useIndexerClient(chainId)
 
   return useQuery({
@@ -166,7 +166,9 @@ export const TransactionConfirmation = ({
             </div>
           ) : (
             <>
-              <Button className="w-full" variant="glass" size="lg" onClick={onCancel} label="Cancel" />
+              <Button className="w-full" variant="ghost" size="lg" onClick={onCancel}>
+                Cancel
+              </Button>
               <Button
                 className="w-full"
                 variant="primary"
@@ -174,10 +176,11 @@ export const TransactionConfirmation = ({
                 onClick={() => {
                   onConfirm()
                 }}
-                label="Confirm"
-                rightIcon={ChevronRightIcon}
                 disabled={isConfirmDisabled}
-              />
+              >
+                Confirm
+                <ChevronRightIcon />
+              </Button>
             </>
           )}
         </div>
