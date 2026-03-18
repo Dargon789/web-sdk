@@ -1,37 +1,38 @@
 {
   "name": "@0xsequence/wallet-widget",
-  "version": "6.0.2",
+  "version": "5.4.8",
   "description": "Wallet UI for Sequence Web SDK",
   "repository": "https://github.com/0xsequence/web-sdk/tree/master/packages/wallet-widget",
-  "author": "Sequence Platforms ULC",
+  "author": "Horizon Blockchain Games",
   "license": "Apache-2.0",
   "type": "module",
-  "main": "dist/esm/index.js",
+  "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./dist/esm/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "default": "./dist/esm/index.js"
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "pnpm build:clean && pnpm build:esm",
+    "build": "pnpm build:clean && pnpm build:esm && pnpm build:cjs",
+    "build:cjs": "tsc --module commonjs --moduleResolution node --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/cjs && echo '{ \"type\": \"commonjs\" }' > dist/cjs/package.json",
     "build:esm": "tsc --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/esm",
     "build:clean": "rimraf -g ./dist",
     "build:check": "attw --pack .",
-    "dev": "tsc --watch --verbatimModuleSyntax false --declaration --declarationMap --outDir dist/esm",
+    "dev": "tsc --watch --module nodenext --moduleResolution nodenext --declaration --declarationMap --outDir dist/esm",
     "test": "echo",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "0xtrails": "^0.11.0",
-    "@0xsequence/design-system": "3.2.9",
+    "0xtrails": "^0.10.1",
+    "@0xsequence/design-system": "2.1.11",
+    "@0xsequence/hooks": "workspace:*",
     "@radix-ui/react-popover": "^1.1.11",
     "dayjs": "^1.11.13",
     "fuse.js": "^7.1.0",
@@ -40,23 +41,27 @@
     "qrcode.react": "^4.2.0"
   },
   "peerDependencies": {
-    "@0xsequence/api": ">=3.0.1",
+    "@0xsequence/api": ">=2.3.38",
     "@0xsequence/connect": "workspace:*",
     "@0xsequence/hooks": "workspace:*",
-    "@0xsequence/indexer": ">=3.0.1",
+    "@0xsequence/indexer": ">=2.3.38",
+    "@0xsequence/metadata": ">=2.3.38",
+    "@0xsequence/network": ">=2.3.38",
     "@tanstack/react-query": ">= 5",
+    "ethers": ">= 6.13.0",
     "react": ">= 17",
     "react-dom": ">= 17",
-    "viem": ">= 2.45.0",
-    "wagmi": ">= 3.2.0"
+    "viem": ">= 2.41.2",
+    "wagmi": ">= 2.18.0"
   },
   "devDependencies": {
     "@0xsequence/connect": "workspace:*",
     "@0xsequence/hooks": "workspace:*",
     "@tanstack/react-query": "^5.74.11",
+    "ethers": "^6.13.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "viem": "^2.45.1",
-    "wagmi": "^3.2.0"
+    "viem": "^2.41.2",
+    "wagmi": "^2.18.0"
   }
 }
