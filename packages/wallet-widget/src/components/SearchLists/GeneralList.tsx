@@ -70,7 +70,7 @@ export const GeneralList = ({ variant = 'default' }: { variant?: 'default' | 'se
   }))
 
   const coinBalancesUnordered =
-    tokenBalancesData?.filter(b => b.contractType === 'ERC20' || compareAddress(b.contractAddress, ethers.ZeroAddress)) || []
+    tokenBalancesData?.filter(b => b.contractType === 'ERC20' || compareAddress(b.contractAddress, zeroAddress)) || []
 
   const { data: coinPrices = [], isLoading: isLoadingCoinPrices } = useGetCoinPrices(
     coinBalancesUnordered.map(token => ({
