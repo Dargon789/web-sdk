@@ -25,10 +25,12 @@ import { SequenceWalletProvider } from '@0xsequence/wallet-widget'
 
 const App = () => {
   return (
-    <SequenceConnect config={config}>
-      <SequenceWalletProvider>
-        <Page />
-      </SequenceWalletProvider>
+    <WagmiProvider config={wagmiConfig}>
+      <SequenceConnect config={connectConfig}>
+        <SequenceWalletProvider>
+          <Page />
+        </SequenceWalletProvider>
+      </SequenceConnect>
     </WagmiProvider>
   )
 }
