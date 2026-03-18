@@ -1,3 +1,4 @@
+import { allNetworks, type EIP1193Provider } from '@0xsequence/network'
 import {
   SequenceWaaS,
   WebrpcEndpointError,
@@ -15,23 +16,13 @@ import {
   toHex,
   TransactionRejectedRpcError,
   UserRejectedRequestError,
-  zeroAddress,
-  type Address
+  zeroAddress
 } from 'viem'
 import { createConnector } from 'wagmi'
 
 import { LocalStorageKey } from '../../constants/localStorage.js'
 import { normalizeChainId } from '../../utils/helpers.js'
-import { allNetworks } from '../../utils/networks.js'
 import { getPkcePair, getXOauthUrl } from '../X/XAuth.js'
-
-type EIP1193Request = { method: string; params?: any[] }
-
-interface EIP1193Provider {
-  request(args: EIP1193Request): Promise<any>
-  on(event: string, listener: (...args: any[]) => void): void
-  removeListener(event: string, listener: (...args: any[]) => void): void
-}
 
 export interface SequenceWaasConnectConfig {
   googleClientId?: string
@@ -48,19 +39,6 @@ export interface SequenceWaasConnectConfig {
 export type BaseSequenceWaasConnectorOptions = SequenceConfig & SequenceWaasConnectConfig & Partial<ExtendedSequenceConfig>
 
 sequenceWaasWallet.type = 'sequence-waas' as const
-
-type ConnectAccounts<withCapabilities extends boolean> = withCapabilities extends true
-  ? readonly { address: Address; capabilities: Record<string, unknown> }[]
-  : readonly Address[]
-
-const resolveConnectAccounts = <withCapabilities extends boolean>(
-  accounts: readonly Address[],
-  withCapabilities?: withCapabilities | boolean
-): ConnectAccounts<withCapabilities> => {
-  return (
-    withCapabilities ? accounts.map(address => ({ address, capabilities: {} })) : accounts
-  ) as ConnectAccounts<withCapabilities>
-}
 
 export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
   type Provider = SequenceWaasProvider
@@ -140,12 +118,8 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       })
     },
 
-    async connect<withCapabilities extends boolean = false>(_connectInfo?: {
-      chainId?: number
-      isReconnecting?: boolean
-      withCapabilities?: withCapabilities | boolean
-    }) {
-      const provider = await this.getProvider()
+    async connect({ withCapabilities, ..._connectInfo } = {}) {
+      const provider = (await this.getProvider()) as SequenceWaasProvider
       const isSignedIn = await provider.sequenceWaas.isSignedIn()
 
       if (!isSignedIn) {
@@ -197,7 +171,6 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       }
 
       const accounts = await this.getAccounts()
-      const resolvedAccounts = resolveConnectAccounts(accounts, _connectInfo?.withCapabilities)
 
       if (accounts.length) {
         await config.storage?.setItem(LocalStorageKey.WaasActiveLoginType, params.loginType)
@@ -206,7 +179,10 @@ export function sequenceWaasWallet(params: BaseSequenceWaasConnectorOptions) {
       }
 
       return {
-        accounts: resolvedAccounts,
+        // TODO(wagmi v3): `as never` can be removed when wagmi makes `withCapabilities: true` the default
+        // see: https://github.com/wevm/wagmi/blob/main/packages/core/src/connectors/createConnector.ts
+        // ref: https://github.com/wevm/wagmi/blob/main/packages/connectors/src/safe.ts
+        accounts: (withCapabilities ? accounts.map(address => ({ address, capabilities: {} })) : accounts) as never,
         chainId: await this.getChainId()
       }
     },

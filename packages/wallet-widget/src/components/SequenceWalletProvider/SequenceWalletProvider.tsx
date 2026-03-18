@@ -8,10 +8,10 @@ import {
   useSocialLink,
   useTheme
 } from '@0xsequence/connect'
-import { Modal, Scroll, ThemeProvider } from '@0xsequence/design-system'
+import { Modal, Scroll } from '@0xsequence/design-system'
 import { AnimatePresence } from 'motion/react'
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { useConnection } from 'wagmi'
+import { useAccount } from 'wagmi'
 
 import { WALLET_HEIGHT, WALLET_WIDTH } from '../../constants/index.js'
 import {
@@ -48,7 +48,7 @@ export const WalletContent = ({ children }: SequenceWalletProviderProps) => {
   const { theme, position } = useTheme()
   const { isConnectModalOpen } = useOpenConnectModal()
   const { isSocialLinkOpen } = useSocialLink()
-  const { address } = useConnection()
+  const { address } = useAccount()
   const { customCSS } = useConnectConfigContext()
 
   useEffect(() => {
@@ -112,48 +112,39 @@ export const WalletContent = ({ children }: SequenceWalletProviderProps) => {
         <SharedProvider>
           <ValueRegistryProvider>
             <NavigationHeaderContextProvider value={{ search, selectedTab, setSearch, setSelectedTab }}>
-              <ShadowRoot customCSS={customCSS}>
-                {(container: HTMLDivElement) => (
-                  <ThemeProvider theme={theme} root={container}>
-                    <AnimatePresence>
-                      {openWalletModal && !isConnectModalOpen && !isSocialLinkOpen && (
-                        <Modal
-                          contentProps={{
-                            className: 'border border-border-normal',
-                            style: {
-                              maxWidth: WALLET_WIDTH,
-                              height: WALLET_HEIGHT,
-                              ...getModalPositionCss(position),
-                              scrollbarColor: 'gray black',
-                              scrollbarWidth: 'thin'
-                            }
-                          }}
-                          scroll={false}
-                          isDismissible={navigation.location !== 'search'}
-                          onClose={() => setOpenWalletModal(false)}
-                        >
-                          <div
-                            className="flex flex-col"
-                            id="sequence-kit-wallet-content"
-                            ref={walletContentRef}
-                            style={{ height: `calc(${WALLET_HEIGHT} - 2px)` }}
-                            // -2 px because of the Modal border
-                          >
-                            <div>{getHeader(navigation)}</div>
+              <ShadowRoot theme={theme} customCSS={customCSS}>
+                <AnimatePresence>
+                  {openWalletModal && !isConnectModalOpen && !isSocialLinkOpen && (
+                    <Modal
+                      contentProps={{
+                        className: 'border border-border-normal',
+                        style: {
+                          maxWidth: WALLET_WIDTH,
+                          height: WALLET_HEIGHT,
+                          ...getModalPositionCss(position),
+                          scrollbarColor: 'gray black',
+                          scrollbarWidth: 'thin'
+                        }
+                      }}
+                      scroll={false}
+                      onClose={() => setOpenWalletModal(false)}
+                    >
+                      <div
+                        className="flex flex-col"
+                        id="sequence-kit-wallet-content"
+                        ref={walletContentRef}
+                        style={{ height: `calc(${WALLET_HEIGHT} - 2px)` }}
+                        // -2 px because of the Modal border
+                      >
+                        <div>{getHeader(navigation)}</div>
 
-                            <div style={{ flex: 1, minHeight: 0 }}>
-                              {displayScrollbar ? (
-                                <Scroll shadows={false}>{getContent(navigation)}</Scroll>
-                              ) : (
-                                getContent(navigation)
-                              )}
-                            </div>
-                          </div>
-                        </Modal>
-                      )}
-                    </AnimatePresence>
-                  </ThemeProvider>
-                )}
+                        <div style={{ flex: 1, minHeight: 0 }}>
+                          {displayScrollbar ? <Scroll shadows={false}>{getContent(navigation)}</Scroll> : getContent(navigation)}
+                        </div>
+                      </div>
+                    </Modal>
+                  )}
+                </AnimatePresence>
               </ShadowRoot>
               {children}
             </NavigationHeaderContextProvider>

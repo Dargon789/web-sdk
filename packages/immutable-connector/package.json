@@ -1,8 +1,8 @@
 {
-  "name": "@0xsequence/hooks",
-  "version": "5.4.1",
-  "description": "React hooks for Sequence Web SDK",
-  "repository": "https://github.com/0xsequence/web-sdk/tree/master/packages/hooks",
+  "name": "@0xsequence/immutable-connector",
+  "version": "5.4.8",
+  "description": "Immutable connector for Sequence Kit",
+  "repository": "https://github.com/0xsequence/web-sdk/tree/master/packages/immutable-connector",
   "author": "Sequence Platforms ULC",
   "license": "Apache-2.0",
   "type": "module",
@@ -31,37 +31,21 @@
     "build:clean": "rimraf -g ./dist",
     "build:check": "attw --pack .",
     "dev": "tsc --watch --module es2022 --moduleResolution node --declaration --declarationMap --outDir dist/esm",
-    "test": "vitest --run",
-    "test:watch": "vitest",
+    "test": "echo",
     "typecheck": "tsc --noEmit"
   },
-  "peerDependencies": {
-    "@0xsequence/api": ">=2.3.23",
-    "@0xsequence/indexer": ">=2.3.23",
-    "@0xsequence/metadata": ">=2.3.23",
-    "@0xsequence/network": ">=2.3.23",
-    "@tanstack/react-query": ">= 5",
-    "react": ">= 17",
-    "react-dom": ">= 17",
-    "viem": ">= 2.44.0"
+  "dependencies": {
+    "@0xsequence/connect": "workspace:*"
   },
-  "devDependencies": {
-    "@0xsequence/api": "2.3.23",
-    "@0xsequence/indexer": "^2.3.23",
-    "@0xsequence/metadata": "^2.3.23",
-    "@0xsequence/network": "^2.3.23",
-    "@tanstack/react-query": "^5.74.11",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
-    "@vitejs/plugin-react": "^4.4.1",
-    "jsdom": "^25.0.1",
-    "msw": "^2.7.5",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "typescript": "^5.8.3",
+  "peerDependencies": {
+    "@0xsequence/connect": "workspace:*",
+    "0xsequence": ">= 2.3.38",
+    "@imtbl/config": ">=2.1.2",
+    "@imtbl/sdk": ">=2.1.2",
+    "ethers": "^6.13.0",
+    "react": ">= 17 < 19",
+    "react-dom": ">= 17 < 19",
     "viem": "^2.44.4",
-    "vite": "^6.3.4",
-    "vitest": "^2.1.9"
+    "wagmi": "^2.19.5"
   }
 }
