@@ -612,7 +612,7 @@ function App() {
                   <div className="action-item">
                     <h3>Get session info</h3>
                     <button onClick={async () => console.log(await getExplicitSessions())} className="btn btn-secondary">
-                      'Get session info'
+                      Get session info
                     </button>
                   </div>
                   <div className="action-item">
