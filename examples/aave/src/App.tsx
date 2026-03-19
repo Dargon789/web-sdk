@@ -196,7 +196,7 @@ function App() {
       .then(sessions => {
         setSessionsInfo(sessions)
       })
-      .catch(() => {})
+.catch(error => console.error('Failed to get explicit sessions:', error))
   }, [connections, getExplicitSessions, isConnected])
 
   const anyError =
