@@ -643,6 +643,9 @@ export const styles = String.raw`
   .min-w-\[var\(--radix-select-trigger-width\)\] {
     min-width: var(--radix-select-trigger-width);
   }
+  .min-w-\[200px\] {
+    min-width: 200px;
+  }
   .min-w-full {
     min-width: 100%;
   }
