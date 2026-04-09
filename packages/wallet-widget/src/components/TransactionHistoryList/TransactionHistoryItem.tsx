@@ -1,13 +1,15 @@
-import type { TokenPrice } from '@0xsequence/api'
-import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/connect'
-import { ArrowRightIcon, NetworkImage, Skeleton, Text, TokenImage, TransactionIcon } from '@0xsequence/design-system'
-import { useGetCoinPrices, useGetExchangeRate } from '@0xsequence/hooks'
-import { TxnTransferType, type Transaction, type TxnTransfer } from '@0xsequence/indexer'
+import { TokenPrice } from '@0xsequence/api'
+import { ArrowRightIcon, Box, Text, Image, TransactionIcon, vars, Skeleton, NetworkImage } from '@0xsequence/design-system'
+import { Transaction, TxnTransfer, TxnTransferType } from '@0xsequence/indexer'
+import { getNativeTokenInfoByChainId } from '@0xsequence/kit'
+import { useCoinPrices, useExchangeRate } from '@0xsequence/kit/hooks'
 import dayjs from 'dayjs'
-import { formatUnits, zeroAddress } from 'viem'
+import { ethers } from 'ethers'
+import React from 'react'
 import { useConfig } from 'wagmi'
 
-import { useNavigation, useSettings } from '../../hooks/index.js'
+import { useSettings, useNavigation } from '../../hooks'
+import { formatDisplay, compareAddress } from '../../utils'
 
 interface TransactionHistoryItemProps {
   transaction: Transaction
@@ -36,16 +38,16 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
     }
   })
 
-  const { data: coinPrices = [], isLoading: isLoadingCoinPrices } = useGetCoinPrices(
+  const { data: coinPrices = [], isPending: isPendingCoinPrices } = useCoinPrices(
     tokenContractAddresses.map(contractAddress => ({
       contractAddress,
       chainId: transaction.chainId
     }))
   )
 
-  const { data: conversionRate = 1, isLoading: isLoadingConversionRate } = useGetExchangeRate(fiatCurrency.symbol)
+  const { data: conversionRate = 1, isPending: isPendingConversionRate } = useExchangeRate(fiatCurrency.symbol)
 
-  const isLoading = isLoadingCoinPrices || isLoadingConversionRate
+  const isPending = isPendingCoinPrices || isPendingConversionRate
 
   const { transfers } = transaction
 
@@ -95,22 +97,14 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
       sign = '+'
     }
 
-    let textColor: 'muted' | 'negative' | 'positive' = 'muted'
+    let textColor = 'text50'
     if (transferType === TxnTransferType.SEND) {
-      textColor = 'negative'
+      textColor = vars.colors.negative
     } else if (transferType === TxnTransferType.RECEIVE) {
-      textColor = 'positive'
+      textColor = vars.colors.positive
     }
 
-    return (
-      <Text
-        className="overflow-hidden"
-        variant="normal"
-        fontWeight="bold"
-        color={textColor}
-        ellipsis
-      >{`${sign}${amount} ${symbol}`}</Text>
-    )
+    return <Text fontWeight="bold" fontSize="normal" style={{ color: textColor }}>{`${sign}${amount} ${symbol}`}</Text>
   }
 
   interface GetTransfer {
@@ -121,28 +115,27 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
   const getTransfer = ({ transfer, isFirstItem }: GetTransfer) => {
     const { amounts } = transfer
     const date = dayjs(transaction.timestamp).format('MMM DD, YYYY')
-
     return (
-      <div className="flex gap-2 w-full flex-col justify-between">
-        <div className="flex flex-row justify-between">
-          <div className="flex text-muted gap-1 flex-row justify-center items-center">
+      <Box gap="2" width="full" flexDirection="column" justifyContent="space-between">
+        <Box flexDirection="row" justifyContent="space-between">
+          <Box color="text50" gap="1" flexDirection="row" justifyContent="center" alignItems="center">
             {getTransactionIconByType(transfer.transferType)}
-            <Text variant="normal" fontWeight="medium" color="primary">
+            <Text fontWeight="medium" fontSize="normal" color="text100">
               {getTansactionLabelByType(transfer.transferType)}
             </Text>
             <NetworkImage chainId={transaction.chainId} size="xs" />
-          </div>
+          </Box>
           {isFirstItem && (
-            <div>
-              <Text variant="normal" fontWeight="medium" color="muted">
+            <Box>
+              <Text fontWeight="medium" fontSize="normal" color="text50">
                 {date}
               </Text>
-            </div>
+            </Box>
           )}
-        </div>
+        </Box>
         {amounts.map((amount, index) => {
           const nativeTokenInfo = getNativeTokenInfoByChainId(transaction.chainId, chains)
-          const isNativeToken = compareAddress(transfer.contractAddress, zeroAddress)
+          const isNativeToken = compareAddress(transfer.contractAddress, ethers.constants.AddressZero)
           const isCollectible = transfer.contractInfo?.type === 'ERC721' || transfer.contractInfo?.type === 'ERC1155'
           let decimals
           const tokenId = transfer.tokenIds?.[index]
@@ -151,12 +144,8 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
           } else {
             decimals = isNativeToken ? nativeTokenInfo.decimals : transfer.contractInfo?.decimals
           }
-          const amountValue = formatUnits(BigInt(amount), decimals || 18)
-          const symbol = isNativeToken
-            ? nativeTokenInfo.symbol
-            : isCollectible
-              ? transfer.contractInfo?.name || ''
-              : transfer.contractInfo?.symbol || ''
+          const amountValue = ethers.utils.formatUnits(amount, decimals)
+          const symbol = isNativeToken ? nativeTokenInfo.symbol : transfer.contractInfo?.symbol || ''
           const tokenLogoUri = isNativeToken ? nativeTokenInfo.logoURI : transfer.contractInfo?.logoURI
 
           const fiatConversionRate = coinPrices.find((coinPrice: TokenPrice) =>
@@ -164,39 +153,48 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
           )?.price?.value
 
           return (
-            <div className="flex flex-row justify-between" key={index}>
-              <div className="flex flex-row gap-2 justify-start items-center w-full">
-                {(tokenLogoUri || symbol) && <TokenImage src={tokenLogoUri} symbol={symbol} size="sm" />}
-                {getTransferAmountLabel(decimals === 0 ? amount : formatDisplay(amountValue), symbol, transfer.transferType)}
-              </div>
-              {isLoading && <Skeleton style={{ width: '35px', height: '20px' }} />}
+            <Box key={index} flexDirection="row" justifyContent="space-between">
+              <Box flexDirection="row" gap="2" justifyContent="center" alignItems="center">
+                {tokenLogoUri && <Image src={tokenLogoUri} width="5" alt="token logo" />}
+                {getTransferAmountLabel(formatDisplay(amountValue), symbol, transfer.transferType)}
+              </Box>
+              {isPending && <Skeleton style={{ width: '35px', height: '20px' }} />}
               {fiatConversionRate && (
-                <Text variant="normal" fontWeight="medium" color="muted">
+                <Text fontWeight="medium" fontSize="normal" color="text50">
                   {`${fiatCurrency.sign}${(Number(amountValue) * fiatConversionRate * conversionRate).toFixed(2)}`}
                 </Text>
               )}
-            </div>
+            </Box>
           )
         })}
-      </div>
+      </Box>
     )
   }
 
   return (
-    <div
-      className="flex bg-background-secondary rounded-xl p-4 gap-2 items-center justify-center flex-col select-none cursor-pointer"
+    <Box
+      background="backgroundSecondary"
+      borderRadius="md"
+      padding="4"
+      gap="2"
+      alignItems="center"
+      justifyContent="center"
+      flexDirection="column"
+      userSelect="none"
+      cursor="pointer"
+      opacity={{ hover: '80' }}
       onClick={() => onClickTransaction()}
     >
       {transfers?.map((transfer, position) => {
         return (
-          <div className="w-full" key={`${transaction.txnHash}-${position}`}>
+          <Box key={`${transaction.txnHash}-${position}`} width="full">
             {getTransfer({
               transfer,
               isFirstItem: position === 0
             })}
-          </div>
+          </Box>
         )
       })}
-    </div>
+    </Box>
   )
 }
