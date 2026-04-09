@@ -592,9 +592,6 @@ export const styles = String.raw`
   .w-\[56px\] {
     width: 56px;
   }
-  .w-\[80px\] {
-    width: 80px;
-  }
   .w-\[100px\] {
     width: 100px;
   }
@@ -643,11 +640,17 @@ export const styles = String.raw`
   .min-w-\[var\(--radix-select-trigger-width\)\] {
     min-width: var(--radix-select-trigger-width);
   }
+  .min-w-\[200px\] {
+    min-width: 200px;
+  }
   .min-w-full {
     min-width: 100%;
   }
   .flex-1 {
     flex: 1;
+  }
+  .flex-none {
+    flex: none;
   }
   .flex-shrink {
     flex-shrink: 1;
