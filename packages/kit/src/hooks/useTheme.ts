@@ -1,5 +1,5 @@
 import { useSnapshot } from 'valtio'
-import { themeState, setTheme, setPosition} from '../states/Theme'
+import { themeState, setTheme, setPosition } from '../states/Theme'
 import { ModalPosition, Theme } from '../index'
 
 interface UseTheme {

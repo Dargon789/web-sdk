@@ -6,18 +6,17 @@
 // webrpc-gen -schema=marketplace.ridl -target=typescript -client -out=./clients/marketplace.gen.ts
 
 // WebRPC description and code-gen version
-export const WebRPCVersion = "v1"
+export const WebRPCVersion = 'v1'
 
 // Schema version of your RIDL schema
-export const WebRPCSchemaVersion = ""
+export const WebRPCSchemaVersion = ''
 
 // Schema hash generated from your RIDL schema
-export const WebRPCSchemaHash = "4449f424290b1361c2580da4e5f1016b93bd59fa"
+export const WebRPCSchemaHash = '4449f424290b1361c2580da4e5f1016b93bd59fa'
 
 //
 // Types
 //
-
 
 export interface TokenMetadata {
   tokenId: string
@@ -26,8 +25,8 @@ export interface TokenMetadata {
   image?: string
   video?: string
   audio?: string
-  properties?: {[key: string]: any}
-  attributes: Array<{[key: string]: any}>
+  properties?: { [key: string]: any }
+  attributes: Array<{ [key: string]: any }>
   image_data?: string
   external_url?: string
   background_color?: string
@@ -298,7 +297,7 @@ export interface Collection {
 }
 
 export interface CollectionConfig {
-  lastSynced: {[key: string]: CollectionLastSynced}
+  lastSynced: { [key: string]: CollectionLastSynced }
   collectiblesSynced: string
 }
 
@@ -435,7 +434,7 @@ export interface CreateCollectionArgs {
 }
 
 export interface CreateCollectionReturn {
-  collection: Collection  
+  collection: Collection
 }
 export interface GetCollectionArgs {
   projectId: number
@@ -443,7 +442,7 @@ export interface GetCollectionArgs {
 }
 
 export interface GetCollectionReturn {
-  collection: Collection  
+  collection: Collection
 }
 export interface ListCollectionsArgs {
   projectId: number
@@ -452,7 +451,7 @@ export interface ListCollectionsArgs {
 
 export interface ListCollectionsReturn {
   collections: Array<Collection>
-  page?: Page  
+  page?: Page
 }
 export interface DeleteCollectionArgs {
   projectId: number
@@ -460,7 +459,7 @@ export interface DeleteCollectionArgs {
 }
 
 export interface DeleteCollectionReturn {
-  collection: Collection  
+  collection: Collection
 }
 export interface SyncCollectionArgs {
   projectId: number
@@ -468,34 +467,33 @@ export interface SyncCollectionArgs {
 }
 
 export interface SyncCollectionReturn {
-  collection: Collection  
+  collection: Collection
 }
 export interface CreateCurrencyArgs {
   currency: Currency
 }
 
 export interface CreateCurrencyReturn {
-  currency: Currency  
+  currency: Currency
 }
 export interface CreateCurrenciesArgs {
   currencies: Array<Currency>
 }
 
 export interface CreateCurrenciesReturn {
-  currency: {[key: string]: Currency}  
+  currency: { [key: string]: Currency }
 }
 export interface UpdateCurrencyArgs {
   currency: Currency
 }
 
 export interface UpdateCurrencyReturn {
-  currency: Currency  
+  currency: Currency
 }
-export interface ListCurrenciesArgs {
-}
+export interface ListCurrenciesArgs {}
 
 export interface ListCurrenciesReturn {
-  currencies: Array<Currency>  
+  currencies: Array<Currency>
 }
 export interface DeleteCurrencyArgs {
   chainId: number
@@ -503,44 +501,123 @@ export interface DeleteCurrencyArgs {
 }
 
 export interface DeleteCurrencyReturn {
-  currency: Currency  
+  currency: Currency
 }
 
 export interface Marketplace {
   listCurrencies(headers?: object, signal?: AbortSignal): Promise<ListCurrenciesReturn>
   getCollectible(args: GetCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleReturn>
-  getLowestPriceOfferForCollectible(args: GetLowestPriceOfferForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetLowestPriceOfferForCollectibleReturn>
-  getHighestPriceOfferForCollectible(args: GetHighestPriceOfferForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetHighestPriceOfferForCollectibleReturn>
-  getLowestPriceListingForCollectible(args: GetLowestPriceListingForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetLowestPriceListingForCollectibleReturn>
-  getHighestPriceListingForCollectible(args: GetHighestPriceListingForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetHighestPriceListingForCollectibleReturn>
-  listListingsForCollectible(args: ListListingsForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<ListListingsForCollectibleReturn>
-  listOffersForCollectible(args: ListOffersForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<ListOffersForCollectibleReturn>
-  getCollectibleLowestOffer(args: GetCollectibleLowestOfferArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleLowestOfferReturn>
-  getCollectibleHighestOffer(args: GetCollectibleHighestOfferArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleHighestOfferReturn>
-  getCollectibleLowestListing(args: GetCollectibleLowestListingArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleLowestListingReturn>
-  getCollectibleHighestListing(args: GetCollectibleHighestListingArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleHighestListingReturn>
-  listCollectibleListings(args: ListCollectibleListingsArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectibleListingsReturn>
-  listCollectibleOffers(args: ListCollectibleOffersArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectibleOffersReturn>
-  generateBuyTransaction(args: GenerateBuyTransactionArgs, headers?: object, signal?: AbortSignal): Promise<GenerateBuyTransactionReturn>
-  generateSellTransaction(args: GenerateSellTransactionArgs, headers?: object, signal?: AbortSignal): Promise<GenerateSellTransactionReturn>
-  generateListingTransaction(args: GenerateListingTransactionArgs, headers?: object, signal?: AbortSignal): Promise<GenerateListingTransactionReturn>
-  generateOfferTransaction(args: GenerateOfferTransactionArgs, headers?: object, signal?: AbortSignal): Promise<GenerateOfferTransactionReturn>
+  getLowestPriceOfferForCollectible(
+    args: GetLowestPriceOfferForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetLowestPriceOfferForCollectibleReturn>
+  getHighestPriceOfferForCollectible(
+    args: GetHighestPriceOfferForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetHighestPriceOfferForCollectibleReturn>
+  getLowestPriceListingForCollectible(
+    args: GetLowestPriceListingForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetLowestPriceListingForCollectibleReturn>
+  getHighestPriceListingForCollectible(
+    args: GetHighestPriceListingForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetHighestPriceListingForCollectibleReturn>
+  listListingsForCollectible(
+    args: ListListingsForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListListingsForCollectibleReturn>
+  listOffersForCollectible(
+    args: ListOffersForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListOffersForCollectibleReturn>
+  getCollectibleLowestOffer(
+    args: GetCollectibleLowestOfferArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetCollectibleLowestOfferReturn>
+  getCollectibleHighestOffer(
+    args: GetCollectibleHighestOfferArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetCollectibleHighestOfferReturn>
+  getCollectibleLowestListing(
+    args: GetCollectibleLowestListingArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetCollectibleLowestListingReturn>
+  getCollectibleHighestListing(
+    args: GetCollectibleHighestListingArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetCollectibleHighestListingReturn>
+  listCollectibleListings(
+    args: ListCollectibleListingsArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListCollectibleListingsReturn>
+  listCollectibleOffers(
+    args: ListCollectibleOffersArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListCollectibleOffersReturn>
+  generateBuyTransaction(
+    args: GenerateBuyTransactionArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GenerateBuyTransactionReturn>
+  generateSellTransaction(
+    args: GenerateSellTransactionArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GenerateSellTransactionReturn>
+  generateListingTransaction(
+    args: GenerateListingTransactionArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GenerateListingTransactionReturn>
+  generateOfferTransaction(
+    args: GenerateOfferTransactionArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GenerateOfferTransactionReturn>
   execute(args: ExecuteArgs, headers?: object, signal?: AbortSignal): Promise<ExecuteReturn>
   listCollectibles(args: ListCollectiblesArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectiblesReturn>
-  listCollectiblesWithLowestListing(args: ListCollectiblesWithLowestListingArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectiblesWithLowestListingReturn>
-  listCollectiblesWithHighestOffer(args: ListCollectiblesWithHighestOfferArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectiblesWithHighestOfferReturn>
+  listCollectiblesWithLowestListing(
+    args: ListCollectiblesWithLowestListingArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListCollectiblesWithLowestListingReturn>
+  listCollectiblesWithHighestOffer(
+    args: ListCollectiblesWithHighestOfferArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListCollectiblesWithHighestOfferReturn>
   syncOrder(args: SyncOrderArgs, headers?: object, signal?: AbortSignal): Promise<SyncOrderReturn>
   syncOrders(args: SyncOrdersArgs, headers?: object, signal?: AbortSignal): Promise<SyncOrdersReturn>
   getOrders(args: GetOrdersArgs, headers?: object, signal?: AbortSignal): Promise<GetOrdersReturn>
-  checkoutOptionsMarketplace(args: CheckoutOptionsMarketplaceArgs, headers?: object, signal?: AbortSignal): Promise<CheckoutOptionsMarketplaceReturn>
-  checkoutOptionsSalesContract(args: CheckoutOptionsSalesContractArgs, headers?: object, signal?: AbortSignal): Promise<CheckoutOptionsSalesContractReturn>
+  checkoutOptionsMarketplace(
+    args: CheckoutOptionsMarketplaceArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<CheckoutOptionsMarketplaceReturn>
+  checkoutOptionsSalesContract(
+    args: CheckoutOptionsSalesContractArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<CheckoutOptionsSalesContractReturn>
 }
 
-export interface ListCurrenciesArgs {
-}
+export interface ListCurrenciesArgs {}
 
 export interface ListCurrenciesReturn {
-  currencies: Array<Currency>  
+  currencies: Array<Currency>
 }
 export interface GetCollectibleArgs {
   contractAddress: string
@@ -548,7 +625,7 @@ export interface GetCollectibleArgs {
 }
 
 export interface GetCollectibleReturn {
-  metadata: TokenMetadata  
+  metadata: TokenMetadata
 }
 export interface GetLowestPriceOfferForCollectibleArgs {
   contractAddress: string
@@ -557,7 +634,7 @@ export interface GetLowestPriceOfferForCollectibleArgs {
 }
 
 export interface GetLowestPriceOfferForCollectibleReturn {
-  order: Order  
+  order: Order
 }
 export interface GetHighestPriceOfferForCollectibleArgs {
   contractAddress: string
@@ -566,7 +643,7 @@ export interface GetHighestPriceOfferForCollectibleArgs {
 }
 
 export interface GetHighestPriceOfferForCollectibleReturn {
-  order: Order  
+  order: Order
 }
 export interface GetLowestPriceListingForCollectibleArgs {
   contractAddress: string
@@ -575,7 +652,7 @@ export interface GetLowestPriceListingForCollectibleArgs {
 }
 
 export interface GetLowestPriceListingForCollectibleReturn {
-  order: Order  
+  order: Order
 }
 export interface GetHighestPriceListingForCollectibleArgs {
   contractAddress: string
@@ -584,7 +661,7 @@ export interface GetHighestPriceListingForCollectibleArgs {
 }
 
 export interface GetHighestPriceListingForCollectibleReturn {
-  order: Order  
+  order: Order
 }
 export interface ListListingsForCollectibleArgs {
   contractAddress: string
@@ -595,7 +672,7 @@ export interface ListListingsForCollectibleArgs {
 
 export interface ListListingsForCollectibleReturn {
   listings: Array<Order>
-  page?: Page  
+  page?: Page
 }
 export interface ListOffersForCollectibleArgs {
   contractAddress: string
@@ -606,7 +683,7 @@ export interface ListOffersForCollectibleArgs {
 
 export interface ListOffersForCollectibleReturn {
   offers: Array<Order>
-  page?: Page  
+  page?: Page
 }
 export interface GetCollectibleLowestOfferArgs {
   contractAddress: string
@@ -615,7 +692,7 @@ export interface GetCollectibleLowestOfferArgs {
 }
 
 export interface GetCollectibleLowestOfferReturn {
-  order: Order  
+  order: Order
 }
 export interface GetCollectibleHighestOfferArgs {
   contractAddress: string
@@ -624,7 +701,7 @@ export interface GetCollectibleHighestOfferArgs {
 }
 
 export interface GetCollectibleHighestOfferReturn {
-  order: Order  
+  order: Order
 }
 export interface GetCollectibleLowestListingArgs {
   contractAddress: string
@@ -633,7 +710,7 @@ export interface GetCollectibleLowestListingArgs {
 }
 
 export interface GetCollectibleLowestListingReturn {
-  order: Order  
+  order: Order
 }
 export interface GetCollectibleHighestListingArgs {
   contractAddress: string
@@ -642,7 +719,7 @@ export interface GetCollectibleHighestListingArgs {
 }
 
 export interface GetCollectibleHighestListingReturn {
-  order: Order  
+  order: Order
 }
 export interface ListCollectibleListingsArgs {
   contractAddress: string
@@ -653,7 +730,7 @@ export interface ListCollectibleListingsArgs {
 
 export interface ListCollectibleListingsReturn {
   listings: Array<Order>
-  page?: Page  
+  page?: Page
 }
 export interface ListCollectibleOffersArgs {
   contractAddress: string
@@ -664,7 +741,7 @@ export interface ListCollectibleOffersArgs {
 
 export interface ListCollectibleOffersReturn {
   offers: Array<Order>
-  page?: Page  
+  page?: Page
 }
 export interface GenerateBuyTransactionArgs {
   collectionAddress: string
@@ -676,7 +753,7 @@ export interface GenerateBuyTransactionArgs {
 }
 
 export interface GenerateBuyTransactionReturn {
-  steps: Array<Step>  
+  steps: Array<Step>
 }
 export interface GenerateSellTransactionArgs {
   collectionAddress: string
@@ -688,7 +765,7 @@ export interface GenerateSellTransactionArgs {
 }
 
 export interface GenerateSellTransactionReturn {
-  steps: Array<Step>  
+  steps: Array<Step>
 }
 export interface GenerateListingTransactionArgs {
   collectionAddress: string
@@ -700,7 +777,7 @@ export interface GenerateListingTransactionArgs {
 }
 
 export interface GenerateListingTransactionReturn {
-  steps: Array<Step>  
+  steps: Array<Step>
 }
 export interface GenerateOfferTransactionArgs {
   collectionAddress: string
@@ -712,7 +789,7 @@ export interface GenerateOfferTransactionArgs {
 }
 
 export interface GenerateOfferTransactionReturn {
-  steps: Array<Step>  
+  steps: Array<Step>
 }
 export interface ExecuteArgs {
   signature: string
@@ -721,7 +798,7 @@ export interface ExecuteArgs {
 }
 
 export interface ExecuteReturn {
-  orderId: string  
+  orderId: string
 }
 export interface ListCollectiblesArgs {
   side: OrderSide
@@ -732,7 +809,7 @@ export interface ListCollectiblesArgs {
 
 export interface ListCollectiblesReturn {
   collectibles: Array<CollectibleOrder>
-  page?: Page  
+  page?: Page
 }
 export interface ListCollectiblesWithLowestListingArgs {
   contractAddress: string
@@ -742,7 +819,7 @@ export interface ListCollectiblesWithLowestListingArgs {
 
 export interface ListCollectiblesWithLowestListingReturn {
   collectibles: Array<CollectibleOrder>
-  page?: Page  
+  page?: Page
 }
 export interface ListCollectiblesWithHighestOfferArgs {
   contractAddress: string
@@ -752,20 +829,18 @@ export interface ListCollectiblesWithHighestOfferArgs {
 
 export interface ListCollectiblesWithHighestOfferReturn {
   collectibles: Array<CollectibleOrder>
-  page?: Page  
+  page?: Page
 }
 export interface SyncOrderArgs {
   order: Order
 }
 
-export interface SyncOrderReturn {  
-}
+export interface SyncOrderReturn {}
 export interface SyncOrdersArgs {
   orders: Array<Order>
 }
 
-export interface SyncOrdersReturn {  
-}
+export interface SyncOrdersReturn {}
 export interface GetOrdersArgs {
   input: Array<GetOrdersInput>
   page?: Page
@@ -773,7 +848,7 @@ export interface GetOrdersArgs {
 
 export interface GetOrdersReturn {
   orders: Array<Order>
-  page?: Page  
+  page?: Page
 }
 export interface CheckoutOptionsMarketplaceArgs {
   wallet: string
@@ -782,7 +857,7 @@ export interface CheckoutOptionsMarketplaceArgs {
 }
 
 export interface CheckoutOptionsMarketplaceReturn {
-  options: CheckoutOptions  
+  options: CheckoutOptions
 }
 export interface CheckoutOptionsSalesContractArgs {
   wallet: string
@@ -792,11 +867,9 @@ export interface CheckoutOptionsSalesContractArgs {
 }
 
 export interface CheckoutOptionsSalesContractReturn {
-  options: CheckoutOptions  
+  options: CheckoutOptions
 }
 
-
-  
 //
 // Client
 //
@@ -813,149 +886,157 @@ export class Admin implements Admin {
   private url(name: string): string {
     return this.hostname + this.path + name
   }
-  
+
   createCollection = (args: CreateCollectionArgs, headers?: object, signal?: AbortSignal): Promise<CreateCollectionReturn> => {
-    return this.fetch(
-      this.url('CreateCollection'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          collection: <Collection>(_data.collection),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('CreateCollection'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            collection: <Collection>_data.collection
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   getCollection = (args: GetCollectionArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectionReturn> => {
-    return this.fetch(
-      this.url('GetCollection'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          collection: <Collection>(_data.collection),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('GetCollection'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            collection: <Collection>_data.collection
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   listCollections = (args: ListCollectionsArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectionsReturn> => {
-    return this.fetch(
-      this.url('ListCollections'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          collections: <Array<Collection>>(_data.collections),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('ListCollections'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            collections: <Array<Collection>>_data.collections,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   deleteCollection = (args: DeleteCollectionArgs, headers?: object, signal?: AbortSignal): Promise<DeleteCollectionReturn> => {
-    return this.fetch(
-      this.url('DeleteCollection'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          collection: <Collection>(_data.collection),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('DeleteCollection'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            collection: <Collection>_data.collection
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   syncCollection = (args: SyncCollectionArgs, headers?: object, signal?: AbortSignal): Promise<SyncCollectionReturn> => {
-    return this.fetch(
-      this.url('SyncCollection'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          collection: <Collection>(_data.collection),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('SyncCollection'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            collection: <Collection>_data.collection
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   createCurrency = (args: CreateCurrencyArgs, headers?: object, signal?: AbortSignal): Promise<CreateCurrencyReturn> => {
-    return this.fetch(
-      this.url('CreateCurrency'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          currency: <Currency>(_data.currency),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('CreateCurrency'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            currency: <Currency>_data.currency
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   createCurrencies = (args: CreateCurrenciesArgs, headers?: object, signal?: AbortSignal): Promise<CreateCurrenciesReturn> => {
-    return this.fetch(
-      this.url('CreateCurrencies'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          currency: <{[key: string]: Currency}>(_data.currency),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('CreateCurrencies'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            currency: <{ [key: string]: Currency }>_data.currency
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   updateCurrency = (args: UpdateCurrencyArgs, headers?: object, signal?: AbortSignal): Promise<UpdateCurrencyReturn> => {
-    return this.fetch(
-      this.url('UpdateCurrency'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          currency: <Currency>(_data.currency),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('UpdateCurrency'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            currency: <Currency>_data.currency
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   listCurrencies = (headers?: object, signal?: AbortSignal): Promise<ListCurrenciesReturn> => {
-    return this.fetch(
-      this.url('ListCurrencies'),
-      createHTTPRequest({}, headers, signal)
-      ).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          currencies: <Array<Currency>>(_data.currencies),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('ListCurrencies'), createHTTPRequest({}, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            currencies: <Array<Currency>>_data.currencies
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   deleteCurrency = (args: DeleteCurrencyArgs, headers?: object, signal?: AbortSignal): Promise<DeleteCurrencyReturn> => {
-    return this.fetch(
-      this.url('DeleteCurrency'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          currency: <Currency>(_data.currency),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('DeleteCurrency'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            currency: <Currency>_data.currency
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
 }
 export class Marketplace implements Marketplace {
   protected hostname: string
@@ -970,393 +1051,498 @@ export class Marketplace implements Marketplace {
   private url(name: string): string {
     return this.hostname + this.path + name
   }
-  
+
   listCurrencies = (headers?: object, signal?: AbortSignal): Promise<ListCurrenciesReturn> => {
-    return this.fetch(
-      this.url('ListCurrencies'),
-      createHTTPRequest({}, headers, signal)
-      ).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          currencies: <Array<Currency>>(_data.currencies),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('ListCurrencies'), createHTTPRequest({}, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            currencies: <Array<Currency>>_data.currencies
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   getCollectible = (args: GetCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleReturn> => {
-    return this.fetch(
-      this.url('GetCollectible'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          metadata: <TokenMetadata>(_data.metadata),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('GetCollectible'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            metadata: <TokenMetadata>_data.metadata
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  getLowestPriceOfferForCollectible = (args: GetLowestPriceOfferForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetLowestPriceOfferForCollectibleReturn> => {
-    return this.fetch(
-      this.url('GetLowestPriceOfferForCollectible'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          order: <Order>(_data.order),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  getLowestPriceOfferForCollectible = (
+    args: GetLowestPriceOfferForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetLowestPriceOfferForCollectibleReturn> => {
+    return this.fetch(this.url('GetLowestPriceOfferForCollectible'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            order: <Order>_data.order
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  getHighestPriceOfferForCollectible = (args: GetHighestPriceOfferForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetHighestPriceOfferForCollectibleReturn> => {
-    return this.fetch(
-      this.url('GetHighestPriceOfferForCollectible'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          order: <Order>(_data.order),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  getHighestPriceOfferForCollectible = (
+    args: GetHighestPriceOfferForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetHighestPriceOfferForCollectibleReturn> => {
+    return this.fetch(this.url('GetHighestPriceOfferForCollectible'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            order: <Order>_data.order
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  getLowestPriceListingForCollectible = (args: GetLowestPriceListingForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetLowestPriceListingForCollectibleReturn> => {
-    return this.fetch(
-      this.url('GetLowestPriceListingForCollectible'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          order: <Order>(_data.order),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  getLowestPriceListingForCollectible = (
+    args: GetLowestPriceListingForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetLowestPriceListingForCollectibleReturn> => {
+    return this.fetch(this.url('GetLowestPriceListingForCollectible'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            order: <Order>_data.order
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  getHighestPriceListingForCollectible = (args: GetHighestPriceListingForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<GetHighestPriceListingForCollectibleReturn> => {
-    return this.fetch(
-      this.url('GetHighestPriceListingForCollectible'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          order: <Order>(_data.order),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  getHighestPriceListingForCollectible = (
+    args: GetHighestPriceListingForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetHighestPriceListingForCollectibleReturn> => {
+    return this.fetch(this.url('GetHighestPriceListingForCollectible'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            order: <Order>_data.order
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  listListingsForCollectible = (args: ListListingsForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<ListListingsForCollectibleReturn> => {
-    return this.fetch(
-      this.url('ListListingsForCollectible'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          listings: <Array<Order>>(_data.listings),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  listListingsForCollectible = (
+    args: ListListingsForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListListingsForCollectibleReturn> => {
+    return this.fetch(this.url('ListListingsForCollectible'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            listings: <Array<Order>>_data.listings,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  listOffersForCollectible = (args: ListOffersForCollectibleArgs, headers?: object, signal?: AbortSignal): Promise<ListOffersForCollectibleReturn> => {
-    return this.fetch(
-      this.url('ListOffersForCollectible'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          offers: <Array<Order>>(_data.offers),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  listOffersForCollectible = (
+    args: ListOffersForCollectibleArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListOffersForCollectibleReturn> => {
+    return this.fetch(this.url('ListOffersForCollectible'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            offers: <Array<Order>>_data.offers,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  getCollectibleLowestOffer = (args: GetCollectibleLowestOfferArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleLowestOfferReturn> => {
-    return this.fetch(
-      this.url('GetCollectibleLowestOffer'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          order: <Order>(_data.order),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  getCollectibleLowestOffer = (
+    args: GetCollectibleLowestOfferArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetCollectibleLowestOfferReturn> => {
+    return this.fetch(this.url('GetCollectibleLowestOffer'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            order: <Order>_data.order
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  getCollectibleHighestOffer = (args: GetCollectibleHighestOfferArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleHighestOfferReturn> => {
-    return this.fetch(
-      this.url('GetCollectibleHighestOffer'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          order: <Order>(_data.order),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  getCollectibleHighestOffer = (
+    args: GetCollectibleHighestOfferArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetCollectibleHighestOfferReturn> => {
+    return this.fetch(this.url('GetCollectibleHighestOffer'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            order: <Order>_data.order
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  getCollectibleLowestListing = (args: GetCollectibleLowestListingArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleLowestListingReturn> => {
-    return this.fetch(
-      this.url('GetCollectibleLowestListing'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          order: <Order>(_data.order),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  getCollectibleLowestListing = (
+    args: GetCollectibleLowestListingArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetCollectibleLowestListingReturn> => {
+    return this.fetch(this.url('GetCollectibleLowestListing'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            order: <Order>_data.order
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  getCollectibleHighestListing = (args: GetCollectibleHighestListingArgs, headers?: object, signal?: AbortSignal): Promise<GetCollectibleHighestListingReturn> => {
-    return this.fetch(
-      this.url('GetCollectibleHighestListing'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          order: <Order>(_data.order),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  getCollectibleHighestListing = (
+    args: GetCollectibleHighestListingArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GetCollectibleHighestListingReturn> => {
+    return this.fetch(this.url('GetCollectibleHighestListing'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            order: <Order>_data.order
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  listCollectibleListings = (args: ListCollectibleListingsArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectibleListingsReturn> => {
-    return this.fetch(
-      this.url('ListCollectibleListings'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          listings: <Array<Order>>(_data.listings),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  listCollectibleListings = (
+    args: ListCollectibleListingsArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListCollectibleListingsReturn> => {
+    return this.fetch(this.url('ListCollectibleListings'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            listings: <Array<Order>>_data.listings,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  listCollectibleOffers = (args: ListCollectibleOffersArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectibleOffersReturn> => {
-    return this.fetch(
-      this.url('ListCollectibleOffers'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          offers: <Array<Order>>(_data.offers),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  listCollectibleOffers = (
+    args: ListCollectibleOffersArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListCollectibleOffersReturn> => {
+    return this.fetch(this.url('ListCollectibleOffers'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            offers: <Array<Order>>_data.offers,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  generateBuyTransaction = (args: GenerateBuyTransactionArgs, headers?: object, signal?: AbortSignal): Promise<GenerateBuyTransactionReturn> => {
-    return this.fetch(
-      this.url('GenerateBuyTransaction'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          steps: <Array<Step>>(_data.steps),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  generateBuyTransaction = (
+    args: GenerateBuyTransactionArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GenerateBuyTransactionReturn> => {
+    return this.fetch(this.url('GenerateBuyTransaction'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            steps: <Array<Step>>_data.steps
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  generateSellTransaction = (args: GenerateSellTransactionArgs, headers?: object, signal?: AbortSignal): Promise<GenerateSellTransactionReturn> => {
-    return this.fetch(
-      this.url('GenerateSellTransaction'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          steps: <Array<Step>>(_data.steps),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  generateSellTransaction = (
+    args: GenerateSellTransactionArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GenerateSellTransactionReturn> => {
+    return this.fetch(this.url('GenerateSellTransaction'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            steps: <Array<Step>>_data.steps
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  generateListingTransaction = (args: GenerateListingTransactionArgs, headers?: object, signal?: AbortSignal): Promise<GenerateListingTransactionReturn> => {
-    return this.fetch(
-      this.url('GenerateListingTransaction'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          steps: <Array<Step>>(_data.steps),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  generateListingTransaction = (
+    args: GenerateListingTransactionArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GenerateListingTransactionReturn> => {
+    return this.fetch(this.url('GenerateListingTransaction'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            steps: <Array<Step>>_data.steps
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  generateOfferTransaction = (args: GenerateOfferTransactionArgs, headers?: object, signal?: AbortSignal): Promise<GenerateOfferTransactionReturn> => {
-    return this.fetch(
-      this.url('GenerateOfferTransaction'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          steps: <Array<Step>>(_data.steps),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  generateOfferTransaction = (
+    args: GenerateOfferTransactionArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<GenerateOfferTransactionReturn> => {
+    return this.fetch(this.url('GenerateOfferTransaction'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            steps: <Array<Step>>_data.steps
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   execute = (args: ExecuteArgs, headers?: object, signal?: AbortSignal): Promise<ExecuteReturn> => {
-    return this.fetch(
-      this.url('Execute'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          orderId: <string>(_data.orderId),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('Execute'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            orderId: <string>_data.orderId
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   listCollectibles = (args: ListCollectiblesArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectiblesReturn> => {
-    return this.fetch(
-      this.url('ListCollectibles'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          collectibles: <Array<CollectibleOrder>>(_data.collectibles),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('ListCollectibles'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            collectibles: <Array<CollectibleOrder>>_data.collectibles,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  listCollectiblesWithLowestListing = (args: ListCollectiblesWithLowestListingArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectiblesWithLowestListingReturn> => {
-    return this.fetch(
-      this.url('ListCollectiblesWithLowestListing'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          collectibles: <Array<CollectibleOrder>>(_data.collectibles),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  listCollectiblesWithLowestListing = (
+    args: ListCollectiblesWithLowestListingArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListCollectiblesWithLowestListingReturn> => {
+    return this.fetch(this.url('ListCollectiblesWithLowestListing'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            collectibles: <Array<CollectibleOrder>>_data.collectibles,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  listCollectiblesWithHighestOffer = (args: ListCollectiblesWithHighestOfferArgs, headers?: object, signal?: AbortSignal): Promise<ListCollectiblesWithHighestOfferReturn> => {
-    return this.fetch(
-      this.url('ListCollectiblesWithHighestOffer'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          collectibles: <Array<CollectibleOrder>>(_data.collectibles),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  listCollectiblesWithHighestOffer = (
+    args: ListCollectiblesWithHighestOfferArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<ListCollectiblesWithHighestOfferReturn> => {
+    return this.fetch(this.url('ListCollectiblesWithHighestOffer'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            collectibles: <Array<CollectibleOrder>>_data.collectibles,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   syncOrder = (args: SyncOrderArgs, headers?: object, signal?: AbortSignal): Promise<SyncOrderReturn> => {
-    return this.fetch(
-      this.url('SyncOrder'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {}
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('SyncOrder'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {}
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   syncOrders = (args: SyncOrdersArgs, headers?: object, signal?: AbortSignal): Promise<SyncOrdersReturn> => {
-    return this.fetch(
-      this.url('SyncOrders'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {}
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('SyncOrders'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {}
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
+
   getOrders = (args: GetOrdersArgs, headers?: object, signal?: AbortSignal): Promise<GetOrdersReturn> => {
-    return this.fetch(
-      this.url('GetOrders'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          orders: <Array<Order>>(_data.orders),
-          page: <Page>(_data.page),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+    return this.fetch(this.url('GetOrders'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            orders: <Array<Order>>_data.orders,
+            page: <Page>_data.page
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  checkoutOptionsMarketplace = (args: CheckoutOptionsMarketplaceArgs, headers?: object, signal?: AbortSignal): Promise<CheckoutOptionsMarketplaceReturn> => {
-    return this.fetch(
-      this.url('CheckoutOptionsMarketplace'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          options: <CheckoutOptions>(_data.options),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  checkoutOptionsMarketplace = (
+    args: CheckoutOptionsMarketplaceArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<CheckoutOptionsMarketplaceReturn> => {
+    return this.fetch(this.url('CheckoutOptionsMarketplace'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            options: <CheckoutOptions>_data.options
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
-  checkoutOptionsSalesContract = (args: CheckoutOptionsSalesContractArgs, headers?: object, signal?: AbortSignal): Promise<CheckoutOptionsSalesContractReturn> => {
-    return this.fetch(
-      this.url('CheckoutOptionsSalesContract'),
-      createHTTPRequest(args, headers, signal)).then((res) => {
-      return buildResponse(res).then(_data => {
-        return {
-          options: <CheckoutOptions>(_data.options),
-        }
-      })
-    }, (error) => {
-      throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
-    })
+
+  checkoutOptionsSalesContract = (
+    args: CheckoutOptionsSalesContractArgs,
+    headers?: object,
+    signal?: AbortSignal
+  ): Promise<CheckoutOptionsSalesContractReturn> => {
+    return this.fetch(this.url('CheckoutOptionsSalesContract'), createHTTPRequest(args, headers, signal)).then(
+      res => {
+        return buildResponse(res).then(_data => {
+          return {
+            options: <CheckoutOptions>_data.options
+          }
+        })
+      },
+      error => {
+        throw WebrpcRequestFailedError.new({ cause: `fetch(): ${error.message || ''}` })
+      }
+    )
   }
-  
 }
 
-  const createHTTPRequest = (body: object = {}, headers: object = {}, signal: AbortSignal | null = null): object => {
+const createHTTPRequest = (body: object = {}, headers: object = {}, signal: AbortSignal | null = null): object => {
   return {
     method: 'POST',
     headers: { ...headers, 'Content-Type': 'application/json' },
@@ -1370,18 +1556,18 @@ const buildResponse = (res: Response): Promise<any> => {
     let data
     try {
       data = JSON.parse(text)
-    } catch(error) {
+    } catch (error) {
       let message = ''
-      if (error instanceof Error)  {
+      if (error instanceof Error) {
         message = error.message
       }
       throw WebrpcBadResponseError.new({
         status: res.status,
-        cause: `JSON.parse(): ${message}: response text: ${text}`},
-      )
+        cause: `JSON.parse(): ${message}: response text: ${text}`
+      })
     }
     if (!res.ok) {
-      const code: number = (typeof data.code === 'number') ? data.code : 0
+      const code: number = typeof data.code === 'number' ? data.code : 0
       throw (webrpcErrorByCode[code] || WebrpcError).new(data)
     }
     return data
@@ -1563,7 +1749,6 @@ export class WebrpcStreamFinishedError extends WebrpcError {
   }
 }
 
-
 // Schema errors
 
 export class UnauthorizedError extends WebrpcError {
@@ -1722,7 +1907,6 @@ export class NotImplementedError extends WebrpcError {
   }
 }
 
-
 export enum errors {
   WebrpcEndpoint = 'WebrpcEndpoint',
   WebrpcRequestFailed = 'WebrpcRequestFailed',
@@ -1746,7 +1930,7 @@ export enum errors {
   ProjectNotFound = 'ProjectNotFound',
   InvalidTier = 'InvalidTier',
   ProjectLimitReached = 'ProjectLimitReached',
-  NotImplemented = 'NotImplemented',
+  NotImplemented = 'NotImplemented'
 }
 
 const webrpcErrorByCode: { [code: number]: any } = {
@@ -1772,8 +1956,7 @@ const webrpcErrorByCode: { [code: number]: any } = {
   [3002]: ProjectNotFoundError,
   [3003]: InvalidTierError,
   [3005]: ProjectLimitReachedError,
-  [9999]: NotImplementedError,
+  [9999]: NotImplementedError
 }
 
 export type Fetch = (input: RequestInfo, init?: RequestInit) => Promise<Response>
-

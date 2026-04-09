@@ -1,7 +1,7 @@
 import { createConfig, createContractPermission, createContractPermissions } from '@0xsequence/connect'
 import { parseEther, parseUnits } from 'viem'
 
-export const USDC_ADDRESS_ARBITRUM = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
+export const USDA_ADDRESS_ARBITRUM = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
 export const AAVE_V3_POOL_ADDRESS_ARBITRUM = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 export const AAVE_V3_WRAPPED_TOKEN_GATEWAY_ADDRESS_ARBITRUM = '0x5283BEcEd7ADF6D003225C13896E536f2D4264FF'
 export const ALLOWED_RECEIVER = '0xBa47299A5B0d402375BA9A300c28D6Aa4fE788FA'

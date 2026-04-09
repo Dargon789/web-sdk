@@ -103,14 +103,9 @@ export const KitProvider = (props: KitConnectProviderProps) => {
 
   const [pendingRequestConfirmation, confirmPendingRequest, rejectPendingRequest] = useWaasConfirmationHandler(waasConnector)
 
-  const {
-    openWaasRevalidationModal,
-    setOpenWaasRevalidationModal,
-    onVerifyIsLoading,
-    setOnVerifyIsLoading,
-    onVerify
-  } = useWaasRevalidation()
-  
+  const { openWaasRevalidationModal, setOpenWaasRevalidationModal, onVerifyIsLoading, setOnVerifyIsLoading, onVerify } =
+    useWaasRevalidation()
+
   const googleWaasConnector = wagmiConfig.connectors.find(
     c => c.id === 'sequence-waas' && (c as ExtendedConnector)._wallet.id === 'google-waas'
   ) as ExtendedConnector | undefined
@@ -391,7 +386,7 @@ export const KitProvider = (props: KitConnectProviderProps) => {
                               <Text as="h1" variant="large" marginBottom="5">
                                 Validate Session
                               </Text>
-                            </Box>  
+                            </Box>
                             <WaasCodeInputContent onVerify={onVerify} isLoading={onVerifyIsLoading} />
                           </Box>
                         </Modal>

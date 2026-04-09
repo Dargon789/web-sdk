@@ -101,10 +101,10 @@ const NetworkSelect = () => {
 
   const modifiedChains = chains.map(chain => {
     if (chain.id === 8453) {
-      return { ...chain, name: 'Base' };
+      return { ...chain, name: 'Base' }
     }
-    return chain;
-  });
+    return chain
+  })
 
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={toggleOpen}>

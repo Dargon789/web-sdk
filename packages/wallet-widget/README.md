@@ -1,7 +1,7 @@
 # Sequence Web SDK Wallet
 
 <div align="center">
-  <img src="../../public/docs/embedded-wallet.png">
+  <img src="../../public/docs/embedded-wallet.png" alt="">
 </div>
 
 Embedded wallet allowing to display and send collectibles and coins.

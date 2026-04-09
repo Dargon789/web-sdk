@@ -4,7 +4,7 @@ import { proxy, useSnapshot, INTERNAL_Snapshot } from 'valtio'
 import { analyticsState, setAnalytics } from '../states/Analytics'
 
 interface UseAnalytics {
-  analytics: INTERNAL_Snapshot<sequence.SequenceClient['analytics']>,
+  analytics: INTERNAL_Snapshot<sequence.SequenceClient['analytics']>
   setAnalytics: (analytics: sequence.SequenceClient['analytics']) => void
 }
 
