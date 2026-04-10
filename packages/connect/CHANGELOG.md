@@ -1,5 +1,29 @@
 # @0xsequence/connect
 
+## 6.0.5
+
+### Patch Changes
+
+- Powered by logo update
+- Updated dependencies
+  - @0xsequence/hooks@6.0.5
+
+## 6.0.4
+
+### Patch Changes
+
+- Fix for node urls
+- Updated dependencies
+  - @0xsequence/hooks@6.0.4
+
+## 6.0.3
+
+### Patch Changes
+
+- Remove unnecessary waas components
+- Updated dependencies
+  - @0xsequence/hooks@6.0.3
+
 ## 6.0.2
 
 ### Patch Changes
