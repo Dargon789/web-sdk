@@ -1,7 +1,7 @@
 import { WALLET_CONFIGURATION_TIMEOUT_MS } from '../constants.js'
 import type { ConnectConfig } from '../types.js'
 
-export type WalletConfigurationProvider = 'EMAIL' | 'GOOGLE' | 'APPLE' | 'PASSKEY'
+export type WalletConfigurationProvider = 'EMAIL' | 'GOOGLE' | 'APPLE' | 'PASSKEY' | 'GUEST' | 'X' | 'EPIC'
 
 type WalletConfigurationMetaTags = {
   title?: string
@@ -51,7 +51,7 @@ type CachedWalletConfiguration = {
 }
 
 const CACHE_TTL_MS = 1000 * 60 * 60 * 4
-const allowedProviders: WalletConfigurationProvider[] = ['EMAIL', 'GOOGLE', 'APPLE', 'PASSKEY']
+const allowedProviders: WalletConfigurationProvider[] = ['EMAIL', 'GOOGLE', 'APPLE', 'PASSKEY', 'GUEST', 'X', 'EPIC']
 const walletConfigurationPromises = new Map<string, Promise<WalletConfigurationResponse>>()
 const walletConfigurationCache = new Map<string, CachedWalletConfiguration>()
 const PROJECT_NAME_CACHE_KEY_PREFIX = '@0xsequence.wallet-config.projectName:'
