@@ -31,21 +31,23 @@ export const ConnectButton = (props: ConnectButtonProps) => {
   const { theme } = useTheme()
   const walletProps = connector._wallet
   const isDescriptive = props.isDescriptive || false
+  const shouldRenderTextButton = isDescriptive || !!walletProps.ctaText
+  const buttonCopy = walletProps.ctaText || `Continue with ${label || walletProps.name}`.trim()
 
   const Logo = getLogo(theme, walletProps)
 
-  if (isDescriptive) {
+  if (shouldRenderTextButton) {
     return (
       <Tooltip message={label || walletProps.name} side="bottom" disabled={disableTooltip}>
         <Card
-          className="flex gap-3 justify-center items-center w-full"
+          className={`flex gap-3 items-center w-full ${isDescriptive ? 'justify-start' : 'justify-center'}`}
           clickable
           onClick={() => onConnect(connector)}
           style={{ height: BUTTON_HEIGHT_DESCRIPTIVE }}
         >
           <Logo className={iconDescriptiveSizeClasses} />
           <Text color="primary" variant="normal" fontWeight="bold">
-            Continue with {label || walletProps.name}
+            {buttonCopy}
           </Text>
         </Card>
       </Tooltip>
@@ -89,8 +91,13 @@ export const ShowAllWalletsButton = ({ onClick }: ShowAllWalletsButtonProps) => 
   )
 }
 
-export const GuestWaasConnectButton = (props: ConnectButtonProps & { setIsLoading: (isLoading: boolean) => void }) => {
-  const { connector, onConnect, setIsLoading } = props
+export const GuestWaasConnectButton = (
+  props: ConnectButtonProps & {
+    setIsLoading: (isLoading: boolean) => void
+    setConnectingConnector?: (connector: ExtendedConnector | null) => void
+  }
+) => {
+  const { connector, onConnect, setIsLoading, setConnectingConnector } = props
 
   return (
     <ConnectButton
@@ -98,6 +105,7 @@ export const GuestWaasConnectButton = (props: ConnectButtonProps & { setIsLoadin
       connector={connector}
       onConnect={() => {
         setIsLoading(true)
+        setConnectingConnector?.(connector)
         onConnect(connector)
       }}
       disableTooltip
@@ -105,8 +113,13 @@ export const GuestWaasConnectButton = (props: ConnectButtonProps & { setIsLoadin
   )
 }
 
-export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
-  const { connector, onConnect, isDescriptive = false } = props
+export const GoogleWaasConnectButton = (
+  props: ConnectButtonProps & {
+    setIsLoading?: (isLoading: boolean) => void
+    setConnectingConnector?: (connector: ExtendedConnector | null) => void
+  }
+) => {
+  const { connector, onConnect, isDescriptive = false, label, setIsLoading, setConnectingConnector } = props
   const storage = useStorage()
 
   const { theme } = useTheme()
@@ -115,19 +128,23 @@ export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
   const Logo = getLogo(theme, walletProps)
 
   const WaasLoginContent = () => {
+    const baseClasses = 'flex items-center w-full h-full bg-background-secondary absolute pointer-events-none top-0 right-0'
+    const layoutClasses = isDescriptive ? 'gap-3 justify-start px-4' : 'justify-center'
+
+    const copy = walletProps?.ctaText || 'Continue with Google'
     if (isDescriptive) {
       return (
-        <div className="flex gap-1 justify-center items-center bg-background-secondary absolute pointer-events-none w-full h-full top-0 right-0">
+        <div className={`${baseClasses} ${layoutClasses}`}>
           <Logo className={iconDescriptiveSizeClasses} />
           <Text color="primary" variant="normal" fontWeight="bold">
-            Continue with Google
+            {copy}
           </Text>
         </div>
       )
     }
 
     return (
-      <div className="flex bg-background-secondary justify-center items-center absolute pointer-events-none w-full h-full top-0 right-0">
+      <div className={`${baseClasses} ${layoutClasses}`}>
         <Logo className={iconSizeClasses} />
       </div>
     )
@@ -136,12 +153,16 @@ export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
   const buttonHeight = isDescriptive ? BUTTON_HEIGHT_DESCRIPTIVE : BUTTON_HEIGHT
 
   return (
-    <Tooltip message="Google" disabled>
+    <Tooltip message={label || walletProps.name} disabled>
       <Card
         className="bg-transparent p-0 w-full relative"
         clickable
         style={{
           height: buttonHeight
+        }}
+        onClick={() => {
+          setIsLoading?.(true)
+          setConnectingConnector?.(connector)
         }}
       >
         <div
@@ -163,6 +184,8 @@ export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
             }}
             onError={() => {
               console.log('Login Failed')
+              setIsLoading?.(false)
+              setConnectingConnector?.(null)
             }}
           />
         </div>
@@ -173,8 +196,13 @@ export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
   )
 }
 
-export const AppleWaasConnectButton = (props: ConnectButtonProps) => {
-  const { connector, onConnect } = props
+export const AppleWaasConnectButton = (
+  props: ConnectButtonProps & {
+    setIsLoading?: (isLoading: boolean) => void
+    setConnectingConnector?: (connector: ExtendedConnector | null) => void
+  }
+) => {
+  const { connector, onConnect, setIsLoading, setConnectingConnector } = props
   const storage = useStorage()
 
   const { data: appleClientId } = useStorageItem(LocalStorageKey.WaasAppleClientID)
@@ -185,6 +213,8 @@ export const AppleWaasConnectButton = (props: ConnectButtonProps) => {
       {...props}
       connector={connector}
       onConnect={() => {
+        setIsLoading?.(true)
+        setConnectingConnector?.(connector)
         appleAuthHelpers.signIn({
           authOptions: {
             clientId: appleClientId,
@@ -198,9 +228,15 @@ export const AppleWaasConnectButton = (props: ConnectButtonProps) => {
               onConnect(connector)
             } else {
               console.log('Apple login error: No id_token found')
+              setIsLoading?.(false)
+              setConnectingConnector?.(null)
             }
           },
-          onError: (error: any) => console.error(error)
+          onError: (error: any) => {
+            console.error(error)
+            setIsLoading?.(false)
+            setConnectingConnector?.(null)
+          }
         })
       }}
       disableTooltip
@@ -225,8 +261,13 @@ export const EpicWaasConnectButton = (props: ConnectButtonProps) => {
   ) : null
 }
 
-export const XWaasConnectButton = (props: ConnectButtonProps) => {
-  const { connector, onConnect } = props
+export const XWaasConnectButton = (
+  props: ConnectButtonProps & {
+    setIsLoading?: (isLoading: boolean) => void
+    setConnectingConnector?: (connector: ExtendedConnector | null) => void
+  }
+) => {
+  const { connector, onConnect, setIsLoading, setConnectingConnector } = props
   const storage = useStorage()
 
   const [XCodeVerifier, setXCodeVerifier] = useState<string>('')
@@ -252,6 +293,8 @@ export const XWaasConnectButton = (props: ConnectButtonProps) => {
       {...props}
       connector={connector}
       onConnect={() => {
+        setIsLoading?.(true)
+        setConnectingConnector?.(connector)
         const popup = window.open(authUrl as string, 'XAuthPopup', 'width=700,height=700')
 
         const handleMessage = async (event: MessageEvent) => {
@@ -275,7 +318,12 @@ export const XWaasConnectButton = (props: ConnectButtonProps) => {
               onConnect(connector)
             } catch (error) {
               console.log('X login error', error)
+              setIsLoading?.(false)
+              setConnectingConnector?.(null)
             }
+          } else {
+            setIsLoading?.(false)
+            setConnectingConnector?.(null)
           }
         }
 

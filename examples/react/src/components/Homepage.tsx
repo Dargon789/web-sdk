@@ -1,59 +1,112 @@
-import { useOpenConnectModal, useWallets, WalletType } from '@0xsequence/connect'
-import { Button, Card, CheckmarkIcon, Image, Text } from '@0xsequence/design-system'
-import { clsx } from 'clsx'
+import { useOpenConnectModal, useWallets } from '@0xsequence/connect'
+import { Button, Collapsible, Image, MoonIcon, SunIcon, Text, TextInput, useTheme } from '@0xsequence/design-system'
 import { Footer } from 'example-shared-components'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+
+import { DEFAULT_WALLET_URL, sanitizeWalletUrl } from '../config'
 
 import { Connected } from './Connected'
 
-// append ?debug to url to enable debug mode
-const searchParams = new URLSearchParams(location.search)
-const walletType: WalletType = searchParams.get('type') === 'universal' ? 'universal' : 'waas'
+type HomepageProps = {
+  walletUrl: string
+  onWalletUrlChange: (walletUrl: string) => void
+}
 
-export const Homepage = () => {
+export const Homepage = ({ walletUrl, onWalletUrlChange }: HomepageProps) => {
+  const { theme, setTheme } = useTheme()
   const { wallets } = useWallets()
   const { setOpenConnectModal } = useOpenConnectModal()
+  const [walletUrlInput, setWalletUrlInput] = useState(walletUrl)
 
-  const handleSwitchWalletType = (type: WalletType) => {
-    const searchParams = new URLSearchParams()
-
-    searchParams.set('type', type)
-    window.location.search = searchParams.toString()
-  }
+  const normalizedTheme: 'light' | 'dark' = theme === 'light' ? 'light' : 'dark'
 
   const onClickConnect = () => {
     setOpenConnectModal(true)
   }
 
+  useEffect(() => {
+    setWalletUrlInput(walletUrl)
+  }, [walletUrl])
+
+  const normalizedInput = sanitizeWalletUrl(walletUrlInput)
+  const isDirty = normalizedInput !== walletUrl
+
+  console.log('wallets.lenght', wallets.length)
+  console.log('wallets', wallets)
+
   return (
     <main>
       {wallets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-5 h-screen">
+        <div className="flex flex-col items-center justify-center gap-5 h-screen relative">
+          <div className="absolute top-4 right-4">
+            <Button onClick={() => setTheme(normalizedTheme === 'dark' ? 'light' : 'dark')} variant="ghost" size="sm">
+              {normalizedTheme === 'dark' ? <SunIcon /> : <MoonIcon />}
+            </Button>
+          </div>
+
           <div className="flex flex-row items-center justify-center gap-3">
-            <Image className="w-[300px]" src="images/sequence-websdk-dark.svg" />
+            <Image
+              className="w-[300px]"
+              src={theme === 'dark' ? 'images/sequence-websdk-dark.svg' : 'images/sequence-websdk-light.svg'}
+            />
           </div>
 
-          <div className="flex gap-2 flex-row items-center">
-            <Button onClick={onClickConnect} variant="feature" label="Connect" />
-            <Link to="/inline">
-              <Button variant="primary" label="Inline Demo" />
-            </Link>
-          </div>
+          <div className="flex flex-col gap-3 items-center">
+            <div className="flex gap-2 flex-row items-center">
+              <Button onClick={onClickConnect} variant="primary">
+                Connect
+              </Button>
+              <Link to="/inline">
+                <Button variant="primary">Inline Demo</Button>
+              </Link>
+            </div>
 
-          <div className="flex gap-2 flex-col px-4 mt-10 w-full max-w-[480px]">
-            <WalletTypeSelect
-              type="waas"
-              title="Embedded Wallet (WaaS)"
-              description="Connect to an embedded wallet for a seamless experience."
-              onClick={handleSwitchWalletType}
-            />
-
-            <WalletTypeSelect
-              type="universal"
-              title="Universal Wallet"
-              description="Connect to the universal sequence wallet or EIP6963 Injected wallet providers (web extension wallets)."
-              onClick={handleSwitchWalletType}
-            />
+            <div className="w-[400px] mt-10">
+              <Collapsible
+                label="Config"
+                defaultOpen={false}
+                className="w-full bg-background-raised border border-solid border-border-muted rounded-2xl"
+              >
+                <div className="flex flex-col gap-3 pt-0" style={{ lineHeight: 1.5 }}>
+                  <div className="flex flex-col gap-1">
+                    <Text variant="normal" color="secondary">
+                      Wallet URL
+                    </Text>
+                    <Text variant="small" color="muted">
+                      Override the wallet URL used by this demo. Saved locally so it sticks between reloads.
+                    </Text>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <TextInput
+                      name="wallet-url"
+                      value={walletUrlInput}
+                      onChange={e => setWalletUrlInput(e.target.value)}
+                      placeholder="https://v3.sequence-dev.app"
+                    />
+                    <div className="flex flex-col gap-2">
+                      <Text variant="small" color="muted">
+                        Current: {walletUrl}
+                      </Text>
+                      <div className="flex gap-2 items-center">
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setWalletUrlInput(DEFAULT_WALLET_URL)
+                            onWalletUrlChange(DEFAULT_WALLET_URL)
+                          }}
+                        >
+                          Reset
+                        </Button>
+                        <Button variant="primary" disabled={!isDirty} onClick={() => onWalletUrlChange(normalizedInput)}>
+                          {isDirty ? 'Save' : 'Saved'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Collapsible>
+            </div>
           </div>
         </div>
       ) : (
@@ -61,39 +114,5 @@ export const Homepage = () => {
       )}
       <Footer />
     </main>
-  )
-}
-
-interface WalletTypeSelectProps {
-  type: WalletType
-  title: string
-  description: string
-  onClick: (type: WalletType) => void
-}
-
-const WalletTypeSelect = (props: WalletTypeSelectProps) => {
-  const { type, title, description, onClick } = props
-
-  const isSelected = walletType === type
-
-  return (
-    <Card
-      className={clsx('w-full border-2', isSelected && 'border-[rgb(127,59,200)] shadow-[0_0_24px_rgb(127_59_158_/_0.8)]')}
-      clickable
-      outlined
-      onClick={() => onClick(type)}
-    >
-      <div className="flex gap-2">
-        <div>
-          <Text variant="normal" fontWeight="bold" color={isSelected ? 'primary' : 'secondary'}>
-            {title}
-          </Text>
-          <Text className="mt-2" variant="normal" color="muted" asChild>
-            <div>{description}</div>
-          </Text>
-        </div>
-        <CheckmarkIcon className={clsx('text-[rgb(127_59_200)]', !isSelected && 'hidden')} size="md" />
-      </div>
-    </Card>
   )
 }

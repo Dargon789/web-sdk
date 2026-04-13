@@ -1,14 +1,4 @@
-import {
-  ArrowRightIcon,
-  Card,
-  IconButton,
-  ModalPrimitive,
-  Scroll,
-  SearchIcon,
-  SearchInput,
-  Text,
-  useTheme
-} from '@0xsequence/design-system'
+import { ArrowRightIcon, Card, DialogPrimitive, IconButton, Scroll, SearchInput, Text, useTheme } from '@0xsequence/design-system'
 import Fuse from 'fuse.js'
 import { useState } from 'react'
 
@@ -21,19 +11,30 @@ interface ExtendedWalletListProps {
   connectors: ExtendedConnector[]
   onGoBack: () => void
   searchable: boolean
+  isInline?: boolean
 }
 
-export const ExtendedWalletList = ({ onConnect, connectors, title, onGoBack, searchable }: ExtendedWalletListProps) => {
+export const ExtendedWalletList = ({
+  onConnect,
+  connectors,
+  title,
+  onGoBack,
+  searchable,
+  isInline = false
+}: ExtendedWalletListProps) => {
   const { theme } = useTheme()
   const [search, setSearch] = useState('')
 
-  const fuzzyConnectors = new Fuse(connectors, {
+  // Guard against connectors missing wallet metadata to avoid runtime errors in the list view
+  const validConnectors = connectors.filter(connector => !!connector._wallet)
+
+  const fuzzyConnectors = new Fuse(validConnectors, {
     keys: ['_wallet.name']
   })
 
   const foundConnectors = fuzzyConnectors.search(search)
 
-  const displayedConnectors = search === '' ? connectors : foundConnectors.map(connector => connector.item)
+  const displayedConnectors = search === '' ? validConnectors : foundConnectors.map(connector => connector.item)
 
   const maxConnectorsInView = searchable ? 6 : 8
   const gutterHeight = 8
@@ -64,7 +65,7 @@ export const ExtendedWalletList = ({ onConnect, connectors, title, onGoBack, sea
   }
 
   return (
-    <div className="p-4">
+    <div className="relative p-4">
       <div className="absolute top-4 left-4">
         <IconButton
           className="bg-button-glass"
@@ -74,16 +75,19 @@ export const ExtendedWalletList = ({ onConnect, connectors, title, onGoBack, sea
         />
       </div>
       <div className="flex justify-center text-primary items-center font-medium mt-2 mb-4">
-        <ModalPrimitive.Title asChild>
+        {isInline ? (
           <Text>{title}</Text>
-        </ModalPrimitive.Title>
+        ) : (
+          <DialogPrimitive.Title asChild>
+            <Text>{title}</Text>
+          </DialogPrimitive.Title>
+        )}
       </div>
       {searchable && (
         <div className="w-full mb-4">
           <SearchInput
             autoFocus
             name="search"
-            leftIcon={SearchIcon}
             value={search}
             onChange={ev => setSearch(ev.target.value)}
             placeholder="Search"

@@ -1,3 +1,5 @@
+'use client'
+
 import { Button, CheckmarkIcon, PINCodeInput, Spinner, Text } from '@0xsequence/design-system'
 import { useEffect, useRef, useState } from 'react'
 
@@ -78,7 +80,9 @@ export const EmailWaasVerify = (props: EmailWaasVerifyProps) => {
           )}
           {!showSentEmail && (
             <div className="flex relative flex-row items-center justify-center gap-2">
-              <Button variant="text" onClick={onClickResend} disabled={isLoadingSendCode} label="Resend email" />
+              <Button variant="text" onClick={onClickResend} disabled={isLoadingSendCode}>
+                Resend email
+              </Button>
               {isLoadingSendCode && <Spinner className="absolute top-0 right-[-18px]" size="sm" />}
             </div>
           )}
@@ -93,10 +97,11 @@ export const EmailWaasVerify = (props: EmailWaasVerifyProps) => {
           <Button
             variant="primary"
             disabled={!isPinCodeValid || isLoading || isLoadingSendCode}
-            label="Confirm"
             onClick={() => onConfirm(waasEmailPinCode.join(''))}
             data-id="verifyButton"
-          />
+          >
+            Confirm
+          </Button>
 
           {isLoading && <Spinner />}
 

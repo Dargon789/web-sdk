@@ -7,16 +7,22 @@ import { createNativeTokenBalance, sortBalancesByType } from '../../utils/helper
 
 import { useIndexerGatewayClient } from './useIndexerGatewayClient.js'
 
-const getTokenBalancesDetails = async (
-  indexerGatewayClient: SequenceIndexerGateway,
-  args: IndexerGateway.GetTokenBalancesDetailsArgs
-) => {
+export type GetTokenBalancesDetailsArgs = IndexerGateway.GetTokenBalancesDetailsRequest
+
+const getTokenBalancesDetails = async (indexerGatewayClient: SequenceIndexerGateway, args: GetTokenBalancesDetailsArgs) => {
   try {
     const res = await indexerGatewayClient.getTokenBalancesDetails(args)
 
     const nativeTokens: TokenBalance[] = res.nativeBalances.flatMap(nativeChainBalance =>
       nativeChainBalance.results.map(nativeTokenBalance =>
-        createNativeTokenBalance(nativeChainBalance.chainId, nativeTokenBalance.accountAddress, nativeTokenBalance.balance)
+        createNativeTokenBalance({
+          chainId: nativeChainBalance.chainId,
+          accountAddress: nativeTokenBalance.accountAddress,
+          balance: nativeTokenBalance.balance,
+          balanceUSD: nativeTokenBalance.balanceUSD,
+          priceUSD: nativeTokenBalance.priceUSD,
+          priceUpdatedAt: nativeTokenBalance.priceUpdatedAt
+        })
       )
     )
 
@@ -129,7 +135,7 @@ const getTokenBalancesDetails = async (
  * }
  * ```
  */
-export const useGetTokenBalancesDetails = (args: IndexerGateway.GetTokenBalancesDetailsArgs, options?: HooksOptions) => {
+export const useGetTokenBalancesDetails = (args: GetTokenBalancesDetailsArgs, options?: HooksOptions) => {
   const indexerGatewayClient = useIndexerGatewayClient()
 
   return useInfiniteQuery({
