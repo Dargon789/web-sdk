@@ -21,8 +21,7 @@ export default defineConfig(() => {
       svgrPlugin()
     ],
     define: {
-      __SEQUENCE_WEB_SDK_PACKAGE_VERSION__: JSON.stringify(process.env.npm_package_version),
-      __SEQUENCE_WEB_SDK_IS_DEV__: JSON.stringify(process.env.DEBUG || false)
+      __SEQUENCE_KIT_PACKAGE_VERSION__: JSON.stringify(process.env.npm_package_version)
     },
     resolve: {
       dedupe: ['wagmi', 'viem']
@@ -32,7 +31,7 @@ export default defineConfig(() => {
     },
     server: {
       minify: false,
-      port: 4444,
+      port: 3000,
       fs: {
         // Allow serving files from one level up to the project root
         allow: ['..']
