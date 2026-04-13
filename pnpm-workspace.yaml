@@ -1,9 +1,86 @@
 packages:
-  - 'packages/*'
-  - 'examples/*'
-minimumReleaseAge: 20160 # If you remove or change this, you will be fired
+  - packages/*
+  - examples/*
+
+minimumReleaseAge: 20160
+
 minimumReleaseAgeExclude:
-- '@0xsequence/*'
-- '@0xtrails/*'
-- '0xtrails'
-- '0xsequence'
+  - '@0xsequence/*'
+  - '@0xtrails/*'
+  - 0xtrails
+  - 0xsequence
+
+onlyBuiltDependencies:
+  - '@opensea/seaport-js'
+  - '@parcel/watcher'
+  - '@prisma/engines'
+  - '@reown/appkit'
+  - bufferutil
+  - esbuild
+  - keccak
+  - msw
+  - prisma
+  - sharp
+  - unrs-resolver
+  - utf-8-validate
+
+overrides:
+  ajv@<6.14.0: '>=6.14.0'
+  axios@>=1.0.0 <=1.13.4: '>=1.13.5'
+  bn.js@<4.12.3: '>=4.12.3'
+  bn.js@>=5.0.0 <5.2.3: '>=5.2.3'
+  cookie@<0.7.0: '>=0.7.0'
+  diff@>=5.0.0 <5.2.2: '>=5.2.2'
+  elliptic@<6.5.6: '>=6.5.6'
+  elliptic@<6.6.0: '>=6.6.0'
+  elliptic@<=6.6.0: '>=6.6.1'
+  elliptic@>=2.0.0 <=6.5.6: '>=6.5.7'
+  elliptic@>=4.0.0 <=6.5.6: '>=6.5.7'
+  elliptic@>=5.2.1 <=6.5.6: '>=6.5.7'
+  esbuild@<=0.24.2: '>=0.25.0'
+  fast-xml-parser@>=4.0.0-beta.3 <=5.5.5: '>=5.5.6'
+  fast-xml-parser@>=5.0.0 <5.3.5: '>=5.3.5'
+  fast-xml-parser@>=5.0.0 <5.3.6: '>=5.3.6'
+  fast-xml-parser@>=5.0.0 <5.3.8: '>=5.3.8'
+  fast-xml-parser@>=5.0.9 <=5.3.3: '>=5.3.4'
+  flatted@<3.4.0: '>=3.4.0'
+  glob@>=10.2.0 <10.5.0: '>=10.5.0'
+  h3@<=1.15.4: '>=1.15.5'
+  hono@<4.12.4: '>=4.12.4'
+  hono@<4.12.7: '>=4.12.7'
+  immutable@>=4.0.0-rc.1 <4.3.8: '>=4.3.8'
+  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
+  minimatch@<3.1.3: '>=3.1.3'
+  minimatch@<3.1.4: '>=3.1.4'
+  minimatch@>=5.0.0 <5.1.7: '>=5.1.7'
+  minimatch@>=5.0.0 <5.1.8: '>=5.1.8'
+  minimatch@>=9.0.0 <9.0.6: '>=9.0.6'
+  minimatch@>=9.0.0 <9.0.7: '>=9.0.7'
+  next@>=0.9.9 <14.2.24: '>=14.2.24'
+  next@>=0.9.9 <14.2.31: '>=14.2.31'
+  next@>=0.9.9 <14.2.32: '>=14.2.32'
+  next@>=10.0.0 <14.2.7: '>=14.2.7'
+  next@>=10.0.0 <15.5.10: '>=15.5.10'
+  next@>=10.0.0 <16.1.7: '>=16.1.7'
+  next@>=13.0 <14.2.30: '>=14.2.30'
+  next@>=13.0.0 <15.0.8: '>=15.0.8'
+  next@>=13.3.0 <14.2.34: '>=14.2.34'
+  next@>=13.3.1-canary.0 <14.2.35: '>=14.2.35'
+  next@>=14.0.0 <14.2.10: '>=14.2.10'
+  next@>=14.0.0 <14.2.21: '>=14.2.21'
+  next@>=14.0.0 <14.2.25: '>=14.2.25'
+  next@>=9.5.0 <15.5.13: '>=15.5.13'
+  next@>=9.5.5 <14.2.15: '>=14.2.15'
+  qs@<6.14.1: '>=6.14.1'
+  qs@>=6.7.0 <=6.14.1: '>=6.14.2'
+  react-router@>=7.0.0 <7.12.0: '>=7.12.0'
+  react-router@>=7.0.0 <=7.11.0: '>=7.12.0'
+  rollup@>=4.0.0 <4.59.0: '>=4.59.0'
+  serialize-javascript@<=7.0.2: '>=7.0.3'
+  socket.io-parser@>=4.0.0 <4.2.6: '>=4.2.6'
+  tmp@<=0.2.3: '>=0.2.4'
+  undici@<6.23.0: '>=6.23.0'
+  undici@<6.24.0: '>=6.24.0'
+  vercel: link:../../../../../home/legion/.local/share/pnpm/global/5/node_modules/vercel
+  ws@>=7.0.0 <7.5.10: '>=7.5.10'
+  ws@>=8.0.0 <8.17.1: '>=8.17.1'
