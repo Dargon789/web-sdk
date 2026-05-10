@@ -24,7 +24,7 @@ const { chains, publicClient, webSocketPublicClient } = configureChains([polygon
 
 const connectors = getDefaultConnectors({
   chains,
-  walletConnectProjectId: 'project_id',
+  walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
   defaultChainId: 137
 })
 
