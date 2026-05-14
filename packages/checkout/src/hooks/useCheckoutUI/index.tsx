@@ -1,13 +1,13 @@
-import { useGetTokenMetadata, useGetContractInfo } from '@0xsequence/hooks'
-import { findSupportedNetwork } from '@0xsequence/network'
-import { Hex } from 'viem'
+import { findSupportedNetwork } from '@0xsequence/connect'
+import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
+import type { Hex } from 'viem'
 
-import { TransakConfig } from '../../contexts/CheckoutModal'
-import { Collectible, CreditCardProviders } from '../../contexts/SelectPaymentModal'
+import type { TransakConfig } from '../../contexts/CheckoutModal.js'
+import type { Collectible, CreditCardProviders } from '../../contexts/SelectPaymentModal.js'
 
-import { useCreditCardPayment, type UseCreditCardPaymentReturn } from './useCreditCardPayment'
-import { useCryptoPayment, type UseCryptoPaymentReturn } from './useCryptoPayment'
-import { useOrderSummary, type UseOrderSummaryReturn } from './useOrderSummary'
+import { useCreditCardPayment, type UseCreditCardPaymentReturn } from './useCreditCardPayment.js'
+import { useCryptoPayment, type UseCryptoPaymentReturn } from './useCryptoPayment.js'
+import { useOrderSummary, type UseOrderSummaryReturn } from './useOrderSummary.js'
 
 interface UseCheckoutUIArgs {
   chain: string | number
@@ -19,6 +19,7 @@ interface UseCheckoutUIArgs {
   targetContractAddress: string
   txData: Hex
   transactionConfirmations?: number
+  slippageBps?: number
   creditCardProvider?: CreditCardProviders
   transakConfig?: TransakConfig
   onSuccess?: (txHash: string) => void
@@ -43,6 +44,7 @@ export const useCheckoutUI = ({
   transactionConfirmations,
   creditCardProvider,
   transakConfig,
+  slippageBps,
   onSuccess,
   onError
 }: UseCheckoutUIArgs): UseCheckoutUIReturn => {
@@ -53,11 +55,16 @@ export const useCheckoutUI = ({
     data: tokenMetadatas,
     isLoading: isLoadingTokenMetadatas,
     error: errorTokenMetadata
-  } = useGetTokenMetadata({
-    chainID: String(chainId),
-    contractAddress: collectionAddress,
-    tokenIDs: [collectible.tokenId]
-  })
+  } = useGetTokenMetadata(
+    {
+      chainID: String(chainId),
+      contractAddress: collectionAddress,
+      tokenIDs: [collectible.tokenId ?? '']
+    },
+    {
+      disabled: !collectible.tokenId
+    }
+  )
 
   const {
     data: dataCollectionInfo,
@@ -138,7 +145,8 @@ export const useCheckoutUI = ({
     isLoadingTokenMetadatas,
     errorTokenMetadata,
     isLoadingCurrencyInfo,
-    errorCurrencyInfo
+    errorCurrencyInfo,
+    slippageBps
   })
 
   return {

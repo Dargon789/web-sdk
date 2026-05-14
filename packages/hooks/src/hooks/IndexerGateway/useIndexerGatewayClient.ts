@@ -1,7 +1,7 @@
 import { SequenceIndexerGateway } from '@0xsequence/indexer'
 import { useMemo } from 'react'
 
-import { useConfig } from '../useConfig'
+import { useConfig } from '../useConfig.js'
 
 /**
  * Hook that provides an indexer gateway client for querying token balances across multiple chains.
@@ -10,7 +10,7 @@ import { useConfig } from '../useConfig'
  *
  * @returns A SequenceIndexerGateway instance
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useIndexerGatewayClient} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useIndexerGatewayClient} for more detailed documentation.
  *
  * @example
  * ```tsx

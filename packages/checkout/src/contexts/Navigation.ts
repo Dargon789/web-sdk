@@ -1,7 +1,8 @@
 'use client'
-import { CreditCardCheckout } from '../contexts'
 
-import { createGenericContext } from './genericContext'
+import type { CreditCardCheckout } from '../contexts/CheckoutModal.js'
+
+import { createGenericContext } from './genericContext.js'
 
 export interface SelectCheckoutNavigation {
   location: 'select-method-checkout'
@@ -55,4 +56,4 @@ type NavigationContext = {
 
 const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
 
-export { useNavigationContext, NavigationContextProvider }
+export { NavigationContextProvider, useNavigationContext }

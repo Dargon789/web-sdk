@@ -1,22 +1,28 @@
-import { IndexerGateway, Page, SequenceIndexerGateway, TokenBalance } from '@0xsequence/indexer'
+import { SequenceIndexerGateway, type IndexerGateway, type Page, type TokenBalance } from '@0xsequence/indexer'
 import { useInfiniteQuery } from '@tanstack/react-query'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
-import { createNativeTokenBalance, sortBalancesByType } from '../../utils/helpers'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
+import { createNativeTokenBalance, sortBalancesByType } from '../../utils/helpers.js'
 
-import { useIndexerGatewayClient } from './useIndexerGatewayClient'
+import { useIndexerGatewayClient } from './useIndexerGatewayClient.js'
 
-const getTokenBalancesDetails = async (
-  indexerGatewayClient: SequenceIndexerGateway,
-  args: IndexerGateway.GetTokenBalancesDetailsArgs
-) => {
+export type GetTokenBalancesDetailsArgs = IndexerGateway.GetTokenBalancesDetailsRequest
+
+const getTokenBalancesDetails = async (indexerGatewayClient: SequenceIndexerGateway, args: GetTokenBalancesDetailsArgs) => {
   try {
     const res = await indexerGatewayClient.getTokenBalancesDetails(args)
 
     const nativeTokens: TokenBalance[] = res.nativeBalances.flatMap(nativeChainBalance =>
       nativeChainBalance.results.map(nativeTokenBalance =>
-        createNativeTokenBalance(nativeChainBalance.chainId, nativeTokenBalance.accountAddress, nativeTokenBalance.balance)
+        createNativeTokenBalance({
+          chainId: nativeChainBalance.chainId,
+          accountAddress: nativeTokenBalance.accountAddress,
+          balance: nativeTokenBalance.balance,
+          balanceUSD: nativeTokenBalance.balanceUSD,
+          priceUSD: nativeTokenBalance.priceUSD,
+          priceUpdatedAt: nativeTokenBalance.priceUpdatedAt
+        })
       )
     )
 
@@ -87,7 +93,7 @@ const getTokenBalancesDetails = async (
  *   - `image`: Token image URL
  *   - `attributes`: Array of token attributes
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetTokenBalancesDetails} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetTokenBalancesDetails} for more detailed documentation.
  *
  * @example
  * ```tsx
@@ -129,7 +135,7 @@ const getTokenBalancesDetails = async (
  * }
  * ```
  */
-export const useGetTokenBalancesDetails = (args: IndexerGateway.GetTokenBalancesDetailsArgs, options?: HooksOptions) => {
+export const useGetTokenBalancesDetails = (args: GetTokenBalancesDetailsArgs, options?: HooksOptions) => {
   const indexerGatewayClient = useIndexerGatewayClient()
 
   return useInfiniteQuery({
@@ -140,7 +146,7 @@ export const useGetTokenBalancesDetails = (args: IndexerGateway.GetTokenBalances
     getNextPageParam: ({ page }) => {
       return page?.more ? page : undefined
     },
-    initialPageParam: { pageSize: args.page?.pageSize } as Page,
+    initialPageParam: { ...args?.page } as Page,
     retry: options?.retry ?? true,
     staleTime: time.oneSecond * 30,
     enabled: args.filter.accountAddresses.length > 0 && !options?.disabled

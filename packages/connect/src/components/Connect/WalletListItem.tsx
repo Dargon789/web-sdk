@@ -1,3 +1,4 @@
+import { truncateAtIndex } from '@0xsequence/connect'
 import {
   Button,
   Card,
@@ -8,30 +9,33 @@ import {
   LinkIcon,
   Spinner,
   Text,
-  Tooltip,
-  truncateAddress
+  Tooltip
 } from '@0xsequence/design-system'
 import React, { useState } from 'react'
 
 export interface WalletListItemProps {
   name: string
   address: string
+  embeddedWalletTitle?: string
   isEmbedded: boolean
   isActive: boolean
   isLinked: boolean
   isReadOnly: boolean
   onDisconnect: () => void
+  onReconnect?: () => void
   onUnlink?: () => void
 }
 
 export const WalletListItem: React.FC<WalletListItemProps> = ({
   name,
   address,
+  embeddedWalletTitle,
   isEmbedded,
   isActive,
   isLinked,
   isReadOnly,
   onDisconnect,
+  onReconnect,
   onUnlink
 }) => {
   const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false)
@@ -50,8 +54,8 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex flex-row items-center gap-1">
             <Text variant="normal" color="primary">
-              {isEmbedded ? 'Embedded - ' : ''}
-              {name}
+              {isEmbedded ? (embeddedWalletTitle ? embeddedWalletTitle : 'Embedded - ') : ''}
+              {isEmbedded && embeddedWalletTitle ? '' : name}
             </Text>
             {isLinked && (
               <Tooltip message="Linked to embedded wallet">
@@ -67,12 +71,16 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
             )}
           </div>
           <Text variant="normal" fontWeight="bold" color="primary">
-            {truncateAddress(address, 8, 5)}
+            {truncateAtIndex(address, 8)}
           </Text>
         </div>
       </div>
 
-      {!isReadOnly && <Button size="xs" variant="glass" label="Disconnect" onClick={onDisconnect} />}
+      {!isReadOnly && (
+        <Button size="xs" variant="secondary" onClick={onDisconnect}>
+          Disconnect
+        </Button>
+      )}
 
       {isReadOnly && isLinked && (
         <div className="flex relative items-center gap-2">
@@ -80,11 +88,20 @@ export const WalletListItem: React.FC<WalletListItemProps> = ({
             <Spinner />
           ) : showUnlinkConfirm ? (
             <div className="flex gap-3">
-              <IconButton size="xs" variant="danger" icon={CheckmarkIcon} onClick={handleUnlink} />
-              <IconButton size="xs" variant="glass" icon={CloseIcon} onClick={() => setShowUnlinkConfirm(false)} />
+              <IconButton size="xs" variant="destructive" icon={CheckmarkIcon} onClick={handleUnlink} />
+              <IconButton size="xs" variant="ghost" icon={CloseIcon} onClick={() => setShowUnlinkConfirm(false)} />
             </div>
           ) : (
-            <Button size="xs" variant="glass" label="Unlink" onClick={() => setShowUnlinkConfirm(true)} />
+            <>
+              {onReconnect && (
+                <Button size="xs" variant="ghost" onClick={onReconnect}>
+                  Reconnect
+                </Button>
+              )}
+              <Button size="xs" variant="ghost" onClick={() => setShowUnlinkConfirm(true)}>
+                Unlink
+              </Button>
+            </>
           )}
         </div>
       )}

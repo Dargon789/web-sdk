@@ -1,9 +1,9 @@
-import { CreateConnectorFn } from 'wagmi'
-import { coinbaseWallet as coinbaseWalletBase, CoinbaseWalletParameters } from 'wagmi/connectors'
+import type { CreateConnectorFn } from 'wagmi'
+import { coinbaseWallet as coinbaseWalletBase, type CoinbaseWalletParameters } from 'wagmi/connectors'
 
-import { Wallet } from '../../types'
+import type { Wallet } from '../../types.js'
 
-import { CoinbaseWalletLogo } from './CoinbaseWalletLogo'
+import { CoinbaseWalletLogo } from './CoinbaseWalletLogo.js'
 
 export const coinbaseWallet = (params: CoinbaseWalletParameters): Wallet => ({
   id: 'coinbase-wallet',

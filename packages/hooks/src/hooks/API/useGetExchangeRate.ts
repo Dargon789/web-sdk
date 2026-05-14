@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
 
-import { useAPIClient } from './useAPIClient'
+import { useAPIClient } from './useAPIClient.js'
 
 /**
  * Hook to fetch current exchange rates from USD to other currencies.
@@ -13,13 +13,13 @@ import { useAPIClient } from './useAPIClient'
  * Used throughout the wallet widget and checkout components to display fiat values
  * for tokens and NFTs.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetExchangeRate} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetExchangeRate} for more detailed documentation.
  *
  * @param toCurrency - The target currency code (e.g., 'EUR', 'GBP', 'JPY').
  *                     If 'USD' is provided, returns 1 as the conversion rate.
  *
  * @param options - Optional configuration options:
- *   - retry: Whether to retry failed requests (defaults to true)
+ *   - retry: Whether to retry failed requests (defaults to false)
  *   - disabled: Whether to disable the query
  *
  * @returns React Query result object containing:
@@ -58,7 +58,7 @@ export const useGetExchangeRate = (toCurrency: string, options?: HooksOptions) =
 
       return res.exchangeRate.value
     },
-    retry: options?.retry ?? true,
+    retry: options?.retry ?? false,
     staleTime: time.oneMinute * 10,
     enabled: !!toCurrency && !options?.disabled
   })

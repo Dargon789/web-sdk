@@ -1,11 +1,12 @@
-import { Price, TokenPrice } from '@0xsequence/api'
+import type { Price, TokenPrice } from '@0xsequence/api'
 import { compareAddress } from '@0xsequence/connect'
-import { TokenBalance, GetTransactionHistoryReturn, Transaction } from '@0xsequence/indexer'
-import { InfiniteData } from '@tanstack/react-query'
+import type { GetTransactionHistoryResponse, TokenBalance, Transaction } from '@0xsequence/indexer'
+import type { InfiniteData } from '@tanstack/react-query'
 import { formatUnits, zeroAddress } from 'viem'
 
-export interface TokenBalanceWithPrice extends TokenBalance {
-  price: Price
+export interface TokenBalanceWithDetails extends TokenBalance {
+  price?: Price
+  _type?: 'coin' | 'collectible' | 'collection'
 }
 
 export const getPercentageColor = (value: number) => {
@@ -92,7 +93,7 @@ export const sortBalancesByType = (balances: TokenBalance[]): SortBalancesByType
 }
 
 export const flattenPaginatedTransactionHistory = (
-  transactionHistoryData: InfiniteData<GetTransactionHistoryReturn> | undefined
+  transactionHistoryData: InfiniteData<GetTransactionHistoryResponse> | undefined
 ) => {
   const transactionHistory: Transaction[] = []
 

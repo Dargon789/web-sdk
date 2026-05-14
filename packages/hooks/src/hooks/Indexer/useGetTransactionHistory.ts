@@ -1,11 +1,11 @@
-import { Page, SequenceIndexer } from '@0xsequence/indexer'
+import { SequenceIndexer, type Page } from '@0xsequence/indexer'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { getAddress } from 'viem'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
 
-import { useIndexerClient } from './useIndexerClient'
+import { useIndexerClient } from './useIndexerClient.js'
 
 interface GetTransactionHistoryArgs {
   accountAddresses: string[]
@@ -76,7 +76,7 @@ const getTransactionHistory = async (
  * It can filter transactions by contract address and token ID, making it useful for both
  * general account history and specific asset history views.
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetTransactionHistory} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetTransactionHistory} for more detailed documentation.
  *
  * @param args - Configuration object for the transaction history query {@link GetTransactionHistoryArgs}
  *
@@ -142,8 +142,8 @@ export const useGetTransactionHistory = (args: UseGetTransactionHistoryArgs, opt
     getNextPageParam: ({ page }) => {
       return page?.more ? page : undefined
     },
-    initialPageParam: { pageSize: args.page?.pageSize } as Page,
-    retry: options?.retry ?? true,
+    initialPageParam: { ...args?.page } as Page,
+    retry: options?.retry ?? false,
     staleTime: time.oneSecond * 30,
     enabled: !!args.chainId && args.accountAddresses.length > 0 && !options?.disabled
   })

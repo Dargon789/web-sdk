@@ -2,9 +2,9 @@ import { cardVariants, ChevronUpDownIcon, cn, NetworkImage, Text } from '@0xsequ
 import { useState } from 'react'
 import { useChainId, useChains, useSwitchChain } from 'wagmi'
 
-import { NetworkRow } from '../Filter/NetworkRow'
+import { ListCardNetwork } from '../ListCard/ListCardNetwork.js'
 
-import { SlideupDrawer } from './SlideupDrawer'
+import { SlideupDrawer } from './SlideupDrawer.js'
 
 const NETWORK_SELECT_HEIGHT = '70px'
 
@@ -37,10 +37,17 @@ export const NetworkSelect = () => {
 
       <ChevronUpDownIcon className="text-muted" />
       {isOpen && (
-        <SlideupDrawer label="Network" onClose={() => setIsOpen(false)}>
+        <SlideupDrawer
+          header={
+            <Text variant="medium" color="primary">
+              Network
+            </Text>
+          }
+          onClose={() => setIsOpen(false)}
+        >
           <div className="flex flex-col gap-2" style={{ overflowY: 'auto' }}>
             {chains.map(chain => (
-              <NetworkRow
+              <ListCardNetwork
                 key={chain.id}
                 chainId={chain.id}
                 isSelected={chain.id === chainId}

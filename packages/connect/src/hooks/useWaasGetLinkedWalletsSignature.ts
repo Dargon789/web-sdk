@@ -1,11 +1,11 @@
 'use client'
 
 import { SequenceWaaS } from '@0xsequence/waas'
-import { useState, useEffect } from 'react'
-import { Address } from 'viem'
-import { Connector } from 'wagmi'
+import { useEffect, useState } from 'react'
+import type { Address } from 'viem'
+import type { Connector } from 'wagmi'
 
-import { CHAIN_ID_FOR_SIGNATURE } from '../constants/walletLinking'
+import { CHAIN_ID_FOR_SIGNATURE } from '../constants/walletLinking.js'
 
 /**
  * Result object returned by the useWaasGetLinkedWalletsSignature hook.

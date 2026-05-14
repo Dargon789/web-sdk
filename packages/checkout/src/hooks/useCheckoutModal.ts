@@ -1,4 +1,4 @@
-import { CheckoutSettings, useCheckoutModalContext } from '../contexts/CheckoutModal'
+import { useCheckoutModalContext, type CheckoutSettings } from '../contexts/CheckoutModal.js'
 
 /**
  * Return type for the useCheckoutModal hook.
@@ -19,18 +19,18 @@ type UseCheckoutModalReturnType = {
  * This hook provides methods to open and close the checkout modal, and access its current settings.
  * Checkout supports credit card payments and crypto payments for purchasing digital assets.
  *
- * Go to {@link https://docs.sequence.xyz/sdk/web/hooks/useCheckoutModal} for more detailed documentation.
+ * Go to {@link https://docs.sequence.xyz/sdk/web/checkout-sdk/hooks/useCheckoutModal} for more detailed documentation.
  *
  * @returns An object containing functions and settings for the Checkout modal {@link UseCheckoutModalReturnType}
  *
  * @example
  * ```tsx
  * import { useCheckoutModal } from '@0xsequence/checkout'
- * import { ChainId } from '@0xsequence/network'
+ * import { ChainId } from '@0xsequence/connect'
  * import { getOrderbookCalldata } from '../utils'
  *
  * const YourComponent = () => {
- *   const { address } = useAccount()
+ *   const { address } = useConnection()
  *   const { triggerCheckout } = useCheckoutModal()
  *
  *   const handleCheckout = () => {

@@ -1,6 +1,6 @@
-import { ContractType, TokenBalance } from '@0xsequence/indexer'
+import { ContractType, type NativeTokenBalance, type TokenBalance } from '@0xsequence/indexer'
 
-import { ZERO_ADDRESS } from '../constants'
+import { ZERO_ADDRESS } from '../constants.js'
 
 export const compareAddress = (a: string, b: string) => {
   return a.toLowerCase() === b.toLowerCase()
@@ -18,13 +18,32 @@ export const splitEvery = (n: number, list: any[]) => {
   return result
 }
 
-export const createNativeTokenBalance = (chainId: number, accountAddress: string, balance: string = '0'): TokenBalance => {
+interface CreateNativeTokenBalanceArgs {
+  chainId: number
+  accountAddress: string
+  balance?: string
+  balanceUSD?: string
+  priceUSD?: string
+  priceUpdatedAt?: string
+}
+
+export const createNativeTokenBalance = ({
+  chainId,
+  accountAddress,
+  balance = '0',
+  balanceUSD = '0',
+  priceUSD = '0',
+  priceUpdatedAt
+}: CreateNativeTokenBalanceArgs | NativeTokenBalance): TokenBalance => {
   return {
     chainId,
     contractAddress: ZERO_ADDRESS,
     accountAddress,
     contractType: ContractType.NATIVE,
     balance,
+    balanceUSD,
+    priceUSD,
+    priceUpdatedAt,
     blockHash: '',
     blockNumber: 0,
     tokenID: '',

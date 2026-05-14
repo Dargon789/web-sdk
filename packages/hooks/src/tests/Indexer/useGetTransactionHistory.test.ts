@@ -1,11 +1,11 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { HttpResponse, http } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
-import { ACCOUNT_ADDRESS, ZERO_ADDRESS } from '../../constants'
-import { UseGetTransactionHistoryArgs, useGetTransactionHistory } from '../../hooks/Indexer/useGetTransactionHistory'
-import { createWrapper } from '../createWrapper'
-import { server } from '../setup'
+import { ACCOUNT_ADDRESS, ZERO_ADDRESS } from '../../constants.js'
+import { useGetTransactionHistory, type UseGetTransactionHistoryArgs } from '../../hooks/Indexer/useGetTransactionHistory.js'
+import { createWrapper } from '../createWrapper.js'
+import { server } from '../setup.js'
 
 const getTransactionHistoryArgs: UseGetTransactionHistoryArgs = {
   chainId: 1,

@@ -1,8 +1,8 @@
 'use client'
 
-import { Transaction } from '@0xsequence/indexer'
+import type { Transaction } from '@0xsequence/indexer'
 
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from './genericContext.js'
 
 export interface CoinDetailsParams {
   contractAddress: string
@@ -27,6 +27,16 @@ export interface CollectibleDetailsNavigation {
   params: CollectibleDetailsParams
 }
 
+export interface CollectionDetailsParams {
+  contractAddress: string
+  chainId: number
+}
+
+export interface CollectionDetailsNavigation {
+  location: 'collection-details'
+  params: CollectionDetailsParams
+}
+
 export interface TransactionDetailsParams {
   transaction: Transaction
 }
@@ -36,44 +46,14 @@ export interface TransactionDetailsNavigation {
   params: TransactionDetailsParams
 }
 
-export interface SearchViewAllParams {
-  defaultTab: 'coins' | 'collections'
-}
-
-export interface SearchViewAllNavigation {
-  location: 'search-view-all'
-  params: SearchViewAllParams
-}
-
 export interface SendCoinParams {
   chainId: number
   contractAddress: string
 }
 
-export interface SwapCoinParams {
-  chainId: number
-  contractAddress: string
-}
-
-export interface SwapCoinListParams {
-  chainId: number
-  contractAddress: string
-  amount: string
-}
-
 export interface SendCoinNavigation {
   location: 'send-coin'
   params: SendCoinParams
-}
-
-export interface SwapCoinNavigation {
-  location: 'swap-coin'
-  params: SwapCoinParams
-}
-
-export interface SwapCoinListNavigation {
-  location: 'swap-coin-list'
-  params: SwapCoinListParams
 }
 
 export interface SendCollectibleParams {
@@ -93,34 +73,26 @@ export interface BasicNavigation {
     | 'send-general'
     | 'swap'
     | 'receive'
+    | 'buy'
     | 'history'
-    | 'legacy-settings'
-    | 'legacy-settings-general'
-    | 'legacy-settings-currency'
-    | 'legacy-settings-networks'
     | 'settings'
     | 'settings-wallets'
-    | 'settings-networks'
     | 'settings-currency'
     | 'settings-profiles'
     | 'settings-apps'
     | 'settings-preferences'
     | 'connect-dapp'
     | 'search'
-    | 'search-tokens'
-    | 'search-collectibles'
 }
 
 export type Navigation =
   | BasicNavigation
   | CoinDetailsNavigation
   | CollectibleDetailsNavigation
+  | CollectionDetailsNavigation
   | TransactionDetailsNavigation
-  | SearchViewAllNavigation
   | SendCoinNavigation
   | SendCollectibleNavigation
-  | SwapCoinNavigation
-  | SwapCoinListNavigation
 
 export type History = Navigation[]
 
@@ -133,4 +105,4 @@ type NavigationContext = {
 
 const [useNavigationContext, NavigationContextProvider] = createGenericContext<NavigationContext>()
 
-export { useNavigationContext, NavigationContextProvider }
+export { NavigationContextProvider, useNavigationContext }

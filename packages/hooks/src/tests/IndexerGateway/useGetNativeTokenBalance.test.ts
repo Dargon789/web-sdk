@@ -1,11 +1,11 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { HttpResponse, http } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
-import { ACCOUNT_ADDRESS } from '../../constants'
-import { useGetNativeTokenBalance } from '../../hooks/IndexerGateway/useGetNativeTokenBalance'
-import { createWrapper } from '../createWrapper'
-import { server } from '../setup'
+import { ACCOUNT_ADDRESS } from '../../constants.js'
+import { useGetNativeTokenBalance } from '../../hooks/IndexerGateway/useGetNativeTokenBalance.js'
+import { createWrapper } from '../createWrapper.js'
+import { server } from '../setup.js'
 
 describe('useGetNativeTokenBalance', () => {
   it('should return data with balance', async () => {

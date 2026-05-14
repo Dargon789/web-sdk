@@ -1,8 +1,10 @@
-import { ConnectedWallet, useWallets, LocalStorageKey, useWalletSettings } from '@0xsequence/connect'
+'use client'
+
+import { LocalStorageKey, useWallets, useWalletSettings, type ConnectedWallet } from '@0xsequence/connect'
 import { Observable, observable } from 'micro-observables'
 import { useConfig } from 'wagmi'
 
-import { FiatCurrency, defaultFiatCurrency } from '../constants'
+import { defaultFiatCurrency, type FiatCurrency } from '../constants/index.js'
 
 interface MutableObservable<T> extends Observable<T> {
   set(value: T): void
@@ -21,17 +23,17 @@ interface Settings {
   selectedNetworks: number[]
   allNetworks: number[]
   selectedWallets: ConnectedWallet[]
-  selectedCollections: SettingsCollection[]
+  showCollections: boolean
   hideUnlistedTokensObservable: Observable<boolean>
   fiatCurrencyObservable: Observable<FiatCurrency>
   selectedNetworksObservable: Observable<number[]>
   selectedWalletsObservable: Observable<ConnectedWallet[]>
-  selectedCollectionsObservable: Observable<SettingsCollection[]>
+  showCollectionsObservable: Observable<boolean>
   setFiatCurrency: (newFiatCurrency: FiatCurrency) => void
   setHideUnlistedTokens: (newState: boolean) => void
   setSelectedWallets: (newWallets: ConnectedWallet[]) => void
   setSelectedNetworks: (newNetworks: number[]) => void
-  setSelectedCollections: (newCollections: SettingsCollection[]) => void
+  setShowCollections: (newState: boolean) => void
 }
 
 type SettingsItems = {
@@ -39,7 +41,7 @@ type SettingsItems = {
   fiatCurrencyObservable: MutableObservable<FiatCurrency>
   selectedWalletsObservable: MutableObservable<ConnectedWallet[]>
   selectedNetworksObservable: MutableObservable<number[]>
-  selectedCollectionsObservable: MutableObservable<SettingsCollection[]>
+  showCollectionsObservable: MutableObservable<boolean>
 }
 
 let settingsObservables: SettingsItems | null = null
@@ -84,12 +86,24 @@ export const useSettings = (): Settings => {
     ...new Set([...chains.map(chain => chain.id), ...(readOnlyNetworks || []), ...displayedAssets.map(asset => asset.chainId)])
   ]
 
+  const buildDefaultObservables = (): SettingsItems => ({
+    hideUnlistedTokensObservable: observable(true),
+    fiatCurrencyObservable: observable(defaultFiatCurrency),
+    selectedWalletsObservable: observable(allWallets),
+    selectedNetworksObservable: observable(allNetworks),
+    showCollectionsObservable: observable(false)
+  })
+
   const getSettingsFromStorage = (): SettingsItems => {
     let hideUnlistedTokens = true
     let fiatCurrency = defaultFiatCurrency
     let selectedWallets: ConnectedWallet[] = allWallets
     let selectedNetworks: number[] = allNetworks
-    let selectedCollections: SettingsCollection[] = []
+    let showCollections = false
+
+    if (typeof window === 'undefined') {
+      return buildDefaultObservables()
+    }
 
     try {
       const settingsStorage = localStorage.getItem(LocalStorageKey.Settings)
@@ -125,15 +139,13 @@ export const useSettings = (): Settings => {
           }
         })
 
-        const hasInvalidNetworksSelection = selectedNetworks.length > 1 && selectedNetworks.length !== allNetworks.length
-
-        if (hasInvalidNetworks || hasInvalidNetworksSelection) {
+        if (hasInvalidNetworks) {
           selectedNetworks = allNetworks
           localStorage.setItem(LocalStorageKey.Settings, JSON.stringify({ ...settings, selectedNetworks: allNetworks }))
         }
       }
-      if (settings?.selectedCollections !== undefined) {
-        selectedCollections = settings?.selectedCollections
+      if (settings?.showCollections !== undefined) {
+        showCollections = settings?.showCollections
       }
     } catch (e) {
       console.error(e, 'Failed to fetch settings')
@@ -144,23 +156,20 @@ export const useSettings = (): Settings => {
       fiatCurrencyObservable: observable(fiatCurrency),
       selectedWalletsObservable: observable(selectedWallets),
       selectedNetworksObservable: observable(selectedNetworks),
-      selectedCollectionsObservable: observable(selectedCollections)
+      showCollectionsObservable: observable(showCollections)
     }
   }
 
   const resetSettings = () => {
     if (settingsObservables) {
       const selectedWallets = settingsObservables.selectedWalletsObservable.get()
-      const selectedNetworks = settingsObservables.selectedNetworksObservable.get()
 
       const isPartialSelection = selectedWallets.length > 1 && selectedWallets.length !== allWallets.length
       const hasInvalidWallets =
         selectedWallets.some(wallet => !allWallets.some((w: ConnectedWallet) => w.address === wallet.address)) ||
         isPartialSelection
 
-      const hasInvalidNetworksSelection = selectedNetworks.length > 1 && selectedNetworks.length !== allNetworks.length
-
-      if (hasInvalidWallets || hasInvalidNetworksSelection || !selectedWallets.length) {
+      if (hasInvalidWallets || !selectedWallets.length) {
         return true
       }
     }
@@ -176,7 +185,7 @@ export const useSettings = (): Settings => {
     fiatCurrencyObservable,
     selectedWalletsObservable,
     selectedNetworksObservable,
-    selectedCollectionsObservable
+    showCollectionsObservable
   } = settingsObservables
 
   const setHideUnlistedTokens = (newState: boolean) => {
@@ -203,27 +212,26 @@ export const useSettings = (): Settings => {
       selectedNetworksObservable.set(allNetworks)
     } else {
       selectedNetworksObservable.set(newSelectedNetworks)
-      selectedCollectionsObservable.set([])
     }
     updateLocalStorage()
   }
 
-  const setSelectedCollections = (newSelectedCollections: SettingsCollection[]) => {
-    if (newSelectedCollections.length === 0) {
-      selectedCollectionsObservable.set([])
-    } else {
-      selectedCollectionsObservable.set(newSelectedCollections)
-    }
+  const setShowCollections = (newState: boolean) => {
+    showCollectionsObservable.set(newState)
     updateLocalStorage()
   }
 
   const updateLocalStorage = () => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
     const newSettings = {
       hideUnlistedTokens: hideUnlistedTokensObservable.get(),
       fiatCurrency: fiatCurrencyObservable.get(),
       selectedWallets: selectedWalletsObservable.get(),
       selectedNetworks: selectedNetworksObservable.get(),
-      selectedCollections: selectedCollectionsObservable.get()
+      showCollections: showCollectionsObservable.get()
     }
     console.log('settings updated', newSettings)
     localStorage.setItem(LocalStorageKey.Settings, JSON.stringify(newSettings))
@@ -235,16 +243,16 @@ export const useSettings = (): Settings => {
     selectedWallets: selectedWalletsObservable.get(),
     selectedNetworks: selectedNetworksObservable.get(),
     allNetworks: allNetworks,
-    selectedCollections: selectedCollectionsObservable.get(),
+    showCollections: showCollectionsObservable.get(),
     hideUnlistedTokensObservable,
     fiatCurrencyObservable,
     selectedWalletsObservable,
     selectedNetworksObservable,
-    selectedCollectionsObservable,
+    showCollectionsObservable,
     setFiatCurrency,
     setHideUnlistedTokens,
     setSelectedWallets,
     setSelectedNetworks,
-    setSelectedCollections
+    setShowCollections
   }
 }

@@ -36,13 +36,13 @@ const App = () => {
 }
 ```
 
-# NFT Checkout (Sequence Pay)
+# NFT Checkout
 
 <div align="center">
   <img src="../../public/docs/checkout-modal.png">
 </div>
 
-Sequence Pay Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
+NFT Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
 
 ## Basic Usage
 
@@ -100,9 +100,9 @@ const MyComponent = () => {
       recipientAddress: address,
       currencyAddress,
       collectionAddress,
-      creditCardProviders: ['sardine'],
+      creditCardProviders: ['transak'],
       copyrightText: 'ⓒ2024 Sequence',
-      onSuccess: (txnHash: string) => {
+      onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
       },
       onError: (error: Error) => {
@@ -140,10 +140,10 @@ The `@0xsequence/checkout` library indeed simplifies the integration of Web3 pay
 
 ```js
 import { useERC1155SaleContractCheckout } from "@0xsequence/checkout";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 
 const MyComponent = () => {
-  const { address: userAddress } = useAccount();
+  const { address: userAddress } = useConnection();
   const { openCheckoutModal } = useERC1155SaleContractCheckout({
     chain: 80001, // chainId of the chain the collectible is on
     contractAddress: "0x0327b2f274e04d292e74a06809bcd687c63a4ba4", // address of the contract handling the minting function
@@ -156,7 +156,7 @@ const MyComponent = () => {
         quantity: "1",
       },
     ],
-    onSuccess: (txnHash: string) => {
+    onSuccess: (txnHash?: string) => {
       console.log("success!", txnHash);
     },
     onError: (error: Error) => {
@@ -274,11 +274,7 @@ const CustomCheckoutUI = () => {
     currencyAddress,
     collectionAddress,
     creditCardProvider: 'transak' as CreditCardProviders,
-    transakConfig: {
-      contractId,
-      apiKey: '5911d9ec-46b5-48fa-a755-d59a715ff0cf'
-    },
-    onSuccess: (txnHash: string) => {
+    onSuccess: (txnHash?: string) => {
       console.log('success!', txnHash)
     },
     onError: (error: Error) => {

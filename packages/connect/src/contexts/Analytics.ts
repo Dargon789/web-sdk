@@ -1,15 +1,15 @@
 'use client'
 
-import { SequenceClient } from '@0xsequence/provider'
-import React from 'react'
+import type { SequenceClient } from '@0xsequence/provider'
+import type { Dispatch, SetStateAction } from 'react'
 
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from './genericContext.js'
 
 type AnalyticsContext = {
-  setAnalytics: React.Dispatch<React.SetStateAction<SequenceClient['analytics']>>
+  setAnalytics: Dispatch<SetStateAction<SequenceClient['analytics']>>
   analytics: SequenceClient['analytics']
 }
 
 const [useAnalyticsContext, AnalyticsContextProvider] = createGenericContext<AnalyticsContext>()
 
-export { useAnalyticsContext, AnalyticsContextProvider }
+export { AnalyticsContextProvider, useAnalyticsContext }

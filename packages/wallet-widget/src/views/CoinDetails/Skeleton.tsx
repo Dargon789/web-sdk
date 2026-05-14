@@ -1,8 +1,7 @@
-import { Button, SendIcon, Skeleton, Text } from '@0xsequence/design-system'
+import { Button, SendIcon, Skeleton, SwapIcon, Text } from '@0xsequence/design-system'
 
-import { NetworkBadge } from '../../components/NetworkBadge'
-import { TransactionHistorySkeleton } from '../../components/TransactionHistoryList/TransactionHistorySkeleton'
-import { HEADER_HEIGHT } from '../../constants'
+import { NetworkBadge } from '../../components/NetworkBadge.js'
+import { TransactionHistorySkeleton } from '../../components/TransactionHistoryList/TransactionHistorySkeleton.js'
 
 interface CoinDetailsSkeletonProps {
   chainId: number
@@ -11,8 +10,8 @@ interface CoinDetailsSkeletonProps {
 
 export const CoinDetailsSkeleton = ({ chainId, isReadOnly }: CoinDetailsSkeletonProps) => {
   return (
-    <div style={{ paddingTop: HEADER_HEIGHT }}>
-      <div className="flex flex-col gap-10 pb-5 px-4 pt-0" style={{ marginTop: '-20px' }}>
+    <div>
+      <div className="flex flex-col gap-10 pb-5 px-4 pt-0">
         <div className="flex mb-10 gap-2 items-center justify-center flex-col">
           <Skeleton style={{ width: '64px', height: '64px' }} />
           <Skeleton style={{ height: '28px', width: '70px' }} />
@@ -28,14 +27,16 @@ export const CoinDetailsSkeleton = ({ chainId, isReadOnly }: CoinDetailsSkeleton
           </div>
         </div>
         {!isReadOnly && (
-          <Button
-            className="w-full text-primary"
-            variant="primary"
-            leftIcon={SendIcon}
-            label="Send"
-            disabled
-            onClick={() => {}}
-          />
+          <div className="flex gap-2">
+            <Button className="w-full text-primary bg-background-secondary" disabled onClick={() => {}}>
+              <SendIcon />
+              Send
+            </Button>
+            <Button className="w-full text-primary bg-background-secondary" disabled onClick={() => {}}>
+              <SwapIcon />
+              Swap
+            </Button>
+          </div>
         )}
         <div>
           <TransactionHistorySkeleton />

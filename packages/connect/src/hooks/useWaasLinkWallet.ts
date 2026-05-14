@@ -1,11 +1,11 @@
 'use client'
 
 import { useAPIClient } from '@0xsequence/hooks'
-import { SequenceWaaS } from '@0xsequence/waas'
+import type { SequenceWaaS } from '@0xsequence/waas'
 import { useState } from 'react'
-import { Connector } from 'wagmi'
+import type { Connector } from 'wagmi'
 
-import { CHAIN_ID_FOR_SIGNATURE } from '../constants/walletLinking'
+import { CHAIN_ID_FOR_SIGNATURE } from '../constants/walletLinking.js'
 
 /**
  * Parameters required for linking a child wallet to a parent WaaS wallet.

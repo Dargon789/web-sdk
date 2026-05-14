@@ -1,12 +1,12 @@
-import { GetTokenMetadataArgs, SequenceMetadata } from '@0xsequence/metadata'
+import { SequenceMetadata, type GetTokenMetadataArgs } from '@0xsequence/metadata'
 import { useQuery } from '@tanstack/react-query'
 
-import { QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
-import { splitEvery } from '../../utils/helpers'
-import { useConfig } from '../useConfig'
+import { QUERY_KEYS, time } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
+import { splitEvery } from '../../utils/helpers.js'
+import { useConfig } from '../useConfig.js'
 
-import { useMetadataClient } from './useMetadataClient'
+import { useMetadataClient } from './useMetadataClient.js'
 
 const getTokenMetadata = async (metadataClient: SequenceMetadata, args: GetTokenMetadataArgs, imageProxyUrl: string) => {
   const { chainID, contractAddress, tokenIDs } = args
@@ -44,7 +44,7 @@ const getTokenMetadata = async (metadataClient: SequenceMetadata, args: GetToken
  * Optimized for batch fetching with automatic chunking of token IDs to respect
  * rate limits (50 tokens per request).
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetTokenMetadata} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetTokenMetadata} for more detailed documentation.
  *
  * @param getTokenMetadataArgs - Arguments for fetching token metadata
  * @param getTokenMetadataArgs.chainID - Chain ID as string (e.g., "1" for Ethereum mainnet)
@@ -52,7 +52,7 @@ const getTokenMetadata = async (metadataClient: SequenceMetadata, args: GetToken
  * @param getTokenMetadataArgs.tokenIDs - Array of token IDs to fetch metadata for. Each ID represents a specific token
  * @param options - Optional configuration for the query behavior
  * @param options.disabled - If true, disables the query from automatically running
- * @param options.retry - If true (default), retries failed queries
+ * @param options.retry - If true, retries failed queries
  *
  * Query configuration:
  * - Marks data as stale after 1 hour
@@ -127,7 +127,7 @@ export const useGetTokenMetadata = (args: GetTokenMetadataArgs, options?: HooksO
   return useQuery({
     queryKey: [QUERY_KEYS.useGetTokenMetadata, args, options],
     queryFn: () => getTokenMetadata(metadataClient, args, env.imageProxyUrl),
-    retry: options?.retry ?? true,
+    retry: options?.retry ?? false,
     staleTime: time.oneHour,
     enabled: !!args.chainID && !!args.contractAddress && !options?.disabled
   })

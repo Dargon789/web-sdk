@@ -1,17 +1,18 @@
-import { SequenceIndexerGateway } from '@0xsequence/indexer'
+import { ContractVerificationStatus, type SequenceIndexerGateway } from '@0xsequence/indexer'
 import { useQuery } from '@tanstack/react-query'
 
-import { ZERO_ADDRESS, QUERY_KEYS, time } from '../../constants'
-import { HooksOptions } from '../../types'
-import { compareAddress, createNativeTokenBalance } from '../../utils/helpers'
+import { QUERY_KEYS, time, ZERO_ADDRESS } from '../../constants.js'
+import type { HooksOptions } from '../../types/hooks.js'
+import { compareAddress, createNativeTokenBalance } from '../../utils/helpers.js'
 
-import { useIndexerGatewayClient } from './useIndexerGatewayClient'
+import { useIndexerGatewayClient } from './useIndexerGatewayClient.js'
 
 export interface GetSingleTokenBalanceArgs {
   chainId: number
   accountAddress: string
   contractAddress: string
   tokenId?: string
+  hideUnlistedTokens?: boolean
 }
 
 const getSingleTokenBalance = async (args: GetSingleTokenBalanceArgs, indexerGatewayClient: SequenceIndexerGateway) => {
@@ -20,12 +21,22 @@ const getSingleTokenBalance = async (args: GetSingleTokenBalanceArgs, indexerGat
     filter: {
       accountAddresses: [args.accountAddress],
       contractWhitelist: [args.contractAddress],
-      omitNativeBalances: false
+      omitNativeBalances: false,
+      contractStatus: args.hideUnlistedTokens ? ContractVerificationStatus.VERIFIED : ContractVerificationStatus.ALL
     }
   })
 
   if (compareAddress(args.contractAddress, ZERO_ADDRESS)) {
-    return createNativeTokenBalance(args.chainId, args.accountAddress, balance.nativeBalances[0].results[0].balance)
+    const nativeBalance = balance.nativeBalances[0].results[0]
+
+    return createNativeTokenBalance({
+      chainId: args.chainId,
+      accountAddress: args.accountAddress,
+      balance: nativeBalance.balance,
+      balanceUSD: nativeBalance.balanceUSD,
+      priceUSD: nativeBalance.priceUSD,
+      priceUpdatedAt: nativeBalance.priceUpdatedAt
+    })
   } else {
     if (args.tokenId) {
       return balance.balances[0].results.find(result => result.tokenID === args.tokenId)
@@ -48,15 +59,15 @@ const getSingleTokenBalance = async (args: GetSingleTokenBalanceArgs, indexerGat
  *
  * @returns Query result containing the token balance
  *
- * @see {@link https://docs.sequence.xyz/sdk/web/hooks/useGetSingleTokenBalanceSummary} for more detailed documentation.
+ * @see {@link https://docs.sequence.xyz/sdk/web/hooks-sdk/hooks/useGetSingleTokenBalance} for more detailed documentation.
  *
  * @example
  * ```tsx
- * import { useGetSingleTokenBalanceSummary, ZERO_ADDRESS } from '@0xsequence/hooks'
+ * import { useGetSingleTokenBalance, ZERO_ADDRESS } from '@0xsequence/hooks'
  *
  * // Fetch native ETH balance
  * function NativeBalance() {
- *   const { data: ethBalance } = useGetSingleTokenBalanceSummary({
+ *   const { data: ethBalance } = useGetSingleTokenBalance({
  *     chainId: 1,
  *     accountAddress: '0x123...',
  *     contractAddress: ZERO_ADDRESS
@@ -66,7 +77,7 @@ const getSingleTokenBalance = async (args: GetSingleTokenBalanceArgs, indexerGat
  *
  * // Fetch USDC balance
  * function TokenBalance() {
- *   const { data: usdcBalance } = useGetSingleTokenBalanceSummary({
+ *   const { data: usdcBalance } = useGetSingleTokenBalance({
  *     chainId: 1,
  *     accountAddress: '0x123...',
  *     contractAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' // USDC
@@ -81,9 +92,17 @@ export const useGetSingleTokenBalance = (args: GetSingleTokenBalanceArgs, option
   return useQuery({
     queryKey: [QUERY_KEYS.useGetSingleTokenBalance, args, options],
     queryFn: async () => {
-      return await getSingleTokenBalance(args, indexerGatewayClient)
+      const tokenBalance = await getSingleTokenBalance(args, indexerGatewayClient)
+
+      if (!tokenBalance) {
+        throw new Error(
+          `Token balance not found for ${args.accountAddress} on chain ${args.chainId} for contract ${args.contractAddress}`
+        )
+      }
+
+      return tokenBalance
     },
-    retry: options?.retry ?? true,
+    retry: options?.retry ?? false,
     staleTime: time.oneSecond * 30,
     enabled: !!args.chainId && !!args.accountAddress && !options?.disabled
   })

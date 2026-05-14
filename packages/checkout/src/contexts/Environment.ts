@@ -1,15 +1,12 @@
 'use client'
 
-import { createGenericContext } from './genericContext'
+import { createGenericContext } from './genericContext.js'
 
 export interface EnvironmentOverrides {
   marketplaceApiUrl: string
-  transakApiUrl: string
-  transakApiKey: string
-  sardineCheckoutUrl: string
-  sardineOnRampUrl: string
+  forteWidgetUrl: string
 }
 
 const [useEnvironmentContext, EnvironmentContextProvider] = createGenericContext<EnvironmentOverrides>()
 
-export { useEnvironmentContext, EnvironmentContextProvider }
+export { EnvironmentContextProvider, useEnvironmentContext }

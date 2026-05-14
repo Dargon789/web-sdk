@@ -1,11 +1,10 @@
-import { formatAddress, useOpenConnectModal, useWallets } from '@0xsequence/connect'
-import { cardVariants, cn, Text, Divider, IconButton, CheckmarkIcon, CloseIcon, Spinner } from '@0xsequence/design-system'
+import { useOpenConnectModal, useWallets } from '@0xsequence/connect'
+import { cardVariants, CheckmarkIcon, CloseIcon, cn, IconButton, Separator, Spinner, Text } from '@0xsequence/design-system'
 import { useState } from 'react'
 
-import { CopyButton } from '../../components/CopyButton'
-import { MediaIconWrapper } from '../../components/IconWrappers'
-import { ListCardSelect } from '../../components/ListCard/ListCardSelect'
-import { WalletAccountGradient } from '../../components/WalletAccountGradient'
+import { ListCard } from '../../components/ListCard/ListCard.js'
+import { ListCardWallet } from '../../components/ListCard/ListCardWallet.js'
+import { WalletAccountGradient } from '../../components/WalletAccountGradient.js'
 
 export const SettingsWallets = () => {
   const { wallets, disconnectWallet } = useWallets()
@@ -24,7 +23,7 @@ export const SettingsWallets = () => {
         className={cn(cardVariants({ clickable: true }), 'flex flex-row justify-between items-center rounded-full h-9')}
         onClick={onClick}
       >
-        <Text color="primary" fontWeight="bold" variant="normal">
+        <Text color="primary" fontWeight="bold" variant="normal" nowrap>
           {label}
         </Text>
       </div>
@@ -51,66 +50,59 @@ export const SettingsWallets = () => {
   }
 
   return (
-    <div className="flex flex-col justify-between" style={{ height: '100%' }}>
-      <div className="flex flex-col px-4 pb-4 gap-2" style={{ paddingBottom: 'calc(77px + 1px + 16px)' }}>
+    <div className="flex flex-col justify-between">
+      <div className="flex flex-col px-4 pb-4 gap-2">
         {wallets.length > 1 && (
-          <ListCardSelect
+          <ListCard
             key="all"
-            type="custom"
             disabled
             rightChildren={
               isUnlinking ? (
                 <Spinner />
               ) : disconnectConfirm === 'All' ? (
                 <div className="flex gap-3">
-                  <IconButton size="xs" variant="danger" icon={CheckmarkIcon} onClick={() => handleDisconnect()} />
-                  <IconButton size="xs" variant="glass" icon={CloseIcon} onClick={() => setDisconnectConfirm(null)} />
+                  <IconButton size="xs" variant="destructive" icon={CheckmarkIcon} onClick={() => handleDisconnect()} />
+                  <IconButton size="xs" variant="ghost" icon={CloseIcon} onClick={() => setDisconnectConfirm(null)} />
                 </div>
               ) : (
                 <DisconnectButton label="Disconnect All" onClick={() => confrimDisconnectAll()} />
               )
             }
           >
-            <MediaIconWrapper iconList={wallets.map(wallet => wallet.address)} size="sm" isAccount />
+            <WalletAccountGradient accountAddresses={wallets.map(wallet => wallet.address)} />
             <Text color="primary" fontWeight="medium" variant="normal">
               All
             </Text>
-          </ListCardSelect>
+          </ListCard>
         )}
         {wallets.map(wallet => (
-          <ListCardSelect
-            key={wallet.address}
-            type="custom"
+          <ListCardWallet
+            key="all"
             disabled
+            wallet={wallet}
             rightChildren={
               isUnlinking && disconnectConfirm === wallet.address ? (
                 <Spinner />
               ) : disconnectConfirm === wallet.address ? (
                 <div className="flex gap-3">
-                  <IconButton size="xs" variant="danger" icon={CheckmarkIcon} onClick={() => handleDisconnect()} />
-                  <IconButton size="xs" variant="glass" icon={CloseIcon} onClick={() => setDisconnectConfirm(null)} />
+                  <IconButton size="xs" variant="destructive" icon={CheckmarkIcon} onClick={() => handleDisconnect()} />
+                  <IconButton size="xs" variant="ghost" icon={CloseIcon} onClick={() => setDisconnectConfirm(null)} />
                 </div>
               ) : (
                 <DisconnectButton label="Disconnect" onClick={() => confirmDisconnect(wallet.address)} />
               )
             }
-          >
-            <WalletAccountGradient accountAddress={wallet.address} size={'small'} />
-            <Text className="flex flex-row gap-1 items-center" color="primary" fontWeight="medium" variant="normal">
-              {formatAddress(wallet.address)}
-              <CopyButton text={wallet.address} buttonVariant="icon" />
-            </Text>
-          </ListCardSelect>
+          />
         ))}
       </div>
 
       <div className="bg-background-primary" style={{ position: 'absolute', bottom: 0, width: '100%' }}>
-        <Divider className="my-0" />
+        <Separator className="my-0" />
         <div className="rounded-none m-4">
           <div
             className={cn(
               cardVariants({ clickable: true }),
-              'flex justify-center items-center bg-gradient-primary rounded-full gap-2 p-3'
+              'flex bg-background-secondary justify-center items-center rounded-full gap-2 p-3'
             )}
             onClick={() => onClickAddWallet()}
           >

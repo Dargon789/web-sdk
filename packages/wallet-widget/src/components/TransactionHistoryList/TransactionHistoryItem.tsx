@@ -1,13 +1,13 @@
-import { TokenPrice } from '@0xsequence/api'
+import type { TokenPrice } from '@0xsequence/api'
 import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/connect'
-import { ArrowRightIcon, Text, TransactionIcon, Skeleton, NetworkImage, TokenImage } from '@0xsequence/design-system'
+import { ArrowRightIcon, NetworkImage, Skeleton, Text, TokenImage, TransactionIcon } from '@0xsequence/design-system'
 import { useGetCoinPrices, useGetExchangeRate } from '@0xsequence/hooks'
-import { Transaction, TxnTransfer, TxnTransferType } from '@0xsequence/indexer'
+import { TxnTransferType, type Transaction, type TxnTransfer } from '@0xsequence/indexer'
 import dayjs from 'dayjs'
 import { formatUnits, zeroAddress } from 'viem'
 import { useConfig } from 'wagmi'
 
-import { useSettings, useNavigation } from '../../hooks'
+import { useNavigation, useSettings } from '../../hooks/index.js'
 
 interface TransactionHistoryItemProps {
   transaction: Transaction
@@ -121,6 +121,7 @@ export const TransactionHistoryItem = ({ transaction }: TransactionHistoryItemPr
   const getTransfer = ({ transfer, isFirstItem }: GetTransfer) => {
     const { amounts } = transfer
     const date = dayjs(transaction.timestamp).format('MMM DD, YYYY')
+
     return (
       <div className="flex gap-2 w-full flex-col justify-between">
         <div className="flex flex-row justify-between">

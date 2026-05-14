@@ -1,6 +1,6 @@
 import { Card, Text, TokenImage } from '@0xsequence/design-system'
 
-import { SelectedIndicator } from './SelectedIndicator'
+import { SelectedIndicator } from './SelectedIndicator.js'
 
 interface CryptoOptionProps {
   currencyName: string
@@ -35,9 +35,9 @@ export const CryptoOption = ({
     <Card className="flex w-full justify-between p-4 cursor-pointer" onClick={onClickCard}>
       <div className="flex flex-row gap-3">
         <div className="w-fit">
-          <TokenImage src={iconUrl} size="lg" symbol={symbol} withNetwork={chainId} disableAnimation />
+          <TokenImage src={iconUrl} size="lg" symbol={symbol} withNetwork={chainId} />
         </div>
-        <div className="flex flex-col justify-between">
+        <div className="flex flex-col justify-center">
           <Text
             className="whitespace-nowrap"
             variant="normal"
@@ -51,18 +51,20 @@ export const CryptoOption = ({
           >
             {currencyName}
           </Text>
-          <Text
-            className="whitespace-nowrap"
-            variant="normal"
-            color="muted"
-            ellipsis
-            style={{
-              overflow: 'hidden',
-              width: '215px'
-            }}
-          >
-            {`${price} ${symbol}`}
-          </Text>
+          {price && (
+            <Text
+              className="whitespace-nowrap"
+              variant="normal"
+              color="muted"
+              ellipsis
+              style={{
+                overflow: 'hidden',
+                width: '215px'
+              }}
+            >
+              {`${price} ${symbol}`}
+            </Text>
+          )}
         </div>
       </div>
       <div className="flex flex-row justify-center items-center gap-3">
