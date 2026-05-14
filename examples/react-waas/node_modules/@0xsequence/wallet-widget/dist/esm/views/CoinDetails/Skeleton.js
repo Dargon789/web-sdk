@@ -1,0 +1,8 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Button, SendIcon, Skeleton, SwapIcon, Text } from '@0xsequence/design-system';
+import { NetworkBadge } from '../../components/NetworkBadge.js';
+import { TransactionHistorySkeleton } from '../../components/TransactionHistoryList/TransactionHistorySkeleton.js';
+export const CoinDetailsSkeleton = ({ chainId, isReadOnly }) => {
+    return (_jsx("div", { children: _jsxs("div", { className: "flex flex-col gap-10 pb-5 px-4 pt-0", children: [_jsxs("div", { className: "flex mb-10 gap-2 items-center justify-center flex-col", children: [_jsx(Skeleton, { style: { width: '64px', height: '64px' } }), _jsx(Skeleton, { style: { height: '28px', width: '70px' } }), _jsx(NetworkBadge, { chainId: chainId })] }), _jsxs("div", { children: [_jsx(Text, { variant: "normal", fontWeight: "medium", color: "muted", children: "Balance" }), _jsxs("div", { className: "flex flex-row items-end justify-between", children: [_jsx(Skeleton, { style: { width: '150px', height: '36px' } }), _jsx(Skeleton, { style: { width: '33px', height: '17px' } })] })] }), !isReadOnly && (_jsxs("div", { className: "flex gap-2", children: [_jsxs(Button, { className: "w-full text-primary bg-background-secondary", disabled: true, onClick: () => { }, children: [_jsx(SendIcon, {}), "Send"] }), _jsxs(Button, { className: "w-full text-primary bg-background-secondary", disabled: true, onClick: () => { }, children: [_jsx(SwapIcon, {}), "Swap"] })] })), _jsx("div", { children: _jsx(TransactionHistorySkeleton, {}) })] }) }));
+};
+//# sourceMappingURL=Skeleton.js.map

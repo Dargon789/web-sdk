@@ -1,0 +1,1 @@
+{"version":3,"file":"TransactionHistoryItem.d.ts","sourceRoot":"","sources":["../../../../src/components/TransactionHistoryList/TransactionHistoryItem.tsx"],"names":[],"mappings":"AAEA,OAAO,EAAE,WAAW,EAAgC,MAAM,qBAAqB,CAAA;AAW/E,UAAU,2BAA2B;IACnC,WAAW,EAAE,WAAW,CAAA;CACzB;AAED,eAAO,MAAM,sBAAsB,GAAI,iBAAiB,2BAA2B,gBAsLlF,CAAA"}

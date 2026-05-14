@@ -1,0 +1,6 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { ArrowUpIcon, Button, ExternalLinkIcon, Separator, Skeleton } from '@0xsequence/design-system';
+export const CollectibleDetailsSkeleton = ({ isReadOnly }) => {
+    return (_jsx("div", { children: _jsxs("div", { className: "flex flex-col p-4 gap-4", children: [_jsx(Skeleton, { className: "w-full aspect-square rounded-lg" }), _jsxs("div", { className: "flex flex-row gap-4", children: [_jsxs(Button, { className: "text-primary w-full", variant: "ghost", disabled: isReadOnly, children: [_jsx(ArrowUpIcon, {}), "Send"] }), _jsxs(Button, { className: "text-primary w-full", variant: "ghost", children: [_jsx(ExternalLinkIcon, {}), "Open in..."] })] }), _jsx(Skeleton, { className: "w-full h-10" }), _jsx(Skeleton, { className: "w-full h-7" }), _jsx(Separator, { className: "my-0" }), _jsx(Skeleton, { className: "w-full h-7" }), _jsx(Separator, { className: "my-0" }), _jsx(Skeleton, { className: "w-full h-7" }), _jsx(Separator, { className: "my-0" }), _jsx(Skeleton, { className: "w-full h-7" }), _jsx(Separator, { className: "my-0" }), _jsx(Skeleton, { className: "w-full h-14" })] }) }));
+};
+//# sourceMappingURL=Skeleton.js.map

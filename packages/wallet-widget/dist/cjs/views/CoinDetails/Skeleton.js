@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CoinDetailsSkeleton = void 0;
+const jsx_runtime_1 = require("react/jsx-runtime");
+const design_system_1 = require("@0xsequence/design-system");
+const NetworkBadge_js_1 = require("../../components/NetworkBadge.js");
+const TransactionHistorySkeleton_js_1 = require("../../components/TransactionHistoryList/TransactionHistorySkeleton.js");
+const CoinDetailsSkeleton = ({ chainId, isReadOnly }) => {
+    return ((0, jsx_runtime_1.jsx)("div", { children: (0, jsx_runtime_1.jsxs)("div", { className: "flex flex-col gap-10 pb-5 px-4 pt-0", children: [(0, jsx_runtime_1.jsxs)("div", { className: "flex mb-10 gap-2 items-center justify-center flex-col", children: [(0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { style: { width: '64px', height: '64px' } }), (0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { style: { height: '28px', width: '70px' } }), (0, jsx_runtime_1.jsx)(NetworkBadge_js_1.NetworkBadge, { chainId: chainId })] }), (0, jsx_runtime_1.jsxs)("div", { children: [(0, jsx_runtime_1.jsx)(design_system_1.Text, { variant: "normal", fontWeight: "medium", color: "muted", children: "Balance" }), (0, jsx_runtime_1.jsxs)("div", { className: "flex flex-row items-end justify-between", children: [(0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { style: { width: '150px', height: '36px' } }), (0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { style: { width: '33px', height: '17px' } })] })] }), !isReadOnly && ((0, jsx_runtime_1.jsxs)("div", { className: "flex gap-2", children: [(0, jsx_runtime_1.jsxs)(design_system_1.Button, { className: "w-full text-primary bg-background-secondary", disabled: true, onClick: () => { }, children: [(0, jsx_runtime_1.jsx)(design_system_1.SendIcon, {}), "Send"] }), (0, jsx_runtime_1.jsxs)(design_system_1.Button, { className: "w-full text-primary bg-background-secondary", disabled: true, onClick: () => { }, children: [(0, jsx_runtime_1.jsx)(design_system_1.SwapIcon, {}), "Swap"] })] })), (0, jsx_runtime_1.jsx)("div", { children: (0, jsx_runtime_1.jsx)(TransactionHistorySkeleton_js_1.TransactionHistorySkeleton, {}) })] }) }));
+};
+exports.CoinDetailsSkeleton = CoinDetailsSkeleton;
+//# sourceMappingURL=Skeleton.js.map

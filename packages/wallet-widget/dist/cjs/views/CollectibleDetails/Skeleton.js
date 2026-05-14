@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CollectibleDetailsSkeleton = void 0;
+const jsx_runtime_1 = require("react/jsx-runtime");
+const design_system_1 = require("@0xsequence/design-system");
+const CollectibleDetailsSkeleton = ({ isReadOnly }) => {
+    return ((0, jsx_runtime_1.jsx)("div", { children: (0, jsx_runtime_1.jsxs)("div", { className: "flex flex-col p-4 gap-4", children: [(0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { className: "w-full aspect-square rounded-lg" }), (0, jsx_runtime_1.jsxs)("div", { className: "flex flex-row gap-4", children: [(0, jsx_runtime_1.jsxs)(design_system_1.Button, { className: "text-primary w-full", variant: "ghost", disabled: isReadOnly, children: [(0, jsx_runtime_1.jsx)(design_system_1.ArrowUpIcon, {}), "Send"] }), (0, jsx_runtime_1.jsxs)(design_system_1.Button, { className: "text-primary w-full", variant: "ghost", children: [(0, jsx_runtime_1.jsx)(design_system_1.ExternalLinkIcon, {}), "Open in..."] })] }), (0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { className: "w-full h-10" }), (0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { className: "w-full h-7" }), (0, jsx_runtime_1.jsx)(design_system_1.Separator, { className: "my-0" }), (0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { className: "w-full h-7" }), (0, jsx_runtime_1.jsx)(design_system_1.Separator, { className: "my-0" }), (0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { className: "w-full h-7" }), (0, jsx_runtime_1.jsx)(design_system_1.Separator, { className: "my-0" }), (0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { className: "w-full h-7" }), (0, jsx_runtime_1.jsx)(design_system_1.Separator, { className: "my-0" }), (0, jsx_runtime_1.jsx)(design_system_1.Skeleton, { className: "w-full h-14" })] }) }));
+};
+exports.CollectibleDetailsSkeleton = CollectibleDetailsSkeleton;
+//# sourceMappingURL=Skeleton.js.map
