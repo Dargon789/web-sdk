@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useProjectAccessKey } from '@0xsequence/connect'
 import { useConfig } from '@0xsequence/hooks'
 import type { ContractInfo, TokenMetadata } from '@0xsequence/metadata'
@@ -5,6 +6,12 @@ import { findSupportedNetwork } from '@0xsequence/network'
 import { compareAddress } from '@0xsequence/web-sdk-core'
 import pako from 'pako'
 import React, { useEffect, useRef } from 'react'
+=======
+import { compareAddress } from '@0xsequence/connect'
+import { findSupportedNetwork } from '@0xsequence/connect'
+import type { ContractInfo, TokenMetadata } from '@0xsequence/metadata'
+import React, { useEffect, useMemo, useRef } from 'react'
+>>>>>>> upstream/master
 import { formatUnits, zeroAddress, type Hex } from 'viem'
 
 import { fetchSardineOrderStatus } from '../../api/data.js'

@@ -3,7 +3,11 @@
 import { SequenceAPIClient, type GetLinkedWalletsArgs, type LinkedWallet } from '@0xsequence/api'
 import { useAPIClient } from '@0xsequence/hooks'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+<<<<<<< HEAD
 import { useAccount, useConnect, useConnections, useDisconnect, type Connector, type UseConnectionsReturnType } from 'wagmi'
+=======
+import { useConnect, useConnection, useConnections, useDisconnect, type Connector, type UseConnectionsReturnType } from 'wagmi'
+>>>>>>> upstream/master
 
 import { WALLET_LIST_DEBOUNCE_MS } from '../constants.js'
 import { useOptionalConnectConfigContext } from '../contexts/ConnectConfig.js'
@@ -228,10 +232,17 @@ export interface UseWalletsReturnType {
  */
 
 export const useWallets = (): UseWalletsReturnType => {
+<<<<<<< HEAD
   const { address, status: accountStatus } = useAccount()
   const connections = useConnections()
   const { connectAsync } = useConnect()
   const { disconnectAsync } = useDisconnect()
+=======
+  const { address, status: accountStatus } = useConnection()
+  const connections = useConnections()
+  const connect = useConnect()
+  const disconnect = useDisconnect()
+>>>>>>> upstream/master
   const connectConfig = useOptionalConnectConfigContext()
   const normalizedWalletUrl = connectConfig?.walletUrl ? normalizeWalletUrl(connectConfig.walletUrl) : ''
   const sequenceProjectName = normalizedWalletUrl ? getCachedProjectName(normalizedWalletUrl) : undefined
@@ -409,7 +420,11 @@ export const useWallets = (): UseWalletsReturnType => {
     }
 
     try {
+<<<<<<< HEAD
       await connectAsync({ connector: connectionToUse.connector })
+=======
+      await connect.mutateAsync({ connector: connectionToUse.connector })
+>>>>>>> upstream/master
     } catch (error) {
       console.error('Failed to set active wallet:', error)
     }
@@ -429,7 +444,7 @@ export const useWallets = (): UseWalletsReturnType => {
     }
 
     try {
-      await disconnectAsync({ connector: connection.connector })
+      await disconnect.mutateAsync({ connector: connection.connector })
     } catch (error) {
       console.error('Failed to disconnect wallet:', error)
     }

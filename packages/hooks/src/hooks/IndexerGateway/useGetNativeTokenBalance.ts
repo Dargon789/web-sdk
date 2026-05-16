@@ -7,14 +7,23 @@ import { createNativeTokenBalance } from '../../utils/helpers.js'
 
 import { useIndexerGatewayClient } from './useIndexerGatewayClient.js'
 
+export type GetNativeTokenBalanceArgs = IndexerGateway.GetNativeTokenBalanceRequest
+
 const getNativeTokenBalance = async (
   indexerGatewayClient: SequenceIndexerGateway,
-  args: IndexerGateway.GetNativeTokenBalanceArgs
+  args: GetNativeTokenBalanceArgs
 ): Promise<TokenBalance[]> => {
   const res = await indexerGatewayClient.getNativeTokenBalance(args)
 
   const balances = res.balances.map(balances =>
-    createNativeTokenBalance(balances.chainId, balances.result.accountAddress, balances.result.balance)
+    createNativeTokenBalance({
+      chainId: balances.chainId,
+      accountAddress: balances.result.accountAddress,
+      balance: balances.result.balance,
+      balanceUSD: balances.result.balanceUSD,
+      priceUSD: balances.result.priceUSD,
+      priceUpdatedAt: balances.result.priceUpdatedAt
+    })
   )
 
   return balances
@@ -51,7 +60,7 @@ const getNativeTokenBalance = async (
  * }
  * ```
  */
-export const useGetNativeTokenBalance = (args: IndexerGateway.GetNativeTokenBalanceArgs, options?: HooksOptions) => {
+export const useGetNativeTokenBalance = (args: GetNativeTokenBalanceArgs, options?: HooksOptions) => {
   const indexerGatewayClient = useIndexerGatewayClient()
 
   return useQuery({

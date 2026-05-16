@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { Button, Card, Divider, PINCodeInput, Spinner, Text, TextInput } from '@0xsequence/design-system'
+=======
+import { Button, Card, PINCodeInput, Separator, Spinner, Text, TextInput } from '@0xsequence/design-system'
+>>>>>>> upstream/master
 import { type Account } from '@0xsequence/waas'
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'
 import { useEffect, useRef, useState, type SetStateAction } from 'react'
@@ -142,7 +146,15 @@ export function SocialLink() {
                     </Text>
                   )}
                 </div>
+<<<<<<< HEAD
                 {a.id !== currentAccount?.id && <Button size="xs" label="Remove" onClick={() => removeAccount(a.id)} />}
+=======
+                {a.id !== currentAccount?.id && (
+                  <Button size="xs" onClick={() => removeAccount(a.id)}>
+                    Remove
+                  </Button>
+                )}
+>>>>>>> upstream/master
               </div>
             ))}
           {error && (
@@ -153,7 +165,7 @@ export function SocialLink() {
         </div>
       </Card>
 
-      <Divider />
+      <Separator className="my-4" />
 
       <div className="flex flex-col gap-2 w-full">
         <Text variant="large" color="text100" fontWeight="bold" className="mb-2">
@@ -187,7 +199,7 @@ export function SocialLink() {
           </Text>
         )}
 
-        <Divider />
+        <Separator className="my-4" />
 
         <div className="mt-2">
           <Text variant="normal" color="text100" fontWeight="bold">
@@ -213,10 +225,11 @@ export function SocialLink() {
                 <Button
                   variant="primary"
                   disabled={code.includes('')}
-                  label="Verify"
                   onClick={() => sendChallengeAnswer(code.join(''))}
                   data-id="verifyButton"
-                />
+                >
+                  Verify
+                </Button>
               )}
             </div>
           </div>
@@ -260,10 +273,11 @@ export function SocialLink() {
                 <Button
                   variant="primary"
                   disabled={!isEmailValid}
-                  label="Continue"
                   onClick={() => initiateEmailAuth(email)}
                   data-id="continueButton"
-                />
+                >
+                  Continue
+                </Button>
               )}
             </div>
           </div>
@@ -278,6 +292,7 @@ const DEVICE_EMOJIS = [
   ...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐽🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🐛🦋🐌🐞🐜🦟🦗🕷🕸🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🐊🐅🐆🦓🦍🦧🐘🦛🦏🐪🐫🦒🦘🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐓🦃🦚🦜🦢🦩🕊🐇🦝🦨🦡🦦🦥🐁🐀🐿🦔🐾🐉🐲🌵🎄🌲🌳🌴🌱🌿🍀🎍🎋🍃👣🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🥭🍍🥥🥝🍅🥑🥦🥬🥒🌶🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🥪🥙🧆🌮🌯🥗🥘🥫🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜👀👂👃👄👅👆👇👈👉👊👋👌👍👎👏👐👑👒👓🎯🎰🎱🎲🎳👾👯👺👻👽🏂🏃🏄'
 ]
 
+<<<<<<< HEAD
 function getSecureRandomInt(max: number): number {
   if (max <= 0) return 0
   const array = new Uint32Array(1)
@@ -292,6 +307,15 @@ function randomName() {
   const randomEmoji = DEVICE_EMOJIS[getSecureRandomInt(DEVICE_EMOJIS.length)]
   const randomWord1 = words[getSecureRandomInt(wordlistSize)]
   const randomWord2 = words[getSecureRandomInt(wordlistSize)]
+=======
+function randomName() {
+  const wordlistSize = english.length
+  const words = english
+
+  const randomEmoji = DEVICE_EMOJIS[Math.floor(Math.random() * DEVICE_EMOJIS.length)]
+  const randomWord1 = words[Math.floor(Math.random() * wordlistSize)]
+  const randomWord2 = words[Math.floor(Math.random() * wordlistSize)]
+>>>>>>> upstream/master
 
   return `${randomEmoji} ${randomWord1} ${randomWord2}`
 }

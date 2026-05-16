@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   ArrowRightIcon,
   Card,
@@ -10,6 +11,9 @@ import {
   useTheme
 } from '@0xsequence/design-system'
 import type { ExtendedConnector } from '@0xsequence/web-sdk-core'
+=======
+import { ArrowRightIcon, Card, DialogPrimitive, IconButton, Scroll, SearchInput, Text, useTheme } from '@0xsequence/design-system'
+>>>>>>> upstream/master
 import Fuse from 'fuse.js'
 import { useState } from 'react'
 
@@ -88,9 +92,15 @@ export const ExtendedWalletList = ({
         {isInline ? (
           <Text>{title}</Text>
         ) : (
+<<<<<<< HEAD
           <ModalPrimitive.Title asChild>
             <Text>{title}</Text>
           </ModalPrimitive.Title>
+=======
+          <DialogPrimitive.Title asChild>
+            <Text>{title}</Text>
+          </DialogPrimitive.Title>
+>>>>>>> upstream/master
         )}
       </div>
       {searchable && (
@@ -98,7 +108,6 @@ export const ExtendedWalletList = ({
           <SearchInput
             autoFocus
             name="search"
-            leftIcon={SearchIcon}
             value={search}
             onChange={ev => setSearch(ev.target.value)}
             placeholder="Search"

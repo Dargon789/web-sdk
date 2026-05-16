@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/connect'
 import { findSupportedNetwork } from '@0xsequence/network'
+=======
+import { findSupportedNetwork } from '@0xsequence/connect'
+import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
+>>>>>>> upstream/master
 import type { Hex } from 'viem'
 
 import type { TransakConfig } from '../../contexts/CheckoutModal'

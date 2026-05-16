@@ -1,14 +1,17 @@
 'use client'
 
+<<<<<<< HEAD
 import { Button, Card, Modal, ModalPrimitive, Spinner, Text, ThemeProvider, type Theme } from '@0xsequence/design-system'
+=======
+import { Button, Card, DialogPrimitive, Modal, Spinner, Text, ThemeProvider, type Theme } from '@0xsequence/design-system'
+>>>>>>> upstream/master
 import { SequenceHooksProvider } from '@0xsequence/hooks'
-import { ChainId } from '@0xsequence/network'
 import { SequenceClient, setupAnalytics, type Analytics } from '@0xsequence/provider'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AnimatePresence } from 'motion/react'
 import React, { useEffect, useState, type ReactNode } from 'react'
 import { hexToString, type Hex } from 'viem'
-import { useAccount, useConfig, useConnections, type Connector } from 'wagmi'
+import { useConfig, useConnection, useConnections, type Connector } from 'wagmi'
 
 import { DEFAULT_SESSION_EXPIRATION, LocalStorageKey, WEB_SDK_VERSION } from '../../constants/index.js'
 import { AnalyticsContextProvider } from '../../contexts/Analytics.js'
@@ -32,13 +35,14 @@ import {
   type ModalPosition
 } from '../../types.js'
 import { isJSON } from '../../utils/helpers.js'
+import { ChainId } from '../../utils/networks.js'
 import { getModalPositionCss } from '../../utils/styling.js'
 import { Connect } from '../Connect/Connect.js'
 import { EpicAuthProvider } from '../EpicAuthProvider/index.js'
 import { JsonTreeViewer } from '../JsonTreeViewer.js'
 import { NetworkBadge } from '../NetworkBadge/index.js'
 import { PageHeading } from '../PageHeading/index.js'
-import { PoweredBySequence } from '../SequenceLogo/index.js'
+import { PoweredByPolygon } from '../PolygonBrand/index.js'
 import { ShadowRoot } from '../ShadowRoot/index.js'
 import { SocialLink } from '../SocialLink/SocialLink.js'
 import { TxnDetails } from '../TxnDetails/index.js'
@@ -48,6 +52,11 @@ export type SequenceConnectInlineProviderProps = {
   config: ConnectConfig
 }
 
+<<<<<<< HEAD
+=======
+const DEFAULT_DISPLAYED_ASSETS: DisplayedAsset[] = []
+
+>>>>>>> upstream/master
 const resolveInlineBackground = (theme: Theme | undefined) => {
   if (theme && typeof theme === 'object' && 'colors' in theme) {
     const background = (theme as any).colors?.backgroundPrimary
@@ -76,16 +85,21 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
     enabledProviders,
     isV3WalletSignedIn,
     isAuthStatusLoading,
+<<<<<<< HEAD
     walletConfigurationSignIn
+=======
+    walletConfigurationSignIn,
+    sdkConfig
+>>>>>>> upstream/master
   } = useResolvedConnectConfig(incomingConfig)
 
   const {
     defaultTheme = 'dark',
     signIn = {},
     position = 'center',
-    displayedAssets: displayedAssetsSetting = [],
+    displayedAssets: displayedAssetsSetting = DEFAULT_DISPLAYED_ASSETS,
     readOnlyNetworks,
-    ethAuth = {} as EthAuthSettings,
+    ethAuth: ethAuthConfig,
     disableAnalytics = false,
     hideExternalConnectOptions = false,
     hideConnectedWallets = false,
@@ -96,13 +110,15 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
 
   const defaultAppName = signIn.projectName || 'app'
 
-  const { expiry = DEFAULT_SESSION_EXPIRATION, app = defaultAppName, origin, nonce } = ethAuth
+  const isEthAuthEnabled = ethAuthConfig !== false
+  const ethAuth: EthAuthSettings | undefined = isEthAuthEnabled ? (ethAuthConfig ?? {}) : undefined
+  const { expiry = DEFAULT_SESSION_EXPIRATION, app = defaultAppName, origin, nonce } = ethAuth ?? {}
 
   const [theme, setTheme] = useState<Exclude<Theme, undefined>>(defaultTheme || 'dark')
   const [modalPosition, setModalPosition] = useState<ModalPosition>(position)
   const [displayedAssets, setDisplayedAssets] = useState<DisplayedAsset[]>(displayedAssetsSetting)
   const [analytics, setAnalytics] = useState<SequenceClient['analytics']>()
-  const { address, isConnected } = useAccount()
+  const { address, isConnected } = useConnection()
   const wagmiConfig = useConfig()
   useSyncWagmiChains(config, wagmiConfig)
   const storage = useStorage()
@@ -198,13 +214,18 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
     // EthAuth
     // note: keep an eye out for potential race-conditions, though they shouldn't occur.
     // If there are race conditions, the settings could be a function executed prior to being passed to wagmi
-    storage?.setItem(LocalStorageKey.EthAuthSettings, {
-      expiry,
-      app,
-      origin: origin || location.origin,
-      nonce
-    })
-  }, [theme, ethAuth])
+    if (isEthAuthEnabled) {
+      storage?.setItem(LocalStorageKey.EthAuthSettings, {
+        expiry,
+        app,
+        origin: origin || location.origin,
+        nonce
+      })
+    } else {
+      storage?.removeItem(LocalStorageKey.EthAuthSettings)
+      storage?.removeItem(LocalStorageKey.EthAuthProof)
+    }
+  }, [theme, isEthAuthEnabled, storage, expiry, app, origin, nonce])
 
   useEffect(() => {
     setDisplayedAssets(displayedAssetsSetting)
@@ -249,7 +270,11 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                     <EpicAuthProvider>
                       <div id="kit-provider" className="h-full w-full flex flex-col" style={{ background: inlineBackground }}>
                         <style>{styles + styleProperties + (customCSS ? `\n\n${customCSS}` : '')}</style>
+<<<<<<< HEAD
                         <ThemeProvider root="#kit-provider" scope="kit" theme={theme}>
+=======
+                        <ThemeProvider root="#kit-provider" theme={theme}>
+>>>>>>> upstream/master
                           {isWalletConfigLoading || isAuthStatusLoading ? (
                             <div className="flex py-8 justify-center items-center">
                               <Spinner size="lg" />
@@ -266,6 +291,10 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                               isAuthStatusLoading={isAuthStatusLoading}
                               enabledProviders={enabledProviders}
                               walletConfigurationSignIn={walletConfigurationSignIn}
+<<<<<<< HEAD
+=======
+                              sdkConfig={sdkConfig}
+>>>>>>> upstream/master
                             />
                           )}
                         </ThemeProvider>
@@ -295,14 +324,14 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                                     marginTop: '4px'
                                   }}
                                 >
-                                  <ModalPrimitive.Title asChild>
+                                  <DialogPrimitive.Title asChild>
                                     <Text className="mb-5" variant="large" asChild>
                                       <h1>
                                         Confirm{' '}
                                         {pendingRequestConfirmation.type === 'signMessage' ? 'signing message' : 'transaction'}
                                       </h1>
                                     </Text>
-                                  </ModalPrimitive.Title>
+                                  </DialogPrimitive.Title>
 
                                   {pendingRequestConfirmation.type === 'signMessage' && pendingRequestConfirmation.message && (
                                     <div className="flex flex-col w-full">
@@ -347,26 +376,28 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                                       className="w-full"
                                       shape="square"
                                       size="lg"
-                                      label="Reject"
                                       onClick={() => {
                                         rejectPendingRequest(pendingRequestConfirmation?.id)
                                       }}
-                                    />
+                                    >
+                                      Reject
+                                    </Button>
                                     <Button
                                       className="flex items-center text-center w-full"
                                       shape="square"
                                       size="lg"
-                                      label="Confirm"
                                       variant="primary"
                                       onClick={() => {
                                         confirmPendingRequest(pendingRequestConfirmation?.id)
                                       }}
-                                    />
+                                    >
+                                      Confirm
+                                    </Button>
                                   </div>
                                 </div>
 
                                 <div className="mt-4">
-                                  <PoweredBySequence />
+                                  <PoweredByPolygon />
                                 </div>
                               </div>
                             </Modal>
@@ -381,9 +412,9 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                               }}
                             >
                               <div className="p-4">
-                                <ModalPrimitive.Title asChild>
+                                <DialogPrimitive.Title asChild>
                                   <PageHeading>Email already in use</PageHeading>
-                                </ModalPrimitive.Title>
+                                </DialogPrimitive.Title>
                                 <div>
                                   <Text className="text-center" variant="normal" color="secondary">
                                     Another account with this email address{' '}
@@ -393,11 +424,12 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                                   </Text>
                                   <div className="flex mt-4 gap-2 items-center justify-center">
                                     <Button
-                                      label="OK"
                                       onClick={() => {
                                         toggleEmailConflictModal(false)
                                       }}
-                                    />
+                                    >
+                                      OK
+                                    </Button>
                                   </div>
                                 </div>
                               </div>

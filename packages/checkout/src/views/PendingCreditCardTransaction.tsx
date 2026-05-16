@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useProjectAccessKey } from '@0xsequence/connect'
 import { Spinner, Text } from '@0xsequence/design-system'
 import { useConfig, useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
@@ -5,6 +6,13 @@ import { findSupportedNetwork } from '@0xsequence/network'
 import { useAnalyticsContext } from '@0xsequence/web-sdk-core'
 import pako from 'pako'
 import { useEffect, useRef } from 'react'
+=======
+import { useAnalyticsContext } from '@0xsequence/connect'
+import { findSupportedNetwork } from '@0xsequence/connect'
+import { Spinner, Text } from '@0xsequence/design-system'
+import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
+import { useEffect, useMemo, useRef } from 'react'
+>>>>>>> upstream/master
 import { formatUnits } from 'viem'
 
 import { fetchSardineOrderStatus } from '../api/data.js'

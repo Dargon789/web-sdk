@@ -16,6 +16,7 @@ export const CopyButton = (props: CopyButtonProps) => {
   const label = isCopied ? 'Copied!' : 'Copy'
 
   return (
+<<<<<<< HEAD
     <Button
       size={size!}
       leftIcon={isCopied ? CheckmarkIcon : CopyIcon}
@@ -24,5 +25,23 @@ export const CopyButton = (props: CopyButtonProps) => {
       onClick={() => setCopied(text)}
       {...rest}
     />
+=======
+    <div className="flex flex-row gap-1 items-center hover:opacity-80 cursor-pointer" onClick={() => setCopied(text)}>
+      {isCopied ? <CheckmarkIcon size={size} /> : <CopyIcon size={size} />}
+      {includeLabel && (
+        <Text color="primary" fontWeight="medium" variant="normal">
+          {label}
+        </Text>
+      )}
+    </div>
+    // <Button
+    //   size={size!}
+    //   leftIcon={isCopied ? CheckmarkIcon : CopyIcon}
+    //   label={buttonVariant === 'with-label' ? label : undefined}
+    //   variant={buttonVariant === 'icon' ? 'ghost' : buttonVariant === 'text' ? 'text' : 'glass'}
+    //   onClick={() => setCopied(text)}
+    //   {...rest}
+    // />
+>>>>>>> upstream/master
   )
 }

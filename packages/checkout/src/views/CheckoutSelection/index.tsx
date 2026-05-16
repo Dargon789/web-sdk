@@ -2,8 +2,13 @@ import {
   Box,
   Button,
   ChevronRightIcon,
-  Divider,
   HelpIcon,
+<<<<<<< HEAD
+=======
+  PaymentsIcon,
+  Separator,
+  Skeleton,
+>>>>>>> upstream/master
   Text,
   Tooltip,
   PaymentsIcon,
@@ -11,11 +16,18 @@ import {
   Skeleton,
   TokenImage
 } from '@0xsequence/design-system'
+<<<<<<< HEAD
 import { getNativeTokenInfoByChainId } from '@0xsequence/kit'
 import { useBalances, useContractInfo, useTokenMetadata, useProjectAccessKey } from '@0xsequence/kit/hooks'
 import { ethers } from 'ethers'
 import React from 'react'
 import { useAccount, useConfig } from 'wagmi'
+=======
+import { useGetContractInfo, useGetTokenBalancesSummary } from '@0xsequence/hooks'
+import { useEffect } from 'react'
+import { formatUnits, zeroAddress } from 'viem'
+import { useConfig, useConnection } from 'wagmi'
+>>>>>>> upstream/master
 
 import { fetchSardineClientToken } from '../../api'
 import { HEADER_HEIGHT } from '../../constants'
@@ -28,8 +40,12 @@ export const CheckoutSelection = () => {
   const { chains } = useConfig()
   const { setNavigation } = useNavigation()
   const { closeCheckout, settings } = useCheckoutModal()
+<<<<<<< HEAD
   const { address: accountAddress } = useAccount()
   const projectAccessKey = useProjectAccessKey()
+=======
+  const { address: accountAddress } = useConnection()
+>>>>>>> upstream/master
 
   const cryptoCheckoutSettings = settings?.cryptoCheckout
   const creditCardCheckoutSettings = settings?.sardineCheckout
@@ -136,6 +152,7 @@ export const CheckoutSelection = () => {
             {orderSummaryItems.map((orderSummaryItem, index) => {
               return <OrderSummaryItem key={index} {...orderSummaryItem} chainId={chainId} />
             })}
+<<<<<<< HEAD
           </Box>
           <Box marginTop="2">
             <Divider
@@ -145,6 +162,12 @@ export const CheckoutSelection = () => {
               }}
             />
           </Box>
+=======
+          </div>
+          <div className="mt-2">
+            <Separator className="m-0" />
+          </div>
+>>>>>>> upstream/master
         </>
       )}
 
@@ -168,6 +191,7 @@ export const CheckoutSelection = () => {
 
       <Box flexDirection="column" alignItems="center" justifyContent="center" gap="2">
         {displayCreditCardCheckout && (
+<<<<<<< HEAD
           <Button
             style={{
               borderRadius: vars.radii.md,
@@ -210,6 +234,28 @@ export const CheckoutSelection = () => {
             onClick={onClickPayWithCrypto}
             disabled
           />
+=======
+          <Button className="w-full h-14 rounded-xl" variant="primary" onClick={onClickPayWithCard}>
+            <PaymentsIcon />
+            Pay with credit card
+            <ChevronRightIcon />
+          </Button>
+        )}
+        {displayCryptoCheckout && !isInsufficientBalance && !isLoading && (
+          <Button className="w-full h-14 rounded-xl" variant="primary" onClick={onClickPayWithCrypto}>
+            <TokenImage src={coinImageUrl} size="sm" />
+            {`Pay with ${coinSymbol}`}
+            <ChevronRightIcon />
+          </Button>
+        )}
+        {displayCryptoCheckout && (isInsufficientBalance || isLoading) && (
+          <Button className="w-full" shape="square" variant="ghost" onClick={onClickPayWithCrypto} disabled>
+            <div className="flex items-center justify-center gap-2">
+              <TokenImage src={coinImageUrl} size="sm" />
+              <Text>Insufficient ${coinSymbol}</Text>
+            </div>
+          </Button>
+>>>>>>> upstream/master
         )}
       </Box>
       {displayCryptoCheckout && (

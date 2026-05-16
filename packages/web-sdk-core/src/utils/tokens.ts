@@ -37,3 +37,23 @@ export const getNativeTokenInfoByChainId = (chainId: number, wagmiChains: readon
     logoURI: ''
   }
 }
+<<<<<<< HEAD:packages/web-sdk-core/src/utils/tokens.ts
+=======
+
+export const createNativeTokenBalance = (chainId: number, accountAddress: string, balance: string = '0'): TokenBalance => {
+  return {
+    chainId,
+    contractAddress: zeroAddress,
+    accountAddress,
+    contractType: ContractType.UNKNOWN,
+    balance,
+    balanceUSD: '0',
+    priceUSD: '0',
+    blockHash: '',
+    blockNumber: 0,
+    tokenID: '',
+    isSummary: false,
+    uniqueCollectibles: ''
+  }
+}
+>>>>>>> upstream/master:packages/connect/src/utils/tokens.ts

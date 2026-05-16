@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { useProjectAccessKey, useEnvironment } from '@0xsequence/kit'
 import { MarketplaceIndexer } from '@0xsequence/marketplace'
 import { networks, stringTemplate } from '@0xsequence/network'
+=======
+import { useProjectAccessKey } from '@0xsequence/connect'
+import { networks } from '@0xsequence/connect'
+import { MarketplaceIndexer } from '@0xsequence/marketplace'
+>>>>>>> upstream/master
 import { useMemo } from 'react'
 
 export interface UseMarketplaceClientArgs {

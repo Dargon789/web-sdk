@@ -134,6 +134,50 @@ const MyComponent = () => {
 - **blockConfirmations**: The number of block confirmations required for the transaction to be considered successful and trigger `onSuccess`.
 - **onError**: Callback function triggered if an error has occurred before or after sending the transaction.
 
+<<<<<<< HEAD
+=======
+## Utility functions
+
+The `@0xsequence/checkout` library indeed simplifies the integration of Web3 payment solutions by providing utility functions. One such function, `useERC1155SaleContractPaymentModal`, is tailored for use cases involving the minting of ERC-1155 tokens. This function works in conjunction with Sequence's wallet ecosystem and its deployable smart contract infrastructure, such as the ERC-1155 sale contract available through the [Sequence Builder](https://sequence.build).
+
+```js
+import { useERC1155SaleContractCheckout } from "@0xsequence/checkout";
+import { useConnection } from "wagmi";
+
+const MyComponent = () => {
+  const { address: userAddress } = useConnection();
+  const { openCheckoutModal } = useERC1155SaleContractCheckout({
+    chain: 80001, // chainId of the chain the collectible is on
+    contractAddress: "0x0327b2f274e04d292e74a06809bcd687c63a4ba4", // address of the contract handling the minting function
+    wallet: userAddress!, // address of the recipient
+    collectionAddress: "0x888a322db4b8033bac3ff84412738c096f87f9d0", // address of the collection contract
+    items: [
+      // array of collectibles to purchase
+      {
+        tokenId: "0",
+        quantity: "1",
+      },
+    ],
+    onSuccess: (txnHash?: string) => {
+      console.log("success!", txnHash);
+    },
+    onError: (error: Error) => {
+      console.error(error);
+    },
+  });
+
+  const onClick = () => {
+    if (!userAddress) {
+      return;
+    }
+    openCheckoutModal();
+  };
+
+  return <button onClick={onClick}>Buy ERC-1155 collectible!</button>;
+};
+```
+
+>>>>>>> upstream/master
 # Swap
 
 <div align="center">

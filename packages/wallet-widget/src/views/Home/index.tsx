@@ -1,7 +1,11 @@
 import { useSocialLink, useWallets } from '@0xsequence/connect'
 import { Text } from '@0xsequence/design-system'
+<<<<<<< HEAD
 import { truncateAtIndex } from '@0xsequence/web-sdk-core'
 import { useAccount } from 'wagmi'
+=======
+import { useConnection } from 'wagmi'
+>>>>>>> upstream/master
 
 import { CopyButton } from '../../components/CopyButton.js'
 import { GeneralList } from '../../components/SearchLists/index.js'
@@ -15,7 +19,7 @@ export const Home = () => {
   const { fiatCurrency } = useSettings()
   const { totalValue } = useValueRegistry()
   const { setIsSocialLinkOpen } = useSocialLink()
-  const { address: accountAddress } = useAccount()
+  const { address: accountAddress } = useConnection()
 
   const onClickLinkGuestAccount = () => {
     setIsSocialLinkOpen(true)

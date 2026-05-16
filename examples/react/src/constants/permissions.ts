@@ -69,11 +69,16 @@ export const getCombinedPermission = (redirectUrl: string, chainId: number): Exp
 
   return createExplicitSessionConfig({
     chainId: chainId,
+<<<<<<< HEAD
     nativeTokenSpending: {
       valueLimit: 0n
     },
     expiresIn: {
       days: 1
+=======
+    expiresIn: {
+      minutes: 3
+>>>>>>> upstream/master
     },
     permissions: [contractCallPermission, usdcPermission]
   })
@@ -88,33 +93,48 @@ export const getSessionConfigForType = (
     case 'contractCall':
       return {
         chainId: chainId,
+<<<<<<< HEAD
         nativeTokenSpending: {
           valueLimit: 1000000000000000000n
         },
         expiresIn: {
           days: 1
+=======
+        expiresIn: {
+          minutes: 3
+>>>>>>> upstream/master
         },
         permissions: [getContractCallPermission(redirectUrl)]
       }
     case 'usdcTransfer':
       return {
         chainId: chainId,
+<<<<<<< HEAD
         nativeTokenSpending: {
           valueLimit: 0n
         },
         expiresIn: {
           days: 1
+=======
+        expiresIn: {
+          minutes: 3
+>>>>>>> upstream/master
         },
         permissions: [getUsdcPermission(chainId)]
       }
     case 'combined':
       return {
         chainId: chainId,
+<<<<<<< HEAD
         nativeTokenSpending: {
           valueLimit: 0n
         },
         expiresIn: {
           days: 1
+=======
+        expiresIn: {
+          minutes: 3
+>>>>>>> upstream/master
         },
         permissions: [getContractCallPermission(redirectUrl), getUsdcPermission(chainId)]
       }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import type { AddFundsSettings } from '../contexts/AddFundsModal.js'
 
 export const TRANSAK_ONRAMP_URL = 'https://global.transak.com'
@@ -37,6 +38,10 @@ export const getTransakLink = (
 
   return url.href
 }
+=======
+import { ChainId } from '@0xsequence/connect'
+import { zeroAddress } from 'viem'
+>>>>>>> upstream/master
 
 interface CountriesResult {
   response: Country[]

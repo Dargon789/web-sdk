@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import { CollectibleTileImage, formatDisplay, truncateAtIndex, waitForTransactionReceipt } from '@0xsequence/connect'
+import { findSupportedNetwork } from '@0xsequence/connect'
+>>>>>>> upstream/master
 import {
   ArrowDownIcon,
   Box,
@@ -5,13 +10,18 @@ import {
   NetworkImage,
   Spinner,
   Text,
+<<<<<<< HEAD
   TokenImage,
   CheckmarkIcon,
   CloseIcon,
   truncateAddress
+=======
+  TokenImage
+>>>>>>> upstream/master
 } from '@0xsequence/design-system'
 import { SequenceIndexer, TransactionStatus as TransactionStatusSequence } from '@0xsequence/indexer'
 import {
+<<<<<<< HEAD
   CollectibleTileImage,
   useContractInfo,
   useTokenMetadata,
@@ -24,6 +34,15 @@ import { findSupportedNetwork } from '@0xsequence/network'
 import { useState, useEffect } from 'react'
 import TimeAgo from 'timeago-react'
 import { formatUnits, Hex, PublicClient } from 'viem'
+=======
+  TransactionStatus as TransactionStatusSequence,
+  type SequenceIndexer,
+  type TransactionReceipt
+} from '@0xsequence/indexer'
+import { formatDistanceToNow } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { formatUnits, type Hex, type PublicClient } from 'viem'
+>>>>>>> upstream/master
 import { usePublicClient } from 'wagmi'
 
 import { HEADER_HEIGHT } from '../../constants'
@@ -248,10 +267,17 @@ export const TransactionStatus = () => {
                   <Text variant="small" color="text100" fontWeight="bold">
                     {`${tokenMetadata?.name || 'Collectible'} #${item.tokenId} ${collectibleQuantity > 1 ? `x${collectibleQuantity}` : ''}`}
                   </Text>
+<<<<<<< HEAD
                 </Box>
               </Box>
               <Box flexDirection="row" gap="1" alignItems="center" justifyContent="center">
                 <TokenImage src={dataCurrencyInfo?.logoURI} size="xs" symbol={dataCurrencyInfo?.symbol} disableAnimation />
+=======
+                </div>
+              </div>
+              <div className="flex flex-row gap-1 items-center justify-center">
+                <TokenImage src={dataCurrencyInfo?.logoURI} size="xs" symbol={dataCurrencyInfo?.symbol} />
+>>>>>>> upstream/master
                 <Text variant="normal" fontWeight="bold" color="white">{`${price} ${dataCurrencyInfo?.symbol}`}</Text>
               </Box>
             </Box>
@@ -287,8 +313,31 @@ export const TransactionStatus = () => {
           <Text color="text50" variant="small" fontWeight="medium">
             <TimeAgo datetime={startTime} />
           </Text>
+<<<<<<< HEAD
         </Box>
       </Box>
+=======
+        </div>
+      </div>
+    )
+  }
+
+  const SuccessActionButtons = () => {
+    return (
+      <div className="flex flex-row gap-2 web-sdk-tx-status-success-buttons">
+        {successActionButtons.map(button => {
+          const action = () => {
+            closeTransactionStatusModal()
+            button.action()
+          }
+          return (
+            <Button key={button.label} onClick={action}>
+              {button.label}
+            </Button>
+          )
+        })}
+      </div>
+>>>>>>> upstream/master
     )
   }
 
@@ -332,7 +381,13 @@ export const TransactionStatus = () => {
                 rel="noreferrer"
                 style={{ color: '#8E7EFF' }}
               >
+<<<<<<< HEAD
                 {truncateAddress(txHash, 4, 4)}
+=======
+                <a href={blockExplorerUrl} target="_blank" rel="noreferrer">
+                  {truncateAtIndex(txHash, 10)}
+                </a>
+>>>>>>> upstream/master
               </Text>
             </Box>
           </>

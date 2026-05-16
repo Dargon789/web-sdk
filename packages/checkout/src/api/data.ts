@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 import type { SequenceAPIClient } from '@0xsequence/api'
 import type { TokenMetadata } from '@0xsequence/metadata'
 import { findSupportedNetwork, networks, type ChainId } from '@0xsequence/network'
+=======
+import { ChainId as Chains, findSupportedNetwork } from '@0xsequence/connect'
+>>>>>>> upstream/master
 import { zeroAddress } from 'viem'
 
 import {

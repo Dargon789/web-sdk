@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import { compareAddress, CryptoOption, formatDisplay, sendTransactions } from '@0xsequence/connect'
+import { findSupportedNetwork } from '@0xsequence/connect'
+>>>>>>> upstream/master
 import { Button, Spinner, Text } from '@0xsequence/design-system'
 import {
   useGetContractInfo,
@@ -6,11 +11,17 @@ import {
   useGetTokenBalancesSummary,
   useIndexerClient
 } from '@0xsequence/hooks'
+<<<<<<< HEAD
 import { findSupportedNetwork } from '@0xsequence/network'
 import { compareAddress, CryptoOption, formatDisplay, sendTransactions } from '@0xsequence/web-sdk-core'
 import { useEffect, useMemo, useState } from 'react'
 import { formatUnits, zeroAddress, type Hex } from 'viem'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
+=======
+import { useEffect, useMemo, useState } from 'react'
+import { formatUnits, zeroAddress, type Hex } from 'viem'
+import { useChainId, useConnection, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+>>>>>>> upstream/master
 
 import { HEADER_HEIGHT } from '../../constants/index.js'
 import { useSwapModal, useTransactionStatusModal } from '../../hooks/index.js'
@@ -30,7 +41,7 @@ export const Swap = () => {
     customSwapErrorMessage,
     onSuccess = () => {}
   } = swapModalSettings!
-  const { address: userAddress, connector } = useAccount()
+  const { address: userAddress, connector } = useConnection()
   const [isTxsPending, setIsTxsPending] = useState(false)
   const [isError, setIsError] = useState(false)
   const [selectedCurrency, setSelectedCurrency] = useState<string>()
@@ -75,7 +86,26 @@ export const Swap = () => {
     return map
   }, [tokenBalances])
 
+  const isTargetWalletClientReady = !!walletClient
+  const isTargetPublicClientReady = publicClient?.chain?.id === chainId
+
   useEffect(() => {
+<<<<<<< HEAD
+=======
+    if (
+      isSwitchingChain &&
+      connectedChainId === chainId &&
+      !isLoadingWalletClient &&
+      isTargetWalletClientReady &&
+      isTargetPublicClientReady
+    ) {
+      setIsSwitchingChain(false)
+      onClickProceed()
+    }
+  }, [connectedChainId, chainId, isLoadingWalletClient, isSwitchingChain, isTargetWalletClientReady, isTargetPublicClientReady])
+
+  useEffect(() => {
+>>>>>>> upstream/master
     // Only attempt to select a currency if none is currently selected
     const selectedCurrencyBalance = tokensBalancesMap.get(selectedCurrency?.toLowerCase() || '')
     if ((selectedCurrency && BigInt(selectedCurrencyBalance || '0') > 0) || isLoadingTokenBalances || swapRoutesIsLoading) {
@@ -157,8 +187,30 @@ export const Swap = () => {
   const isLoading = isLoadingCurrencyInfo || swapRoutesIsLoading
 
   const onClickProceed = async () => {
+<<<<<<< HEAD
     if (!userAddress || !publicClient || !walletClient || !connector) {
+=======
+    if (!userAddress) {
+      throw new Error('User address is not available. Please ensure your wallet is connected.')
+    }
+    if (!connector) {
+      throw new Error('Wallet connector is not available. Please ensure your wallet is properly connected.')
+    }
+
+    if (connectedChainId != chainId) {
+      await switchChain({ chainId })
+      setIsSwitchingChain(true)
+>>>>>>> upstream/master
       return
+    }
+
+    if (!publicClient || publicClient.chain?.id !== chainId) {
+      throw new Error('Public client is not ready for the selected network. Please try again.')
+    }
+    if (!walletClient || isErrorWalletClient || errorWalletClient) {
+      throw new Error('Wallet client is not available. Please ensure your wallet is connected.', {
+        cause: errorWalletClient
+      })
     }
 
     setIsError(false)
@@ -330,9 +382,10 @@ export const Swap = () => {
           <Button
             disabled={noOptionsFound || !selectedCurrency || quoteFetchInProgress || isTxsPending || isErrorSwapQuote}
             variant="primary"
-            label={quoteFetchInProgress ? 'Preparing swap...' : isTxsPending ? 'Preparing transaction...' : 'Proceed'}
             onClick={onClickProceed}
-          />
+          >
+            {quoteFetchInProgress ? 'Preparing swap...' : isTxsPending ? 'Preparing transaction...' : 'Proceed'}
+          </Button>
         </div>
       )
     }

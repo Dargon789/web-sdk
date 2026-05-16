@@ -5,6 +5,10 @@ import {
   truncateAtMiddle,
   useAnalyticsContext,
   useFeeOptions,
+<<<<<<< HEAD
+=======
+  useSendWalletTransaction,
+>>>>>>> upstream/master
   useWaasFeeOptions,
   useWallets,
   waitForTransactionReceipt,
@@ -32,7 +36,11 @@ import {
 import type { TokenBalance } from '@0xsequence/indexer'
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { encodeFunctionData, formatUnits, parseUnits, toHex, zeroAddress, type Hex } from 'viem'
+<<<<<<< HEAD
 import { useAccount, useChainId, useConfig, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+=======
+import { useChainId, useConfig, useConnection, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+>>>>>>> upstream/master
 
 import { AllButActiveWalletSelect } from '../../components/Select/AllButActiveWalletSelect.js'
 import { SendItemInfo } from '../../components/SendItemInfo.js'
@@ -58,7 +66,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
   const { analytics } = useAnalyticsContext()
   const { chains } = useConfig()
   const connectedChainId = useChainId()
-  const { address: accountAddress = '', connector } = useAccount()
+  const { address: accountAddress = '', connector } = useConnection()
   const isConnectorSequenceBased = !!(connector as ExtendedConnector)?._wallet?.isSequenceBased
 
   const isCorrectChainId = connectedChainId === chainId
@@ -74,6 +82,10 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
 
   const [pendingV3FeeConfirmation, confirmV3FeeOption, rejectV3FeeOption] = useFeeOptions()
   const [pendingWaasFeeConfirmation, confirmWaasFeeOption, rejectWaasFeeOption] = useWaasFeeOptions()
+<<<<<<< HEAD
+=======
+  const { sendTransactionAsync: sendWalletTransactionAsync } = useSendWalletTransaction()
+>>>>>>> upstream/master
 
   const connectorType = (connector as ExtendedConnector | undefined)?.type
   const isWaasConnectorActive = connectorType === 'sequence-waas'
@@ -194,7 +206,7 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
       await switchChainAsync({ chainId })
     }
 
-    if (!walletClient) {
+    if (!walletClient && !isSequenceV3ConnectorActive) {
       console.error('Wallet client not found')
       setErrorMsg('Wallet client not available. Please ensure your wallet is connected.')
       setIsSendTxnPending(false)
@@ -208,19 +220,40 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
 
     try {
       if (isNativeCoin) {
-        txHash = await walletClient.sendTransaction({
-          account: accountAddress as `0x${string}`,
-          to: toAddress as `0x${string}`,
-          value: BigInt(sendAmount.toString()),
-          chain: chains.find(c => c.id === chainId)
-        })
+        if (isSequenceV3ConnectorActive) {
+          txHash = (await sendWalletTransactionAsync({
+            chainId,
+            transaction: {
+              to: toAddress as `0x${string}`,
+              value: BigInt(sendAmount.toString())
+            }
+          })) as Hex
+        } else {
+          txHash = await walletClient!.sendTransaction({
+            account: accountAddress as `0x${string}`,
+            to: toAddress as `0x${string}`,
+            value: BigInt(sendAmount.toString()),
+            chain: chains.find(c => c.id === chainId)
+          })
+        }
       } else {
-        txHash = await walletClient.sendTransaction({
-          account: accountAddress as `0x${string}`,
-          to: tokenBalance?.contractAddress as `0x${string}`,
-          data: encodeFunctionData({ abi: ERC_20_ABI, functionName: 'transfer', args: [toAddress, toHex(sendAmount)] }),
-          chain: chains.find(c => c.id === chainId)
-        })
+        const data = encodeFunctionData({ abi: ERC_20_ABI, functionName: 'transfer', args: [toAddress, toHex(sendAmount)] })
+        if (isSequenceV3ConnectorActive) {
+          txHash = (await sendWalletTransactionAsync({
+            chainId,
+            transaction: {
+              to: tokenBalance?.contractAddress as `0x${string}`,
+              data
+            }
+          })) as Hex
+        } else {
+          txHash = await walletClient!.sendTransaction({
+            account: accountAddress as `0x${string}`,
+            to: tokenBalance?.contractAddress as `0x${string}`,
+            data,
+            chain: chains.find(c => c.id === chainId)
+          })
+        }
       }
 
       // Handle successful transaction submission
@@ -352,7 +385,9 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
                   <Text className="whitespace-nowrap" variant="small" color="muted">
                     {`~${fiatCurrency.sign}${amountToSendFiat}`}
                   </Text>
-                  <Button className="shrink-0" size="xs" shape="square" label="Max" onClick={handleMax} data-id="maxCoin" />
+                  <Button className="shrink-0" size="xs" shape="square" onClick={handleMax} data-id="maxCoin">
+                    Max
+                  </Button>
                 </>
               }
             />
@@ -383,15 +418,10 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
                   name="to-address"
                   data-1p-ignore
                   controls={
-                    <Button
-                      className="shrink-0"
-                      size="xs"
-                      shape="square"
-                      label="Paste"
-                      onClick={handlePaste}
-                      data-id="to-address"
-                      leftIcon={CopyIcon}
-                    />
+                    <Button className="shrink-0" size="xs" shape="square" onClick={handlePaste} data-id="to-address">
+                      <CopyIcon />
+                      Paste
+                    </Button>
                   }
                 />
                 {wallets.length > 1 && <AllButActiveWalletSelect onClick={setToAddress} />}
@@ -414,9 +444,16 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
                 size="lg"
                 type="submit"
                 disabled={!isNonZeroAmount || !isEthAddress(toAddress) || insufficientFunds || isSendTxnPending}
+<<<<<<< HEAD
                 label="Send"
                 rightIcon={ChevronRightIcon}
               />
+=======
+              >
+                Send
+                <ChevronRightIcon />
+              </Button>
+>>>>>>> upstream/master
             )}
           </div>
         </>

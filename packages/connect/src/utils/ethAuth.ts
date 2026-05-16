@@ -1,4 +1,5 @@
 import type { ETHAuthProof } from '@0xsequence/auth'
+import { WebStorage } from '@0xsequence/dapp-client'
 import { ETHAuth, Proof } from '@0xsequence/ethauth'
 import type { Storage, UsePublicClientReturnType } from 'wagmi'
 import type { GetWalletClientData } from 'wagmi/query'
@@ -6,6 +7,27 @@ import type { GetWalletClientData } from 'wagmi/query'
 import { DEFAULT_SESSION_EXPIRATION, LocalStorageKey } from '../constants/index.js'
 import type { StorageItem } from '../types.js'
 
+<<<<<<< HEAD
+=======
+const matchesExpectedProofClaims = (
+  decodedProof: Awaited<ReturnType<ETHAuth['decodeProof']>>,
+  normalizedWalletAddress: string,
+  expectedOrigin: string | undefined,
+  expectedNonce: number | undefined
+) => {
+  const exp = decodedProof.claims.exp
+  const nowSeconds = Math.floor(Date.now() / 1000)
+  const isNotExpired = typeof exp === 'number' && exp > nowSeconds
+
+  return (
+    decodedProof.address.toLowerCase() === normalizedWalletAddress &&
+    (decodedProof.claims.ogn ?? undefined) === (expectedOrigin ?? undefined) &&
+    (decodedProof.claims.n ?? undefined) === (expectedNonce ?? undefined) &&
+    isNotExpired
+  )
+}
+
+>>>>>>> upstream/master
 export const signEthAuthProof = async (
   walletClient: GetWalletClientData<any, any>,
   storage: Storage<StorageItem>
@@ -36,6 +58,7 @@ export const signEthAuthProof = async (
   if (proofInformation) {
     try {
       const decodedProof = await ethAuth.decodeProof(proofInformation.proofString, true)
+<<<<<<< HEAD
       const cachedExpiry =
         decodedProof.claims.exp && decodedProof.claims.iat ? decodedProof.claims.exp - decodedProof.claims.iat : null
 
@@ -46,6 +69,9 @@ export const signEthAuthProof = async (
         (decodedProof.claims.n ?? undefined) === (expectedNonce ?? undefined) &&
         cachedExpiry !== null &&
         Math.abs(cachedExpiry - expectedExpiry) <= 1
+=======
+      const isMatchingProof = matchesExpectedProofClaims(decodedProof, normalizedWalletAddress, expectedOrigin, expectedNonce)
+>>>>>>> upstream/master
 
       if (isMatchingProof) {
         return proofInformation
@@ -56,6 +82,31 @@ export const signEthAuthProof = async (
       await clearCachedProof()
     }
   }
+<<<<<<< HEAD
+=======
+
+  // Fall back to dapp-client ETHAuth cache (stored as `ewtString`) before creating a new signature.
+  const dappClientStorage = new WebStorage()
+  const dappClientProof = await dappClientStorage.getEthAuthProof()
+
+  if (dappClientProof?.ewtString) {
+    try {
+      const decodedProof = await ethAuth.decodeProof(dappClientProof.ewtString, true)
+      const isMatchingProof = matchesExpectedProofClaims(decodedProof, normalizedWalletAddress, expectedOrigin, expectedNonce)
+
+      if (isMatchingProof) {
+        const normalizedProof: ETHAuthProof = {
+          typedData: dappClientProof.typedData as ETHAuthProof['typedData'],
+          proofString: dappClientProof.ewtString
+        }
+        await storage.setItem(LocalStorageKey.EthAuthProof, normalizedProof)
+        return normalizedProof
+      }
+    } catch {
+      // ignore malformed dapp-client proof and continue with fresh signing
+    }
+  }
+>>>>>>> upstream/master
 
   const proof = new Proof()
   proof.address = walletAddress

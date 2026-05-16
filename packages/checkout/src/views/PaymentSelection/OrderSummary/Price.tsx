@@ -1,6 +1,12 @@
+<<<<<<< HEAD:packages/checkout/src/views/PaymentSelection/OrderSummary/Price.tsx
 import { useGetCoinPrices, useGetContractInfo } from '@0xsequence/connect'
 import { Spinner, Text, TokenImage } from '@0xsequence/design-system'
 import { findSupportedNetwork } from '@0xsequence/network'
+=======
+import { findSupportedNetwork } from '@0xsequence/connect'
+import { Spinner, Text, TokenImage } from '@0xsequence/design-system'
+import { useGetCoinPrices, useGetContractInfo } from '@0xsequence/hooks'
+>>>>>>> upstream/master:packages/checkout/src/views/Checkout/PaymentMethodSelect/OrderSummary/Price.tsx
 import { formatUnits } from 'viem'
 
 import { useSelectPaymentModal } from '../../../hooks'
