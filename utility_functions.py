@@ -10,7 +10,7 @@ def format_date(date: datetime, format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
 
 
 def generate_hash(input_str: str) -> str:
-    return hashlib.md5(input_str.encode()).hexdigest()
+    return hashlib.sha256(input_str.encode()).hexdigest()
 
 
 def truncate_string(s: str, max_length: int = 50, suffix: str = "...") -> str:
