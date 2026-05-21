@@ -6,7 +6,7 @@ import {
   useOpenConnectModal,
   type ExplicitSession
 } from '@0xsequence/connect'
-import { supplyERC20Calldata, supplyETHCalldata, withdrawERC20Calldata, withdrawETHCalldata } from '@contractjs/aave-v3'
+import { supplyERC20Call data, supplyETHCall data, withdrawERC20Call data, withdrawETHCall data } from '@contractjs/aave-v3'
 import { useEffect, useMemo, useState } from 'react'
 import { encodeFunctionData, erc20Abi, formatUnits, maxUint256, parseAbi, parseEther, parseUnits } from 'viem'
 import { useBalance, useConnection, useConnections, useDisconnect, useReadContract, useSendTransaction } from 'wagmi'
