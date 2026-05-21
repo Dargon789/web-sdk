@@ -1,10 +1,10 @@
-import { formatAddress } from '@0xsequence/connect'
 import { GradientAvatar, Text } from '@0xsequence/design-system'
+import { formatAddress } from '@0xsequence/web-sdk-core'
 import { getAddress } from 'viem'
 import { useChains } from 'wagmi'
 
 import { useSettings } from '../../../hooks/index.js'
-import { formatTokenInfo } from '../../../utils/formatBalance.js'
+import { getTokenDisplayInfo } from '../../../utils/formatBalance.js'
 import type { TokenBalanceWithDetails } from '../../../utils/tokens.js'
 import { TokenImageCustom } from '../../Filter/TokenImageCustom.js'
 import { ListCard } from '../../ListCard/ListCard.js'
@@ -18,7 +18,7 @@ interface BalanceItemProps {
 export const CoinRow = ({ balance, onTokenClick, includeUserAddress = false }: BalanceItemProps) => {
   const { fiatCurrency } = useSettings()
   const chains = useChains()
-  const { logo, name, symbol, displayBalance, fiatBalance } = formatTokenInfo(balance, fiatCurrency.sign, chains)
+  const { logo, name, symbol, displayBalance, fiatBalance } = getTokenDisplayInfo(balance, fiatCurrency.sign, chains)
 
   const userAddress = getAddress(balance.accountAddress)
 

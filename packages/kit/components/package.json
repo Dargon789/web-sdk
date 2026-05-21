@@ -1,0 +1,4 @@
+{
+  "main": "dist/0xsequence-kit-components.cjs.js",
+  "module": "dist/0xsequence-kit-components.esm.js"
+}

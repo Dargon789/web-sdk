@@ -3,18 +3,21 @@ import { useConnectConfigContext, useTheme } from '@0xsequence/connect'
 import { useConfig } from '@0xsequence/hooks'
 
 import { TRAILS_CUSTOM_CSS, TRAILS_CUSTOM_CSS_LIGHT } from './consts.js'
-import { useTrailsSequenceV3WalletSend } from './useTrailsSequenceV3WalletSend.js'
+import { getEnvironmentFromApiUrl, sequenceApiURL, sequenceIndexerURL, sequenceNodeGatewayURL, trailsApiURL } from './utils.js'
 
 export const Swap = () => {
   const config = useConfig()
   const { theme } = useTheme()
   const { trailsCustomCSS } = useConnectConfigContext()
-  useTrailsSequenceV3WalletSend()
 
-  const trailsApiUrl = config.env.trailsApiUrl
-  const sequenceIndexerUrl = config.env.indexerUrl
-  const sequenceNodeGatewayUrl = config.env.nodeGatewayUrl
-  const sequenceApiUrl = config.env.apiUrl
+  // Determine environment from config
+  const environment = getEnvironmentFromApiUrl(config.env.apiUrl)
+
+  // Generate all required URLs
+  const trailsApiUrl = trailsApiURL(environment)
+  const sequenceIndexerUrl = sequenceIndexerURL(environment)
+  const sequenceNodeGatewayUrl = sequenceNodeGatewayURL(environment)
+  const sequenceApiUrl = sequenceApiURL(environment)
   const trailsTheme = typeof theme === 'string' && theme === 'light' ? 'light' : 'dark'
   const resolvedCustomCss =
     typeof trailsCustomCSS === 'string'
