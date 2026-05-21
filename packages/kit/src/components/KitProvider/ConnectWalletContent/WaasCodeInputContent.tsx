@@ -1,22 +1,12 @@
 import React, { useState } from 'react'
-import {
-  Box,
-  Button,
-  Text,
-  Spinner,
-  PINCodeInput
-} from '@0xsequence/design-system'
-
+import { Box, Button, Text, Spinner, PINCodeInput } from '@0xsequence/design-system'
 
 export interface WaasCodeInputContentProps {
   isLoading: boolean
   onVerify: (code: string) => void
 }
 
-export const WaasCodeInputContent = ({
-  isLoading,
-  onVerify
-}: WaasCodeInputContentProps) => {
+export const WaasCodeInputContent = ({ isLoading, onVerify }: WaasCodeInputContentProps) => {
   const [waasEmailPinCode, setWaasEmailPinCode] = useState<string[]>([])
 
   return (
