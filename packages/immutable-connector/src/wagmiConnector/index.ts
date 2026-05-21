@@ -1,6 +1,6 @@
 import { Environment } from '@imtbl/config'
 import { passport } from '@imtbl/sdk'
-import { type Address } from 'viem'
+import type { Address } from 'viem'
 import { createConnector } from 'wagmi'
 
 export interface BaseImmutableConnectorOptions {
@@ -35,19 +35,13 @@ export function immutableConnector(params: BaseImmutableConnectorOptions) {
 
     async setup() {},
 
-    async connect({ withCapabilities } = {}) {
+    async connect() {
       provider = await passportInstance.connectEvm({
         announceProvider: false
       })
       const accounts = await this.getAccounts()
       const chainId = await this.getChainId()
-      // TODO(wagmi v3): `as never` can be removed when wagmi makes `withCapabilities: true` the default
-      // see: https://github.com/wevm/wagmi/blob/main/packages/core/src/connectors/createConnector.ts
-      // ref: https://github.com/wevm/wagmi/blob/main/packages/connectors/src/safe.ts
-      return {
-        accounts: (withCapabilities ? accounts.map(address => ({ address, capabilities: {} })) : accounts) as never,
-        chainId
-      }
+      return { accounts, chainId }
     },
 
     async disconnect() {

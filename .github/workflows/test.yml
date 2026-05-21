@@ -1,5 +1,8 @@
 name: Run Tests
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: [master]
@@ -7,6 +10,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -20,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 22.22.0
           cache: 'pnpm'
 
       - name: Install dependencies

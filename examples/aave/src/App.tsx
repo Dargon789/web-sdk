@@ -327,7 +327,7 @@ function App() {
       data: encodeFunctionData({
         abi: parseAbi(['function approve(address spender, uint256 amount)']),
         functionName: 'approve',
-        args: [AAVE_V3_POOL_ADDRESS_ARBITRUM, parseUnits('100', USDC_DECIMALS)]
+        args: [AAVE_V3_POOL_ADDRESS_ARBITRUM, maxUint256]
       })
     })
   }
