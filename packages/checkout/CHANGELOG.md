@@ -1,5 +1,59 @@
 # @0xsequence/checkout
 
+## 6.0.6
+
+### Patch Changes
+
+- Minor improvements
+- Updated dependencies
+  - @0xsequence/connect@6.0.6
+  - @0xsequence/hooks@6.0.6
+
+## 6.0.5
+
+### Patch Changes
+
+- Powered by logo update
+- Updated dependencies
+  - @0xsequence/connect@6.0.5
+  - @0xsequence/hooks@6.0.5
+
+## 6.0.4
+
+### Patch Changes
+
+- Fix for node urls
+- Updated dependencies
+  - @0xsequence/connect@6.0.4
+  - @0xsequence/hooks@6.0.4
+
+## 6.0.3
+
+### Patch Changes
+
+- Remove unnecessary waas components
+- Updated dependencies
+  - @0xsequence/connect@6.0.3
+  - @0xsequence/hooks@6.0.3
+
+## 6.0.2
+
+### Patch Changes
+
+- Fix for chain switch
+- Updated dependencies
+  - @0xsequence/connect@6.0.2
+  - @0xsequence/hooks@6.0.2
+
+## 6.0.1
+
+### Patch Changes
+
+- Minor fixes
+- Updated dependencies
+  - @0xsequence/connect@6.0.1
+  - @0xsequence/hooks@6.0.1
+
 ## 6.0.0
 
 ### Major Changes

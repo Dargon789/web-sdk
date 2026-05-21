@@ -197,7 +197,7 @@ function App() {
       .then(sessions => {
         setSessionsInfo(sessions)
       })
-      .catch(() => {})
+.catch(error => console.error('Failed to get explicit sessions:', error))
   }, [connections, getExplicitSessions, isConnected])
 
   const anyError =
@@ -613,7 +613,7 @@ function App() {
                   <div className="action-item">
                     <h3>Get session info</h3>
                     <button onClick={async () => console.log(await getExplicitSessions())} className="btn btn-secondary">
-                      'Get session info'
+                      Get session info
                     </button>
                   </div>
                   <div className="action-item">
