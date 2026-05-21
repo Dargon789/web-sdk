@@ -35,6 +35,6 @@ def is_safe_string(input_str: str) -> bool:
 
 # Tests
 assert format_date(datetime.now())[:4] == str(datetime.now().year)
-assert generate_hash("test") == "098f6bcd4621d373cade4e832627b4f6cd"
+assert generate_hash("test") == "098f6bcd4621d373cade4e832627b4f6"
 assert is_safe_string("normal text") == True
 assert is_safe_string("DROP TABLE") == False
