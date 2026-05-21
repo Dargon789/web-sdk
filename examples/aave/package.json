@@ -12,11 +12,10 @@
   "dependencies": {
     "@0xsequence/connect": "workspace:*",
     "@contractjs/aave-v3": "^0.0.8",
-    "ox": "^0.7.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "viem": "^2.28.1",
-    "wagmi": "^2.15.1"
+    "viem": "^2.45.1",
+    "wagmi": "^3.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
@@ -29,6 +28,6 @@
     "globals": "^16.3.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
+    "vite": "^6.4.2"
   }
 }

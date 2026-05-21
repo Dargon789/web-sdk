@@ -1,9 +1,6 @@
 import { SequenceCheckoutConfig } from '@0xsequence/checkout'
 import { ConnectConfig, createConfig } from '@0xsequence/connect'
-import { immutable } from '@0xsequence/immutable-connector'
-import { ChainId } from '@0xsequence/network'
-import { Environment } from '@imtbl/config'
-import { passport } from '@imtbl/sdk'
+import { ChainId } from '@0xsequence/connect'
 import { zeroAddress } from 'viem'
 
 const searchParams = new URLSearchParams(location.search)
@@ -73,19 +70,6 @@ export const connectConfig: ConnectConfig = {
     : undefined
 }
 
-export const passportInstance = new passport.Passport({
-  baseConfig: {
-    environment: Environment.SANDBOX,
-    publishableKey: 'pk_imapik-test-VEMeW7wUX7hE7LHg3FxY'
-  },
-  forceScwDeployBeforeMessageSignature: true,
-  clientId: 'ap8Gv3188GLFROiBFBNFz77DojRpqxnS',
-  redirectUri: `${window.location.origin}/auth-callback`,
-  logoutRedirectUri: `${window.location.origin}`,
-  audience: 'platform_api',
-  scope: 'openid offline_access email transact'
-})
-
 export const config = createConfig('waas', {
   ...connectConfig,
   appName: 'Sequence Web SDK Demo',
@@ -122,13 +106,7 @@ export const config = createConfig('waas', {
   },
   walletConnect: {
     projectId: walletConnectProjectId
-  },
-  additionalWallets: [
-    immutable({
-      passportInstance,
-      environment: Environment.SANDBOX
-    })
-  ]
+  }
 })
 
 export const getErc1155SaleContractConfig = (walletAddress: string) => ({

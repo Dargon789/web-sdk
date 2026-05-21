@@ -2,19 +2,28 @@ import { SequenceIndexerGateway, type IndexerGateway, type TokenBalance } from '
 import { useQuery } from '@tanstack/react-query'
 
 import { QUERY_KEYS, time } from '../../constants.js'
-import type { HooksOptions } from '../../types/hooks.js'
+import type { QueryHookOptions } from '../../types/hooks.js'
 import { createNativeTokenBalance } from '../../utils/helpers.js'
 
 import { useIndexerGatewayClient } from './useIndexerGatewayClient.js'
 
+export type GetNativeTokenBalanceArgs = IndexerGateway.GetNativeTokenBalanceRequest
+
 const getNativeTokenBalance = async (
   indexerGatewayClient: SequenceIndexerGateway,
-  args: IndexerGateway.GetNativeTokenBalanceArgs
+  args: GetNativeTokenBalanceArgs
 ): Promise<TokenBalance[]> => {
   const res = await indexerGatewayClient.getNativeTokenBalance(args)
 
   const balances = res.balances.map(balances =>
-    createNativeTokenBalance(balances.chainId, balances.result.accountAddress, balances.result.balance)
+    createNativeTokenBalance({
+      chainId: balances.chainId,
+      accountAddress: balances.result.accountAddress,
+      balance: balances.result.balance,
+      balanceUSD: balances.result.balanceUSD,
+      priceUSD: balances.result.priceUSD,
+      priceUpdatedAt: balances.result.priceUpdatedAt
+    })
   )
 
   return balances
@@ -51,14 +60,15 @@ const getNativeTokenBalance = async (
  * }
  * ```
  */
-export const useGetNativeTokenBalance = (args: IndexerGateway.GetNativeTokenBalanceArgs, options?: HooksOptions) => {
+export const useGetNativeTokenBalance = (args: GetNativeTokenBalanceArgs, options?: QueryHookOptions<TokenBalance[]>) => {
   const indexerGatewayClient = useIndexerGatewayClient()
 
   return useQuery({
-    queryKey: [QUERY_KEYS.useGetNativeTokenBalance, args, options],
+    queryKey: [QUERY_KEYS.useGetNativeTokenBalance, args],
     queryFn: async () => await getNativeTokenBalance(indexerGatewayClient, args),
-    retry: options?.retry ?? false,
+    retry: false,
     staleTime: time.oneSecond * 30,
-    enabled: !!args.accountAddress && !options?.disabled
+    enabled: !!args.accountAddress,
+    ...options
   })
 }
