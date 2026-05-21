@@ -10,7 +10,7 @@ View the [demo here](https://0xsequence.github.io/web-sdk)! 👀
   <img src="../../public/docs/web-sdk-demo.png">
 </div>
 
-The React example can be used to test the library locally.
+The Next example can be used to test the library locally.
 
 1. `pnpm install`
 2. From the root folder, run `pnpm build` to build the packages.
