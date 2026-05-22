@@ -40,7 +40,7 @@ export const signEthAuthProof = async (
         decodedProof.claims.exp && decodedProof.claims.iat ? decodedProof.claims.exp - decodedProof.claims.iat : null
 
       const isMatchingProof =
-        decodedProof.address === normalizedWalletAddress &&
+        decodedProof.address.toLowerCase() === normalizedWalletAddress &&
         (decodedProof.claims.app || 'app') === expectedApp &&
         (decodedProof.claims.ogn ?? undefined) === (expectedOrigin ?? undefined) &&
         (decodedProof.claims.n ?? undefined) === (expectedNonce ?? undefined) &&
