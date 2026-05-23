@@ -1,9 +1,7 @@
 import { SequenceCheckoutConfig } from '@0xsequence/checkout'
 import { ConnectConfig, createConfig, createContractPermission } from '@0xsequence/connect'
-import { ChainId } from '@0xsequence/network'
-import { Environment } from '@imtbl/config'
-import { passport } from '@imtbl/sdk'
-import { parseEther, zeroAddress } from 'viem'
+import { ChainId } from '@0xsequence/connect'
+import { zeroAddress } from 'viem'
 import { cookieStorage, createStorage } from 'wagmi'
 
 import { getEmitterContractAddress } from './constants/permissions'
@@ -12,8 +10,8 @@ const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.
 
 // append ?debug to url to enable debug mode
 const isDebugMode = searchParams.has('debug')
-const isDev = true
-const projectAccessKey = isDev ? 'AQAAAAAAAAVBcvNU0sTXiBQmgnL-uVm929Y' : 'AQAAAAAAAKqC8tV0Mgsd0BGlI2bzanNTdEE'
+const isDev = false
+const projectAccessKey = isDev ? 'AQAAAAAAAAVBcvNU0sTXiBQmgnL-uVm929Y' : 'AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI'
 const walletConnectProjectId = 'c65a6cb1aa83c4e24500130f23a437d8'
 const defaultOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
 
@@ -74,31 +72,6 @@ export const connectConfig: ConnectConfig = {
     : undefined
 }
 
-let passportInstance: passport.Passport | undefined
-
-export const getPassportInstance = () => {
-  if (typeof window === 'undefined') {
-    return undefined
-  }
-
-  if (!passportInstance) {
-    passportInstance = new passport.Passport({
-      baseConfig: {
-        environment: Environment.SANDBOX,
-        publishableKey: 'pk_imapik-test-VEMeW7wUX7hE7LHg3FxY'
-      },
-      forceScwDeployBeforeMessageSignature: true,
-      clientId: 'ap8Gv3188GLFROiBFBNFz77DojRpqxnS',
-      redirectUri: `${defaultOrigin}/auth-callback`,
-      logoutRedirectUri: `${defaultOrigin}`,
-      audience: 'platform_api',
-      scope: 'openid offline_access email transact'
-    })
-  }
-
-  return passportInstance
-}
-
 export const config = createConfig({
   ...connectConfig,
   walletUrl: 'https://v3.sequence-dev.app',
@@ -130,11 +103,8 @@ export const config = createConfig({
   includeFeeOptionPermissions: true,
   explicitSessionParams: {
     chainId: ChainId.OPTIMISM,
-    nativeTokenSpending: {
-      valueLimit: parseEther('0.1')
-    },
     expiresIn: {
-      days: 1
+      minutes: 3
     },
     permissions: [
       createContractPermission({
