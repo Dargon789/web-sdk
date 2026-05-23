@@ -62,7 +62,7 @@ export const useCheckoutUI = ({
       tokenIDs: [collectible.tokenId ?? '']
     },
     {
-      enabled: !!collectible.tokenId
+      disabled: !collectible.tokenId
     }
   )
 

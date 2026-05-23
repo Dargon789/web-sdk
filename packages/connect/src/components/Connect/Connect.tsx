@@ -464,7 +464,7 @@ export const Connect = (props: ConnectProps) => {
       }
 
       // We check if SDK-generated connectors is actually an injected connector
-      const isMetamaskInjected = typeof window !== 'undefined' && window.ethereum?.isMetaMask
+      const isMetamaskInjected = window.ethereum?.isMetaMask
 
       if ((connector as ExtendedConnector)._wallet?.id === 'metamask-wallet' && isMetamaskInjected) {
         return true

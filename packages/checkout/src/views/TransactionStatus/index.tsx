@@ -125,7 +125,7 @@ export const TransactionStatus = () => {
       tokenIDs: noItemsToDisplay ? [] : items?.map(i => i.tokenId || '')
     },
     {
-      enabled: !noItemsToDisplay
+      disabled: noItemsToDisplay
     }
   )
 
@@ -172,7 +172,7 @@ export const TransactionStatus = () => {
       contractAddress: collectionAddress || ''
     },
     {
-      enabled: !noItemsToDisplay
+      disabled: noItemsToDisplay
     }
   )
   const { data: dataCurrencyInfo, isLoading: isLoadingCurrencyInfo } = useGetContractInfo(
@@ -181,7 +181,7 @@ export const TransactionStatus = () => {
       contractAddress: currencyAddress || ''
     },
     {
-      enabled: !noItemsToDisplay
+      disabled: noItemsToDisplay
     }
   )
 
