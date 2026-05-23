@@ -378,9 +378,15 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
                 <>
                   {showAmountControls && (
                     <div className="flex gap-2">
-                      <Button disabled={isMinimum} size="xs" onClick={handleSubtractOne} leftIcon={SubtractIcon} />
-                      <Button disabled={isMaximum} size="xs" onClick={handleAddOne} leftIcon={AddIcon} />
-                      <Button className="shrink-0" size="xs" shape="square" label="Max" onClick={handleMax} data-id="maxCoin" />
+                      <Button disabled={isMinimum} size="xs" onClick={handleSubtractOne}>
+                        <SubtractIcon />
+                      </Button>
+                      <Button disabled={isMaximum} size="xs" onClick={handleAddOne}>
+                        <AddIcon />
+                      </Button>
+                      <Button className="shrink-0" size="xs" shape="square" onClick={handleMax} data-id="maxCoin">
+                        Max
+                      </Button>
                     </div>
                   )}
                 </>
@@ -418,15 +424,10 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
                   name="to-address"
                   data-1p-ignore
                   controls={
-                    <Button
-                      className="shrink-0"
-                      size="xs"
-                      shape="square"
-                      label="Paste"
-                      onClick={handlePaste}
-                      data-id="to-address"
-                      leftIcon={CopyIcon}
-                    />
+                    <Button className="shrink-0" size="xs" shape="square" onClick={handlePaste} data-id="to-address">
+                      <CopyIcon />
+                      Paste
+                    </Button>
                   }
                 />
                 {wallets.length > 1 && <AllButActiveWalletSelect onClick={setToAddress} />}
@@ -448,9 +449,10 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
                 size="lg"
                 type="submit"
                 disabled={!isNonZeroAmount || !isEthAddress(toAddress) || insufficientFunds || isSendTxnPending}
-                label="Send"
-                rightIcon={ChevronRightIcon}
-              />
+              >
+                Send
+                <ChevronRightIcon />
+              </Button>
             )}
           </div>
         </>
