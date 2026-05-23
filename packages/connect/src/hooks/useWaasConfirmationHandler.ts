@@ -61,7 +61,7 @@ export function useWaasConfirmationHandler(
       }
     }
     setup()
-  }, [waasConnector])
+  })
 
   return [pendingRequestConfirmation, confirmPendingRequest, rejectPendingRequest]
 }

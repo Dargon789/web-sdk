@@ -228,13 +228,7 @@ export const ConnectWalletContent = (props: ConnectWalletContentProps) => {
         {emailConnector && showEmailInput && (
           <Box as="form" onSubmit={onConnectInlineEmail}>
             <Box style={{ width: 'calc(100% - 32px)' }}>
-              <TextInput
-                onChange={onChangeEmail}
-                value={email}
-                name="email"
-                placeholder="Enter email"
-                data-1p-ignore
-              />
+              <TextInput onChange={onChangeEmail} value={email} name="email" placeholder="Enter email" data-1p-ignore />
             </Box>
             <Box alignItems="center" justifyContent="center" marginTop="4">
               {!emailAuthInProgress && (

@@ -1,4 +1,5 @@
 name: Setup Node and PNPM dependencies
+description: Install Node.js and PNPM dependencies with caching support
 
 runs:
   using: 'composite'
