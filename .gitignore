@@ -1,0 +1,21 @@
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
+node_modules/
+cache/
+build/
+dist/
+/packages/*/dist/**
+
+.next/
+
+.turbo
+
+*.js.map
+
+.DS_Store
+.vscode
+.idea
+*.iml
+.cache
+package-lock.json
+coverage

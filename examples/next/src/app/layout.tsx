@@ -1,0 +1,38 @@
+import './globals.css'
+import '@0xsequence/design-system/styles.css'
+import { ThemeProvider } from '@0xsequence/design-system'
+import { Analytics } from '@vercel/analytics/next'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import { headers } from 'next/headers'
+import { cookieToInitialState } from 'wagmi'
+
+import { wagmiConfig } from '../config'
+
+import { Providers } from './Providers'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Sequence Web SDK Demo (Next.js)',
+  description: 'Next.js example for the Sequence Web SDK'
+}
+
+export default function RootLayout({
+  children
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  const initialState = cookieToInitialState(wagmiConfig, headers().get('cookie'))
+
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <ThemeProvider theme="dark">
+          <Providers initialState={initialState}>{children}</Providers>
+        </ThemeProvider>
+        <Analytics />
+      </body>
+    </html>
+  )
+}

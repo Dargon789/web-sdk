@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "declaration": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "typeRoots": ["node_modules/@types"],
+    "types": ["node"]
+  },
+  "include": ["./packages/**/src/**/*.ts", "./packages/**/src/**/*.tsx"]
+}
