@@ -115,7 +115,8 @@ async function ccipRequest({ data, sender, urls }) {
       const response = await fetch(url.replace("{sender}", sender).replace("{data}", data), {
         body: JSON.stringify(body),
         headers,
-        method
+        method,
+        redirect: "error"
       });
       let result;
       if ((_a = response.headers.get("Content-Type")) == null ? void 0 : _a.startsWith("application/json")) {
