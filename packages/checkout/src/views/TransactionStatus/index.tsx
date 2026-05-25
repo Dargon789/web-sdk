@@ -113,7 +113,7 @@ export const TransactionStatus = () => {
     successActionButtons = []
   } = transactionStatusSettings!
   const networkConfig = findSupportedNetwork(chainId)
-  const blockExplorerUrl = `${networkConfig?.blockExplorer?.rootUrl}tx/${txHash}`
+  const blockExplorerUrl = `${networkConfig?.blockExplorer?.rootUrl}/tx/${txHash}`
 
   const [startTime] = useState(new Date())
   const [status, setStatus] = useState<TxStatus>('pending')
