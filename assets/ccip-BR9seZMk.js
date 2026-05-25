@@ -105,7 +105,7 @@ async function offchainLookup(client, { blockNumber, blockTag, data, to }) {
 }
 async function ccipRequest({ data, sender, urls }) {
   var _a;
-  let error = new Error("An unknown error occurred.");
+  let error = new Error("No gateway URLs provided or all gateways failed.");
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
     const method = url.includes("{data}") ? "GET" : "POST";
