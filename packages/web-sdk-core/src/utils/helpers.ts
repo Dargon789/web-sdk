@@ -110,8 +110,9 @@ export const truncateAtMiddle = (text: string, truncateAt: number) => {
 export const truncateAtIndex = (text: string, truncateIndex: number) => {
   let finalText = text
 
-  if (text.length >= truncateIndex) {
-    finalText = text.slice(0, truncateIndex) + '...' + text.slice(text.length - 4)
+  if (text.length > truncateIndex) {
+    const charsToShow = Math.floor(truncateIndex / 2)
+    finalText = text.slice(0, charsToShow) + '...' + text.slice(text.length - charsToShow, text.length)
   }
 
   return finalText
@@ -144,4 +145,33 @@ export const normalizeChainId = (chainId: string | number | bigint | { chainId: 
     return Number(chainId)
   }
   return chainId
+}
+
+export const isSequenceUrl = (url?: string): url is string => {
+  return !!url && url.includes('sequence.app')
+}
+
+export const normalizeSequenceNodesUrl = (nodesUrl?: string) => {
+  if (!nodesUrl) {
+    return nodesUrl
+  }
+
+  const cleanUrl = nodesUrl.endsWith('/') ? nodesUrl.slice(0, -1) : nodesUrl
+
+  if (!isSequenceUrl(cleanUrl)) {
+    return cleanUrl
+  }
+
+  if (cleanUrl.includes('{network}')) {
+    return cleanUrl
+  }
+
+  const pathSegments = cleanUrl.split('/').filter(Boolean)
+  const hasPathBeyondHost = pathSegments.length > 2
+
+  if (hasPathBeyondHost) {
+    throw new Error('Invalid nodesUrl: Sequence nodesUrl must be a bare host or include "{network}".')
+  }
+
+  return `${cleanUrl}/{network}`
 }
