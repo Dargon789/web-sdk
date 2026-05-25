@@ -29,7 +29,7 @@ export const WalletAccountGradient = ({
             padding: `${remSize / 4}px`
           }}
         >
-        <LoginIcon style={{ width: remSize, height: remSize }} />
+          <LoginIcon style={{ width: remSize, height: remSize }} />
         </div>
       </div>
     </div>
