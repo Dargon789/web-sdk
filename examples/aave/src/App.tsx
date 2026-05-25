@@ -10,6 +10,7 @@ import { supplyERC20Calldata, supplyETHCalldata, withdrawERC20Calldata, withdraw
 import { useEffect, useMemo, useState } from 'react'
 import { encodeFunctionData, erc20Abi, formatUnits, maxUint256, parseAbi, parseEther, parseUnits } from 'viem'
 import { useBalance, useConnection, useConnections, useDisconnect, useReadContract, useSendTransaction } from 'wagmi'
+import { Analytics } from '@vercel/analytics/react'
 
 import { AAVE_V3_POOL_ADDRESS_ARBITRUM, AAVE_V3_WRAPPED_TOKEN_GATEWAY_ADDRESS_ARBITRUM, USDC_ADDRESS_ARBITRUM } from './config'
 
@@ -196,7 +197,7 @@ function App() {
       .then(sessions => {
         setSessionsInfo(sessions)
       })
-      .catch(() => {})
+.catch(error => console.error('Failed to get explicit sessions:', error))
   }, [connections, getExplicitSessions, isConnected])
 
   const anyError =
@@ -612,7 +613,7 @@ function App() {
                   <div className="action-item">
                     <h3>Get session info</h3>
                     <button onClick={async () => console.log(await getExplicitSessions())} className="btn btn-secondary">
-                      'Get session info'
+                      Get session info
                     </button>
                   </div>
                   <div className="action-item">
@@ -684,6 +685,7 @@ function App() {
           </div>
         </div>
       )}
+      <Analytics />
     </div>
   )
 }

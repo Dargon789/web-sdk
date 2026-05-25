@@ -8,6 +8,7 @@ on:
   push: web-sdk
   branches:
       - master
+      - main
   # This allows you to manually trigger the workflow from the GitHub Actions page.
   workflow_dispatch:
 # These are environment variables passed to the Vercel CLI.
