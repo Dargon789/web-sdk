@@ -11,7 +11,7 @@ import {
 import { Modal, Scroll, ThemeProvider } from '@0xsequence/design-system'
 import { AnimatePresence } from 'motion/react'
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { useConnection } from 'wagmi'
+import { useAccount } from 'wagmi'
 
 import { WALLET_HEIGHT, WALLET_WIDTH } from '../../constants/index.js'
 import {
