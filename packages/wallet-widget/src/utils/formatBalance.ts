@@ -1,9 +1,11 @@
 import { compareAddress, formatDisplay, getNativeTokenInfoByChainId } from '@0xsequence/connect'
 import type { TokenBalance } from '@0xsequence/indexer'
-import { formatUnits, parseUnits, type Chain } from 'viem'
+import { formatUnits, type Chain } from 'viem'
 import { zeroAddress } from 'viem'
 
 import type { TokenBalanceWithDetails } from './tokens.js'
+
+//TODO: rename these and maybe do a refactor
 
 interface NativeTokenInfo {
   chainId: number
@@ -15,7 +17,7 @@ interface NativeTokenInfo {
   blockExplorerName?: string
 }
 
-export interface TokenDisplayInfo {
+interface TokenInfo {
   name: string
   logo?: string
   symbol?: string
@@ -25,83 +27,67 @@ export interface TokenDisplayInfo {
   fiatBalance: string
 }
 
-/**
- * Formats token balance and metadata for display.
- */
-export const getTokenDisplayInfo = (
+export const formatTokenInfo = (
   balance: TokenBalanceWithDetails | undefined,
   fiatSign: string,
   chains: readonly [Chain, ...Chain[]]
-): TokenDisplayInfo => {
+): TokenInfo => {
   if (!balance) {
     return { isNativeToken: false, logo: '', name: '', symbol: '', displayBalance: '', fiatBalance: '' }
   }
 
-  const isNativeToken = compareAddress(balance.contractAddress || '', zeroAddress)
-  const nativeTokenInfo = getNativeTokenInfoByChainId(balance.chainId || 1, chains)
+  const isNativeToken = compareAddress(balance?.contractAddress || '', zeroAddress)
+  const nativeTokenInfo = getNativeTokenInfoByChainId(balance?.chainId || 1, chains)
 
-  const name = isNativeToken ? nativeTokenInfo.name : balance.contractInfo?.name || 'Unknown'
-  const symbol = isNativeToken ? nativeTokenInfo.symbol : balance.contractInfo?.symbol || ''
-  const logo = isNativeToken ? nativeTokenInfo.logoURI : balance.contractInfo?.logoURI
-  const decimals = (isNativeToken ? nativeTokenInfo.decimals : balance.contractInfo?.decimals) || 18
+  const selectedCoinLogo = isNativeToken ? nativeTokenInfo.logoURI : balance?.contractInfo?.logoURI
+  const selectedCoinName = isNativeToken ? nativeTokenInfo.name : balance?.contractInfo?.name || 'Unknown'
+  const selectedCoinSymbol = isNativeToken ? nativeTokenInfo.symbol : balance?.contractInfo?.symbol
 
-  const formattedAmount = formatUnits(BigInt(balance.balance || 0), decimals)
-  const displayBalanceValue = formatDisplay(formattedAmount)
-  const fiatValue = (balance.price?.value || 0) * Number(formattedAmount)
+  const decimals = isNativeToken ? nativeTokenInfo.decimals : balance?.contractInfo?.decimals
+  const bal = formatUnits(BigInt(balance?.balance || 0), decimals || 18)
+  const displayBalance = formatDisplay(bal)
+  const symbol = isNativeToken ? nativeTokenInfo.symbol : balance?.contractInfo?.symbol
+  const fiatBalance = (balance?.price?.value || 0) * Number(bal)
 
   return {
     isNativeToken,
     nativeTokenInfo,
-    logo,
-    name,
-    symbol,
-    displayBalance: `${displayBalanceValue} ${symbol}`.trim(),
-    fiatBalance: `${fiatSign}${fiatValue.toFixed(2)}`
+    logo: selectedCoinLogo,
+    name: selectedCoinName,
+    symbol: selectedCoinSymbol,
+    displayBalance: `${displayBalance} ${symbol}`,
+    fiatBalance: `${fiatSign}${fiatBalance.toFixed(2)}`
   }
 }
 
-/**
- * Formats a raw balance into a fiat currency string.
- */
-export const formatFiatValue = (
-  balance: string | number | bigint,
-  price: number,
-  decimals: number,
-  fiatSign: string
-): string => {
-  if (!balance || Number(balance) === 0) {
+export const formatFiatBalance = (balance: number, price: number, decimals: number, fiatSign: string) => {
+  if (!balance) {
     return ''
   }
 
-  const formattedAmount = formatUnits(BigInt(balance.toString()), decimals || 18)
-  const fiatValue = price * Number(formattedAmount)
+  const bal = formatUnits(BigInt(Number(balance)), decimals || 18)
 
-  return `${fiatSign}${fiatValue.toFixed(2)}`
+  return `${fiatSign}${(price * Number(bal)).toFixed(2)}`
 }
 
-/**
- * Formats a TokenBalance into a human-readable unit string.
- */
-export const formatTokenAmount = (
-  token: TokenBalance | undefined,
-  chains: readonly [Chain, ...Chain[]]
-): string => {
+export const formatTokenUnits = (token: TokenBalance | undefined, chains: readonly [Chain, ...Chain[]]) => {
   if (!token) {
     return ''
   }
 
   const isNativeToken = token.contractType === 'NATIVE'
-  const decimals = isNativeToken
-    ? getNativeTokenInfoByChainId(token.chainId, chains).decimals
-    : token.contractInfo?.decimals || 18
+  const nativeTokenInfo = getNativeTokenInfoByChainId(token.chainId, chains)
 
-  return formatUnits(BigInt(token.balance), decimals)
+  if (isNativeToken) {
+    return formatUnits(BigInt(Number(token.balance)), nativeTokenInfo.decimals)
+  }
+  return formatUnits(BigInt(Number(token.balance)), token.contractInfo?.decimals || 18)
 }
 
-/**
- * Converts a decimal balance to its wei (base unit) representation.
- * Uses parseUnits for better precision over floating point math.
- */
-export const toWei = (balance: string | number, decimals: number): bigint => {
-  return parseUnits(balance.toString(), decimals)
+export const decimalsToWei = (balance: number, decimals: number) => {
+  const scaledBalance = balance * Math.pow(10, decimals)
+
+  const balanceBigInt = BigInt(scaledBalance)
+
+  return Number(balanceBigInt)
 }
