@@ -1,6 +1,7 @@
 import './globals.css'
 import '@0xsequence/design-system/styles.css'
 import { ThemeProvider } from '@0xsequence/design-system'
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { headers } from 'next/headers'
@@ -30,6 +31,7 @@ export default function RootLayout({
         <ThemeProvider theme="dark">
           <Providers initialState={initialState}>{children}</Providers>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
