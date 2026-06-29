@@ -47,7 +47,7 @@ export const fetchSardineClientToken = async ({
       params: {
         name: tokenMetadata?.name || 'Unknown',
         imageUrl: tokenMetadata?.image || 'https://sequence.market/images/placeholder.png',
-        network: networks[order.chainId as ChainId].name,
+        network: networks[order.chainId as ChainId]?.name || `Chain ${order.chainId}`,
         recipientAddress: order.recipientAddress,
         contractAddress: order.contractAddress,
         platform: 'calldata_execution',
