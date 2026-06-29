@@ -60,8 +60,9 @@ export function immutableConnector(params: BaseImmutableConnectorOptions) {
 
     async getProvider() {
       const userProfile = await passportInstance.login({ useCachedSession: true })
-      if (!userProfile && !provider) {
-        throw new Error('Provider not initialized')
+      if (!userProfile) {
+        provider = undefined
+        throw new Error('User is not logged in')
       }
       if (!provider) {
         provider = await passportInstance.connectEvm({
