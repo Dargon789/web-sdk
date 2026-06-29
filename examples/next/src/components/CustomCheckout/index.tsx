@@ -5,12 +5,12 @@ import { CryptoOption } from '@0xsequence/connect'
 import { Button, Image, NetworkImage, Spinner, Text } from '@0xsequence/design-system'
 import { useState } from 'react'
 import { encodeFunctionData, toHex } from 'viem'
-import { useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 
 import { ERC_1155_SALE_CONTRACT } from '../../constants/erc1155-sale-contract'
 
 export const CustomCheckout = () => {
-  const { address } = useAccount()
+  const { address } = useConnection()
 
   // NATIVE token sale
   // const currencyAddress = zeroAddress
@@ -87,7 +87,7 @@ export const CustomCheckout = () => {
                 width: '36px'
               }}
             >
-              <Image alt="Collectible preview" disableAnimation src={orderSummary.data?.collectibleItem?.collectibleImageUrl} />
+              <Image alt="Collectible preview" src={orderSummary.data?.collectibleItem?.collectibleImageUrl} />
             </div>
             <div className="flex flex-col gap-0.5">
               <Text variant="small" color="secondary" fontWeight="medium">
@@ -101,7 +101,7 @@ export const CustomCheckout = () => {
         </div>
         <div className="flex gap-1 flex-col">
           <div className="flex flex-row gap-2 items-center">
-            <NetworkImage disableAnimation chainId={chainId} size="sm" />
+            <NetworkImage chainId={chainId} size="sm" />
             <Text
               color="white"
               variant="large"

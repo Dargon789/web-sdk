@@ -3,6 +3,7 @@ import {
   truncateAtMiddle,
   useAnalyticsContext,
   useFeeOptions,
+  useSendWalletTransaction,
   useWaasFeeOptions,
   useWallets,
   waitForTransactionReceipt,
@@ -26,7 +27,7 @@ import { useClearCachedBalances, useGetSingleTokenBalance, useIndexerClient } fr
 import type { ContractType, TokenBalance } from '@0xsequence/indexer'
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { encodeFunctionData, formatUnits, parseUnits, toHex, zeroAddress, type Hex } from 'viem'
-import { useAccount, useChainId, useConfig, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+import { useChainId, useConfig, useConnection, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
 
 import { AllButActiveWalletSelect } from '../../components/Select/AllButActiveWalletSelect.js'
 import { SendItemInfo } from '../../components/SendItemInfo.js'
@@ -51,7 +52,7 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
   const { analytics } = useAnalyticsContext()
   const { chains } = useConfig()
   const connectedChainId = useChainId()
-  const { address: accountAddress = '', connector } = useAccount()
+  const { address: accountAddress = '', connector } = useConnection()
   const indexerClient = useIndexerClient(chainId)
   const publicClient = usePublicClient({ chainId })
   const isConnectorSequenceBased = !!(connector as ExtendedConnector)?._wallet?.isSequenceBased
@@ -68,6 +69,7 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
 
   const [pendingV3FeeConfirmation, confirmV3FeeOption, rejectV3FeeOption] = useFeeOptions()
   const [pendingWaasFeeConfirmation, confirmWaasFeeOption, rejectWaasFeeOption] = useWaasFeeOptions()
+  const { sendTransactionAsync: sendWalletTransactionAsync } = useSendWalletTransaction()
 
   const connectorType = (connector as ExtendedConnector | undefined)?.type
   const isWaasConnectorActive = connectorType === 'sequence-waas'
@@ -249,7 +251,7 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
       await switchChainAsync({ chainId })
     }
 
-    if (!walletClient) {
+    if (!walletClient && !isSequenceV3ConnectorActive) {
       console.error('Wallet client not found')
       setErrorMsg('Wallet client not available. Please ensure your wallet is connected.')
       setIsSendTxnPending(false)
@@ -265,33 +267,51 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
     try {
       switch (contractType) {
         case 'ERC721':
-          console.log('Sending ERC721 via walletClient')
           txData = encodeFunctionData({
             abi: ERC_721_ABI,
             functionName: 'safeTransferFrom',
             args: [accountAddress, toAddress, tokenId]
           })
-          txHash = await walletClient.sendTransaction({
-            account: accountAddress as `0x${string}`,
-            to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
-            data: txData,
-            chain: chains.find(c => c.id === chainId)
-          })
+          if (isSequenceV3ConnectorActive) {
+            txHash = (await sendWalletTransactionAsync({
+              chainId,
+              transaction: {
+                to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
+                data: txData
+              }
+            })) as Hex
+          } else {
+            txHash = await walletClient!.sendTransaction({
+              account: accountAddress as `0x${string}`,
+              to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
+              data: txData,
+              chain: chains.find(c => c.id === chainId)
+            })
+          }
           break
         case 'ERC1155':
         default:
-          console.log('Sending ERC1155 via walletClient')
           txData = encodeFunctionData({
             abi: ERC_1155_ABI,
             functionName: 'safeBatchTransferFrom',
             args: [accountAddress, toAddress, [tokenId], [toHex(sendAmount)], toHex(new Uint8Array())]
           })
-          txHash = await walletClient.sendTransaction({
-            account: accountAddress as `0x${string}`,
-            to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
-            data: txData,
-            chain: chains.find(c => c.id === chainId)
-          })
+          if (isSequenceV3ConnectorActive) {
+            txHash = (await sendWalletTransactionAsync({
+              chainId,
+              transaction: {
+                to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
+                data: txData
+              }
+            })) as Hex
+          } else {
+            txHash = await walletClient!.sendTransaction({
+              account: accountAddress as `0x${string}`,
+              to: (tokenBalance as TokenBalance).contractAddress as `0x${string}`,
+              data: txData,
+              chain: chains.find(c => c.id === chainId)
+            })
+          }
       }
 
       // Handle successful transaction submission
@@ -378,9 +398,15 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
                 <>
                   {showAmountControls && (
                     <div className="flex gap-2">
-                      <Button disabled={isMinimum} size="xs" onClick={handleSubtractOne} leftIcon={SubtractIcon} />
-                      <Button disabled={isMaximum} size="xs" onClick={handleAddOne} leftIcon={AddIcon} />
-                      <Button className="shrink-0" size="xs" shape="square" label="Max" onClick={handleMax} data-id="maxCoin" />
+                      <Button disabled={isMinimum} size="xs" onClick={handleSubtractOne}>
+                        <SubtractIcon />
+                      </Button>
+                      <Button disabled={isMaximum} size="xs" onClick={handleAddOne}>
+                        <AddIcon />
+                      </Button>
+                      <Button className="shrink-0" size="xs" shape="square" onClick={handleMax} data-id="maxCoin">
+                        Max
+                      </Button>
                     </div>
                   )}
                 </>
@@ -418,15 +444,10 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
                   name="to-address"
                   data-1p-ignore
                   controls={
-                    <Button
-                      className="shrink-0"
-                      size="xs"
-                      shape="square"
-                      label="Paste"
-                      onClick={handlePaste}
-                      data-id="to-address"
-                      leftIcon={CopyIcon}
-                    />
+                    <Button className="shrink-0" size="xs" shape="square" onClick={handlePaste} data-id="to-address">
+                      <CopyIcon />
+                      Paste
+                    </Button>
                   }
                 />
                 {wallets.length > 1 && <AllButActiveWalletSelect onClick={setToAddress} />}
@@ -448,9 +469,10 @@ export const SendCollectible = ({ chainId, contractAddress, tokenId }: SendColle
                 size="lg"
                 type="submit"
                 disabled={!isNonZeroAmount || !isEthAddress(toAddress) || insufficientFunds || isSendTxnPending}
-                label="Send"
-                rightIcon={ChevronRightIcon}
-              />
+              >
+                Send
+                <ChevronRightIcon />
+              </Button>
             )}
           </div>
         </>

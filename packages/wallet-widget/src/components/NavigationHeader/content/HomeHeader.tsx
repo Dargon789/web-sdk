@@ -2,10 +2,11 @@ import { useOpenConnectModal, useWallets } from '@0xsequence/connect'
 import {
   AddIcon,
   ArrowUpIcon,
-  Divider,
+  Button,
   IconButton,
   ScanIcon,
   SearchIcon,
+  Separator,
   SettingsIcon,
   SwapIcon,
   Text,
@@ -50,10 +51,24 @@ export const HomeHeader = () => {
     })
   }
 
+  const onClickSwap = () => {
+    setIsOperationMenuOpen(false)
+    setNavigation({
+      location: 'swap'
+    })
+  }
+
   const onClickReceive = () => {
     setIsOperationMenuOpen(false)
     setNavigation({
       location: 'receive'
+    })
+  }
+
+  const onClickBuy = () => {
+    setIsOperationMenuOpen(false)
+    setNavigation({
+      location: 'buy'
     })
   }
 
@@ -83,8 +98,7 @@ export const HomeHeader = () => {
 
           {isOperationMenuOpen && (
             <PopoverPrimitive.Content
-              className="flex flex-col p-2 gap-2 z-30 rounded-xl border border-border-normal"
-              style={{ background: 'rgb(25, 25, 25)' }}
+              className="flex flex-col p-2 gap-2 z-30 rounded-xl border border-border-normal bg-background-primary"
               asChild
               side="bottom"
               sideOffset={8}
@@ -98,9 +112,20 @@ export const HomeHeader = () => {
                     onClickSend()
                   }}
                 >
-                  <ArrowUpIcon color="white" />
+                  <ArrowUpIcon className="text-primary" />
                   <Text variant="normal" fontWeight="bold" color="primary">
                     Send
+                  </Text>
+                </div>
+                <div
+                  className="flex flex-row items-center py-2 px-4 gap-2 bg-background-secondary rounded-lg hover:opacity-80 cursor-pointer"
+                  onClick={() => {
+                    onClickSwap()
+                  }}
+                >
+                  <SwapIcon className="text-primary" />
+                  <Text variant="normal" fontWeight="bold" color="primary">
+                    Swap
                   </Text>
                 </div>
                 <div
@@ -109,9 +134,20 @@ export const HomeHeader = () => {
                     onClickReceive()
                   }}
                 >
-                  <ScanIcon color="white" />
+                  <ScanIcon className="text-primary" />
                   <Text variant="normal" fontWeight="bold" color="primary">
                     Receive
+                  </Text>
+                </div>
+                <div
+                  className="flex flex-row items-center py-2 px-4 gap-2 bg-background-secondary rounded-lg hover:opacity-80 cursor-pointer"
+                  onClick={() => {
+                    onClickBuy()
+                  }}
+                >
+                  <AddIcon className="text-primary" />
+                  <Text variant="normal" fontWeight="bold" color="primary">
+                    Buy
                   </Text>
                 </div>
               </div>
@@ -122,7 +158,7 @@ export const HomeHeader = () => {
         <IconButton className="bg-background-secondary" icon={SearchIcon} size="sm" onClick={() => onClickSearch()} />
         <IconButton className="bg-background-secondary" icon={SettingsIcon} size="sm" onClick={() => onClickSettings()} />
       </div>
-      <Divider className="my-0 w-full" style={{ position: 'absolute', bottom: 0 }} />
+      <Separator className="my-0 w-full" style={{ position: 'absolute', bottom: 0 }} />
 
       <AnimatePresence>
         {isWalletViewOpen && (
@@ -141,24 +177,18 @@ export const HomeHeader = () => {
             }
             footer={
               <div className="flex flex-row w-full gap-3">
-                <div
-                  className="flex justify-center items-center bg-background-secondary rounded-full py-3 px-4 gap-2 w-full hover:opacity-80 cursor-pointer"
-                  onClick={() => setOpenConnectModal(true)}
-                >
-                  <AddIcon color="white" />
+                <Button className="flex justify-center items-center flex-1" onClick={() => setOpenConnectModal(true)}>
+                  <AddIcon />
                   <Text variant="normal" fontWeight="bold" color="primary">
                     Add Wallet
                   </Text>
-                </div>
-                <div
-                  className="flex justify-center items-center bg-background-secondary rounded-full py-3 px-4 gap-2 w-full hover:opacity-80 cursor-pointer"
-                  onClick={() => handleManageWallets()}
-                >
-                  <SettingsIcon color="white" />
+                </Button>
+                <Button className="flex justify-center items-center flex-1" onClick={() => handleManageWallets()}>
+                  <SettingsIcon />
                   <Text variant="normal" fontWeight="bold" color="primary">
                     Manage
                   </Text>
-                </div>
+                </Button>
               </div>
             }
           >

@@ -29,6 +29,8 @@ yarn add @0xsequence/connect
 
 2. Create the wallet configuration
 
+Use separate sections for Ecosystem (v3) and WaaS.
+
 ```typescript [config.ts]
 import { createConfig, createContractPermission } from '@0xsequence/connect'
 import { parseEther, parseUnits } from 'viem'
@@ -36,12 +38,13 @@ import { parseEther, parseUnits } from 'viem'
 export const USDC_ADDRESS_ARBITRUM = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
 export const AAVE_V3_POOL_ADDRESS_ARBITRUM = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 
-export const config: any = createConfig({
-  projectAccessKey: 'AQAAAAAAAABtDHG1It7lxRF_9bbxw4diip8',
+// Ecosystem connector (sequenceV3 connector path)
+export const ecosystemConfig = createConfig({
+  projectAccessKey: '<your-project-access-key>',
   signIn: {
     projectName: 'Sequence Web SDK Demo'
   },
-  walletUrl: 'https://next-acme-wallet.sequence-dev.app/',
+  walletUrl: 'https://wallet.sequence.app',
   dappOrigin: window.location.origin,
   appName: 'Sequence Web SDK Demo',
   chainIds: [42161],
@@ -49,13 +52,14 @@ export const config: any = createConfig({
   google: true,
   apple: true,
   email: true,
+  passkey: true,
   explicitSessionParams: {
     chainId: 42161,
     nativeTokenSpending: {
-      valueLimit: parseEther('0.01') // Allow spending up to 0.01 ETH for gas fees
+      valueLimit: parseEther('0.01')
     },
     expiresIn: {
-      hours: 24 // Session lasts for 24 hours
+      hours: 24
     },
     permissions: [
       createContractPermission({
@@ -72,12 +76,40 @@ export const config: any = createConfig({
             param: 'amount',
             type: 'uint256',
             condition: 'LESS_THAN_OR_EQUAL',
-            value: parseUnits('100', 6), // Max cumulative amount of 100 USDC
+            value: parseUnits('100', 6),
             cumulative: true
           }
         ]
       })
     ]
+  },
+  walletConnect: {
+    projectId: '<your-wallet-connect-id>'
+  }
+})
+
+// WaaS connector path
+export const waasConfig = createConfig('waas', {
+  projectAccessKey: '<your-project-access-key>',
+  waasConfigKey: '<your-waas-config-key>',
+  appName: 'Sequence Web SDK Demo',
+  chainIds: [42161],
+  defaultChainId: 42161,
+  guest: true,
+  email: true,
+  google: {
+    clientId: '<your-google-client-id>'
+  },
+  apple: {
+    clientId: '<your-apple-client-id>',
+    redirectURI: 'https://your.app/apple-callback'
+  },
+  X: {
+    clientId: '<your-x-client-id>',
+    redirectURI: 'https://your.app/x-callback'
+  },
+  walletConnect: {
+    projectId: '<your-wallet-connect-id>'
   }
 })
 ```
@@ -98,8 +130,11 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 
 import App from "./App";
-import { config } from "./config";
+import { ecosystemConfig, waasConfig } from "./config";
 import { SequenceConnect } from "@0xsequence/connect";
+
+const config = ecosystemConfig
+// const config = waasConfig
 
 function Dapp() {
   return (
@@ -147,12 +182,12 @@ Wallet selection is done through a modal which can be called programmatically.
 
 ```js
 import { useOpenConnectModal } from '@0xsequence/connect'
-import { useDisconnect, useAccount } from 'wagmi'
+import { useConnection } from 'wagmi'
 
 const MyReactComponent = () => {
   const { setOpenConnectModal } = useOpenConnectModal()
 
-  const { isConnected } = useAccount()
+  const { isConnected } = useConnection()
 
   const onClick = () => {
     setOpenConnectModal(true)
@@ -316,18 +351,6 @@ The React example can be used to test the library locally.
 2. From the root folder, run `pnpm build` to build the packages.
 3. From the root folder, run `pnpm dev:react` or `pnpm dev:next` to run the examples.
 
-# Setting specific functionalities to dev
-
-Specific functionalities such as the APIs, credit card processors can be set to use the dev environments through the variables in `globalThis`
-
-```
-__WEB_SDK_DEV_GLOBAL__ : sets everything to dev
-__WEB_SDK_DEV_SARDINE__ : sets only sardine to dev
-__WEB_SDK_DEV_TRANSAK__ : sets only transak to dev
-__WEB_SDK_DEV_SEQUENCE_APIS__ : sets only the sequence apis to dev
-__WEB_SDK_DEV_SARDINE_PROJECT_ACCESS_KEY__ : the project access key used to query the client token for sardine. Must use a dev access key if the everything is using prod, but if sardine is using dev
-```
-
 ## What to do next?
 
 Now that the core package is installed, you can install the [embedded wallet](https://github.com/0xsequence/web-sdk/tree/master/packages/wallet-widget) or take a look at the [checkout](https://github.com/0xsequence/web-sdk/tree/master/packages/checkout).
@@ -336,4 +359,4 @@ Now that the core package is installed, you can install the [embedded wallet](ht
 
 Apache-2.0
 
-Copyright (c) 2017-present Horizon Blockchain Games Inc. / https://horizon.io
+Copyright (c) 2017-present Sequence Platforms ULC. / https://sequence.xyz

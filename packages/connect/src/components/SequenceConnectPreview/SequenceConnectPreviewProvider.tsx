@@ -36,6 +36,7 @@ const resolveInlineBackground = (theme: Theme | undefined) => {
 }
 
 /**
+ * @internal
  * Preview version of SequenceConnectProvider component.
  * This component should only be used for testing purposes.
  * It provides the same functionality as SequenceConnectProvider but only for preview purposes.
@@ -100,7 +101,7 @@ export const SequenceConnectPreviewProvider = (props: SequenceConnectProviderPro
               }}
             >
               <div id="kit-provider" style={{ background: inlineBackground }}>
-                <ThemeProvider root="#kit-provider" scope="kit" theme={theme}>
+                <ThemeProvider root="#kit-provider" theme={theme}>
                   {isWalletConfigLoading ? (
                     <div className="flex py-8 justify-center items-center">
                       <Spinner size="lg" />
