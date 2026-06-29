@@ -80,7 +80,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
     onSuccessChecker
   } = selectPaymentSettings
 
-  const isFree = !price || BigInt(price) === 0n
+  const isFree = BigInt(price) === 0n
 
   const network = findSupportedNetwork(chain)
   const chainId = network?.chainId || 137
@@ -135,7 +135,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
       contractAddress: selectedCurrency.address
     },
     {
-      disabled: !isSwapTransaction
+      enabled: isSwapTransaction
     }
   )
 
@@ -161,7 +161,7 @@ export const PayWithCryptoTab = ({ skipOnCloseCallback, isSwitchingChainRef }: P
       }
     },
     {
-      disabled: !isSwapTransaction
+      enabled: isSwapTransaction
     }
   )
 
