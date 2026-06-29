@@ -1,7 +1,11 @@
 # @0xsequence/hooks
 
-<<<<<<< HEAD
-=======
+## 6.0.7
+
+### Patch Changes
+
+- Minor fee options improvement
+
 ## 6.0.6
 
 ### Patch Changes
@@ -132,7 +136,6 @@
   - Add message for rejected transactions (#559)
   - Deprecate `findVersion` (#560)
 
->>>>>>> upstream/master
 ## 5.4.1
 
 ### Patch Changes

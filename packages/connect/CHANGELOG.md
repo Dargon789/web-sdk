@@ -1,7 +1,14 @@
 # @0xsequence/connect
 
-<<<<<<< HEAD
-=======
+## 6.0.7
+
+### Patch Changes
+
+- Minor fee options improvement
+- 96e70de: Compare WaaS fee token addresses case-insensitively when matching balances.
+- Updated dependencies
+  - @0xsequence/hooks@6.0.7
+
 ## 6.0.6
 
 ### Patch Changes
@@ -189,7 +196,6 @@
 - Updated dependencies []:
   - @0xsequence/hooks@5.4.2
 
->>>>>>> upstream/master
 ## 5.4.1
 
 ### Patch Changes

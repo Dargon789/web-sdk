@@ -1,10 +1,6 @@
 {
   "name": "@0xsequence/hooks",
-<<<<<<< HEAD
-  "version": "5.4.1",
-=======
-  "version": "6.0.6",
->>>>>>> upstream/master
+  "version": "6.0.7",
   "description": "React hooks for Sequence Web SDK",
   "repository": "https://github.com/0xsequence/web-sdk/tree/master/packages/hooks",
   "author": "Sequence Platforms ULC",
@@ -22,12 +18,7 @@
     }
   },
   "files": [
-    "dist",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "!src/**/*.test.ts",
-    "!src/**/*.test.tsx",
-    "!src/**/*.test-d.ts"
+    "dist"
   ],
   "scripts": {
     "build": "pnpm build:clean && pnpm build:esm",
@@ -40,30 +31,16 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-<<<<<<< HEAD
-    "@0xsequence/api": ">=2.3.23",
-    "@0xsequence/indexer": ">=2.3.23",
-    "@0xsequence/metadata": ">=2.3.23",
-    "@0xsequence/network": ">=2.3.23",
-=======
     "@0xsequence/api": ">=3.0.1",
     "@0xsequence/indexer": ">=3.0.1",
     "@0xsequence/metadata": ">=3.0.1",
     "@0xsequence/wallet-primitives": ">=3.0.1",
->>>>>>> upstream/master
     "@tanstack/react-query": ">= 5",
     "react": ">= 17",
     "react-dom": ">= 17",
     "viem": ">= 2.45.0"
   },
   "devDependencies": {
-<<<<<<< HEAD
-    "@0xsequence/api": "2.3.23",
-    "@0xsequence/indexer": "^2.3.23",
-    "@0xsequence/metadata": "^2.3.23",
-    "@0xsequence/network": "^2.3.23",
-=======
->>>>>>> upstream/master
     "@tanstack/react-query": "^5.74.11",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
