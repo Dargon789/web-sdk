@@ -470,7 +470,7 @@ export const Connect = (props: ConnectProps) => {
         return true
       }
 
-      const isCoinbaseInjected = window.ethereum?.isCoinbaseWallet
+      const isCoinbaseInjected = typeof window !== 'undefined' && window.ethereum?.isCoinbaseWallet
 
       if ((connector as ExtendedConnector)._wallet?.id === 'coinbase-wallet' && isCoinbaseInjected) {
         return true
