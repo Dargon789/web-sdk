@@ -12,7 +12,7 @@ export const OperationButtonTemplate = ({
 }) => {
   return (
     <div className={cn(cardVariants({ clickable: true }), 'flex flex-col items-center w-full gap-1')} onClick={onClick}>
-      {Icon && <Icon size="lg" color="white"/>}
+      {Icon && <Icon size="lg" color="white" />}
       <Text
         variant="normal"
         fontWeight="semibold"

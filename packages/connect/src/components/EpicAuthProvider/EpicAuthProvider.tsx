@@ -1,8 +1,8 @@
 'use client'
 
-import { Modal, ModalPrimitive, Spinner } from '@0xsequence/design-system'
+import { DialogPrimitive, Modal, Spinner } from '@0xsequence/design-system'
 import { useEffect, type ReactNode } from 'react'
-import { useConnect, useConnection, useConnectors } from 'wagmi'
+import { useAccount, useConnect } from 'wagmi'
 
 import { EpicLogo } from '../../connectors/epic/EpicLogo.js'
 import { LocalStorageKey } from '../../constants/localStorage.js'
@@ -11,10 +11,8 @@ import type { ExtendedConnector } from '../../types.js'
 
 // Handles Epic Games OAuth redirects for WaaS by capturing the Epic JWT and triggering a reconnect.
 export const EpicAuthProvider = ({ children }: { children: ReactNode }) => {
-  const connect = useConnect()
-  const connectors = useConnectors()
-  const { isPending } = connect
-  const { isConnected } = useConnection()
+  const { connectors, connect, isPending } = useConnect()
+  const { isConnected } = useAccount()
 
   const storage = useStorage()
 
@@ -38,7 +36,7 @@ export const EpicAuthProvider = ({ children }: { children: ReactNode }) => {
       const signInWithEpic = async (token: string) => {
         try {
           storage?.setItem(LocalStorageKey.WaasEpicIdToken, token)
-          connect.mutate({ connector: socialAuthConnectors.find(c => c._wallet.id === 'epic-waas')! })
+          connect({ connector: socialAuthConnectors.find(c => c._wallet.id === 'epic-waas')! })
         } catch (err) {
           console.error('Sequence WaaS sign in failed:', err)
         }
@@ -55,12 +53,12 @@ export const EpicAuthProvider = ({ children }: { children: ReactNode }) => {
             <div className="w-12 h-12 mb-4" aria-label="Epic Games">
               <EpicLogo />
             </div>
-            <ModalPrimitive.Title asChild>
+            <DialogPrimitive.Title asChild>
               <div className="flex items-center gap-4 mt-4 mb-2 flex-row">
                 <h2 className="text-white text-lg font-semibold text-center w-full">Logging in with Epic Games…</h2>
                 <Spinner />
               </div>
-            </ModalPrimitive.Title>
+            </DialogPrimitive.Title>
           </div>
         </Modal>
       )}

@@ -1,5 +1,47 @@
 # @0xsequence/hooks
 
+## 6.0.7
+
+### Patch Changes
+
+- Minor fee options improvement
+
+## 6.0.6
+
+### Patch Changes
+
+- Minor improvements
+
+## 6.0.5
+
+### Patch Changes
+
+- Powered by logo update
+
+## 6.0.4
+
+### Patch Changes
+
+- Fix for node urls
+
+## 6.0.3
+
+### Patch Changes
+
+- Remove unnecessary waas components
+
+## 6.0.2
+
+### Patch Changes
+
+- Fix for chain switch
+
+## 6.0.1
+
+### Patch Changes
+
+- Minor fixes
+
 ## 6.0.0
 
 ### Major Changes

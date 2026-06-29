@@ -1,8 +1,8 @@
-import { ContractVerificationStatus, type SequenceIndexerGateway } from '@0xsequence/indexer'
+import { ContractVerificationStatus, type SequenceIndexerGateway, type TokenBalance } from '@0xsequence/indexer'
 import { useQuery } from '@tanstack/react-query'
 
 import { QUERY_KEYS, time, ZERO_ADDRESS } from '../../constants.js'
-import type { HooksOptions } from '../../types/hooks.js'
+import type { QueryHookOptions } from '../../types/hooks.js'
 import { compareAddress, createNativeTokenBalance } from '../../utils/helpers.js'
 
 import { useIndexerGatewayClient } from './useIndexerGatewayClient.js'
@@ -27,7 +27,16 @@ const getSingleTokenBalance = async (args: GetSingleTokenBalanceArgs, indexerGat
   })
 
   if (compareAddress(args.contractAddress, ZERO_ADDRESS)) {
-    return createNativeTokenBalance(args.chainId, args.accountAddress, balance.nativeBalances[0].results[0].balance)
+    const nativeBalance = balance.nativeBalances[0].results[0]
+
+    return createNativeTokenBalance({
+      chainId: args.chainId,
+      accountAddress: args.accountAddress,
+      balance: nativeBalance.balance,
+      balanceUSD: nativeBalance.balanceUSD,
+      priceUSD: nativeBalance.priceUSD,
+      priceUpdatedAt: nativeBalance.priceUpdatedAt
+    })
   } else {
     if (args.tokenId) {
       return balance.balances[0].results.find(result => result.tokenID === args.tokenId)
@@ -77,11 +86,11 @@ const getSingleTokenBalance = async (args: GetSingleTokenBalanceArgs, indexerGat
  * }
  * ```
  */
-export const useGetSingleTokenBalance = (args: GetSingleTokenBalanceArgs, options?: HooksOptions) => {
+export const useGetSingleTokenBalance = (args: GetSingleTokenBalanceArgs, options?: QueryHookOptions<TokenBalance>) => {
   const indexerGatewayClient = useIndexerGatewayClient()
 
   return useQuery({
-    queryKey: [QUERY_KEYS.useGetSingleTokenBalance, args, options],
+    queryKey: [QUERY_KEYS.useGetSingleTokenBalance, args],
     queryFn: async () => {
       const tokenBalance = await getSingleTokenBalance(args, indexerGatewayClient)
 
@@ -93,8 +102,9 @@ export const useGetSingleTokenBalance = (args: GetSingleTokenBalanceArgs, option
 
       return tokenBalance
     },
-    retry: options?.retry ?? false,
+    retry: false,
     staleTime: time.oneSecond * 30,
-    enabled: !!args.chainId && !!args.accountAddress && !options?.disabled
+    enabled: !!args.chainId && !!args.accountAddress,
+    ...options
   })
 }

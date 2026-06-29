@@ -9,8 +9,8 @@
   },
   "peerDependencies": {
     "@0xsequence/design-system": "2.1.11",
-    "wagmi": "^3.2.0"
+    "@0xsequence/network": "*",
+    "wagmi": "^2.18.0"
   },
-  "private": true,
-  "version": null
+  "private": true
 }

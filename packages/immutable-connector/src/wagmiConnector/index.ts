@@ -1,24 +1,11 @@
 import { Environment } from '@imtbl/config'
 import { passport } from '@imtbl/sdk'
-import { type Address } from 'viem'
+import type { Address } from 'viem'
 import { createConnector } from 'wagmi'
 
 export interface BaseImmutableConnectorOptions {
   passportInstance: passport.Passport
   environment: Environment
-}
-
-type ConnectAccounts<withCapabilities extends boolean> = withCapabilities extends true
-  ? readonly { address: Address; capabilities: Record<string, unknown> }[]
-  : readonly Address[]
-
-const resolveConnectAccounts = <withCapabilities extends boolean>(
-  accounts: readonly Address[],
-  withCapabilities?: withCapabilities | boolean
-): ConnectAccounts<withCapabilities> => {
-  return (
-    withCapabilities ? accounts.map(address => ({ address, capabilities: {} })) : accounts
-  ) as ConnectAccounts<withCapabilities>
 }
 
 immutableConnector.type = 'immutable' as const
@@ -48,18 +35,13 @@ export function immutableConnector(params: BaseImmutableConnectorOptions) {
 
     async setup() {},
 
-    async connect<withCapabilities extends boolean = false>(_connectInfo?: {
-      chainId?: number
-      isReconnecting?: boolean
-      withCapabilities?: withCapabilities | boolean
-    }) {
+    async connect() {
       provider = await passportInstance.connectEvm({
         announceProvider: false
       })
       const accounts = await this.getAccounts()
-      const resolvedAccounts = resolveConnectAccounts(accounts, _connectInfo?.withCapabilities)
       const chainId = await this.getChainId()
-      return { accounts: resolvedAccounts, chainId }
+      return { accounts, chainId }
     },
 
     async disconnect() {

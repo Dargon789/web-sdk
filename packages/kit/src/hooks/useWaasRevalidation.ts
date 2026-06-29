@@ -6,14 +6,11 @@ import { Deferred } from '../utils/deferred'
 import { useAccount } from 'wagmi'
 import type { SequenceWaasConnector } from '@0xsequence/kit-connectors'
 
-
-export function useWaasRevalidation(
-  // waasConnector?: any
-) {
+export function useWaasRevalidation() {
+// waasConnector?: any
   const { connector } = useAccount()
 
   const waasConnector = connector?.type === 'sequence-waas' ? connector : undefined
-
 
   useEffect(() => {
     async function setup() {
@@ -35,5 +32,5 @@ export function useWaasRevalidation(
     setup()
   }, [waasConnector])
 
-  return 
+  return
 }

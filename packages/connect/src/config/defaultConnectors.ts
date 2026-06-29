@@ -14,7 +14,7 @@ import { metaMask } from '../connectors/metaMask/metaMask.js'
 import { passkeyV3 } from '../connectors/passkey/passkeyV3.js'
 import { walletConnect } from '../connectors/walletConnect/walletConnect.js'
 import { XWaas } from '../connectors/X/XWaas.js'
-import type { EthAuthSettings, Wallet, WalletType } from '../types.js'
+import type { Wallet, WalletType } from '../types.js'
 import { getConnectWallets } from '../utils/getConnectWallets.js'
 import type { ExplicitSessionParams } from '../utils/session/types.js'
 
@@ -24,18 +24,6 @@ export interface CommonConnectorOptions {
   walletUrl?: string
   dappOrigin?: string
   defaultChainId?: number
-}
-
-const resolveDappOrigin = (dappOrigin?: string) => {
-  if (dappOrigin) {
-    return dappOrigin
-  }
-
-  if (typeof window !== 'undefined') {
-    return window.location.origin
-  }
-
-  return undefined
 }
 
 const resolveAppName = (options: CommonConnectorOptions & { signIn?: { projectName?: string } }) => {
@@ -51,9 +39,6 @@ const resolveAppName = (options: CommonConnectorOptions & { signIn?: { projectNa
 }
 
 export interface DefaultV3ConnectorOptions extends CommonConnectorOptions {
-  signIn?: {
-    projectName?: string
-  }
   email?: boolean
   google?: boolean
   apple?: boolean
@@ -64,6 +49,7 @@ export interface DefaultV3ConnectorOptions extends CommonConnectorOptions {
     | false
     | {
         projectId: string
+        customStoragePrefix?: string
       }
   additionalWallets?: Wallet[]
   /**
@@ -73,28 +59,8 @@ export interface DefaultV3ConnectorOptions extends CommonConnectorOptions {
   explicitSessionParams?: ExplicitSessionParams
   includeFeeOptionPermissions?: boolean
   enableImplicitSession?: boolean
-  ethAuth?: EthAuthSettings | false
   nodesUrl?: string
   relayerUrl?: string
-}
-
-const resolveV3EthAuthSettings = (
-  options: DefaultV3ConnectorOptions,
-  defaultAppName: string,
-  defaultOrigin?: string
-): EthAuthSettings | false => {
-  if (options.ethAuth === false) {
-    return false
-  }
-
-  const ethAuth = options.ethAuth ?? {}
-
-  return {
-    app: ethAuth.app ?? (defaultAppName || 'app'),
-    origin: ethAuth.origin ?? defaultOrigin,
-    expiry: ethAuth.expiry,
-    nonce: ethAuth.nonce
-  }
 }
 
 export interface DefaultWaasConnectorOptions extends CommonConnectorOptions {
@@ -135,6 +101,7 @@ export interface DefaultWaasConnectorOptions extends CommonConnectorOptions {
     | false
     | {
         projectId: string
+        customStoragePrefix?: string
       }
   additionalWallets?: Wallet[]
 
@@ -278,10 +245,12 @@ export const getDefaultWaasConnectors = (options: DefaultWaasConnectorOptions): 
 
   if (options.walletConnect || options.walletConnectProjectId) {
     const projectId = (options.walletConnect && options.walletConnect?.projectId) || options.walletConnectProjectId!
+    const customStoragePrefix = options.walletConnect && options.walletConnect.customStoragePrefix
 
     wallets.push(
       walletConnect({
         projectId,
+        ...(customStoragePrefix && { customStoragePrefix }),
         defaultNetwork: defaultChainId
       })
     )
@@ -296,15 +265,12 @@ export const getDefaultWaasConnectors = (options: DefaultWaasConnectorOptions): 
 
 export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): CreateConnectorFn[] => {
   const { projectAccessKey, walletUrl, dappOrigin, defaultChainId = 1 } = options
-  const resolvedDappOrigin = resolveDappOrigin(dappOrigin)
   const appName = resolveAppName(options)
-  const defaultEthAuthAppName = options.signIn?.projectName || 'app'
-  const ethAuth = resolveV3EthAuthSettings(options, defaultEthAuthAppName, resolvedDappOrigin)
 
   const wallets: Wallet[] = []
 
   if (options.email !== false) {
-    if (!walletUrl || !resolvedDappOrigin) {
+    if (!walletUrl || !dappOrigin) {
       throw new Error('Email wallet requires walletUrl and dappOrigin to be set')
     }
     wallets.push(
@@ -312,11 +278,10 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
-        dappOrigin: resolvedDappOrigin,
+        dappOrigin: dappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
-        ethAuth,
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
@@ -324,7 +289,7 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
   }
 
   if (options.google !== false) {
-    if (!walletUrl || !resolvedDappOrigin) {
+    if (!walletUrl || !dappOrigin) {
       throw new Error('Google wallet requires walletUrl and dappOrigin to be set')
     }
     wallets.push(
@@ -332,11 +297,10 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
-        dappOrigin: resolvedDappOrigin,
+        dappOrigin: dappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
-        ethAuth,
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
@@ -344,7 +308,7 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
   }
 
   if (options.apple !== false) {
-    if (!walletUrl || !resolvedDappOrigin) {
+    if (!walletUrl || !dappOrigin) {
       throw new Error('Apple wallet requires walletUrl and dappOrigin to be set')
     }
     wallets.push(
@@ -352,11 +316,10 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
-        dappOrigin: resolvedDappOrigin,
+        dappOrigin: dappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
-        ethAuth,
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
@@ -364,7 +327,7 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
   }
 
   if (options.passkey !== false) {
-    if (!walletUrl || !resolvedDappOrigin) {
+    if (!walletUrl || !dappOrigin) {
       throw new Error('Passkey wallet requires walletUrl and dappOrigin to be set')
     }
     wallets.push(
@@ -372,28 +335,26 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
-        dappOrigin: resolvedDappOrigin,
+        dappOrigin: dappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
-        ethAuth,
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
     )
   }
 
-  if (walletUrl && resolvedDappOrigin) {
+  if (walletUrl && dappOrigin) {
     wallets.push(
       ecosystemV3({
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
-        dappOrigin: resolvedDappOrigin,
+        dappOrigin: dappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
-        ethAuth,
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
@@ -424,10 +385,12 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
 
   if (options.walletConnect || options.walletConnectProjectId) {
     const projectId = (options.walletConnect && options.walletConnect?.projectId) || options.walletConnectProjectId!
+    const customStoragePrefix = options.walletConnect && options.walletConnect.customStoragePrefix
 
     wallets.push(
       walletConnect({
         projectId,
+        ...(customStoragePrefix && { customStoragePrefix }),
         defaultNetwork: defaultChainId
       })
     )

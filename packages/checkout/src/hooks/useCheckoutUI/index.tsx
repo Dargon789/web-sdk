@@ -1,5 +1,5 @@
-import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
 import { findSupportedNetwork } from '@0xsequence/connect'
+import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
 import type { Hex } from 'viem'
 
 import type { TransakConfig } from '../../contexts/CheckoutModal.js'
@@ -62,7 +62,7 @@ export const useCheckoutUI = ({
       tokenIDs: [collectible.tokenId ?? '']
     },
     {
-      disabled: !collectible.tokenId
+      enabled: !!collectible.tokenId
     }
   )
 
