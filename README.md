@@ -56,7 +56,7 @@ Explore the potential of our Web SDKs by trying out our [demo](https://web-sdk.s
 Install the core package and required peer deps:
 
 ```bash
-npm install @0xsequence/connect @0xsequence/hooks wagmi ethers@6.13.0 viem @tanstack/react-query
+npm install @0xsequence/connect @0xsequence/hooks wagmi ethers@6.13.0 viem 0xsequence @tanstack/react-query
 ```
 
 ### Configure `@0xsequence/connect`
