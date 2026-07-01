@@ -1,6 +1,10 @@
 'use client'
 
+<<<<<<< HEAD
+import { Button, Card, Modal, ModalPrimitive, Spinner, Text, ThemeProvider, type Theme } from '@0xsequence/design-system'
+=======
 import { Button, Card, DialogPrimitive, Modal, Spinner, Text, ThemeProvider, type Theme } from '@0xsequence/design-system'
+>>>>>>> upstream/master
 import { SequenceHooksProvider } from '@0xsequence/hooks'
 import { SequenceClient, setupAnalytics, type Analytics } from '@0xsequence/provider'
 import { GoogleOAuthProvider } from '@react-oauth/google'
@@ -48,8 +52,11 @@ export type SequenceConnectInlineProviderProps = {
   config: ConnectConfig
 }
 
+<<<<<<< HEAD
+=======
 const DEFAULT_DISPLAYED_ASSETS: DisplayedAsset[] = []
 
+>>>>>>> upstream/master
 const resolveInlineBackground = (theme: Theme | undefined) => {
   if (theme && typeof theme === 'object' && 'colors' in theme) {
     const background = (theme as any).colors?.backgroundPrimary
@@ -78,8 +85,12 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
     enabledProviders,
     isV3WalletSignedIn,
     isAuthStatusLoading,
+<<<<<<< HEAD
+    walletConfigurationSignIn
+=======
     walletConfigurationSignIn,
     sdkConfig
+>>>>>>> upstream/master
   } = useResolvedConnectConfig(incomingConfig)
 
   const {
@@ -259,7 +270,11 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                     <EpicAuthProvider>
                       <div id="kit-provider" className="h-full w-full flex flex-col" style={{ background: inlineBackground }}>
                         <style>{styles + styleProperties + (customCSS ? `\n\n${customCSS}` : '')}</style>
+<<<<<<< HEAD
+                        <ThemeProvider root="#kit-provider" scope="kit" theme={theme}>
+=======
                         <ThemeProvider root="#kit-provider" theme={theme}>
+>>>>>>> upstream/master
                           {isWalletConfigLoading || isAuthStatusLoading ? (
                             <div className="flex py-8 justify-center items-center">
                               <Spinner size="lg" />
@@ -276,7 +291,10 @@ export const SequenceConnectInlineProvider = (props: SequenceConnectInlineProvid
                               isAuthStatusLoading={isAuthStatusLoading}
                               enabledProviders={enabledProviders}
                               walletConfigurationSignIn={walletConfigurationSignIn}
+<<<<<<< HEAD
+=======
                               sdkConfig={sdkConfig}
+>>>>>>> upstream/master
                             />
                           )}
                         </ThemeProvider>

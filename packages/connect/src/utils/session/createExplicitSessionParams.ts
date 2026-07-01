@@ -28,7 +28,11 @@ export function createExplicitSessionConfig(params: ExplicitSessionParams): Expl
     throw new Error('createExplicitSessionParams: At least one permission is required.')
   }
 
+<<<<<<< HEAD
+  const nativeTokenReceivers: Address[] = [...(params.nativeTokenSpending.allowedRecipients || [])]
+=======
   const nativeTokenReceivers: Address[] = [...(params.nativeTokenSpending?.allowedRecipients || [])]
+>>>>>>> upstream/master
 
   const nativeTokenSpendingPermissions = nativeTokenReceivers.map(receiver => ({
     target: receiver as Address,
@@ -38,7 +42,11 @@ export function createExplicitSessionConfig(params: ExplicitSessionParams): Expl
   // Assemble and return the final SessionObject.
   const explicitSessionParams: ExplicitSessionConfig = {
     chainId: params.chainId,
+<<<<<<< HEAD
+    valueLimit: params.nativeTokenSpending.valueLimit,
+=======
     valueLimit: params.nativeTokenSpending?.valueLimit ?? 0n,
+>>>>>>> upstream/master
     deadline,
     permissions: [...params.permissions, ...nativeTokenSpendingPermissions] as Permission[]
   }

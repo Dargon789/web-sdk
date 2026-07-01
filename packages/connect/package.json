@@ -23,7 +23,12 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
+    "!src/**/*.test-d.ts"
   ],
   "scripts": {
     "build": "pnpm run writeVersion && pnpm build:clean && pnpm build:css && pnpm build:esm",
@@ -39,11 +44,19 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+<<<<<<< HEAD
+    "@0xsequence/dapp-client": "3.0.0-beta.4",
+    "@0xsequence/api": ">=2.3.38",
+    "@0xsequence/auth": "^2.3.38",
+    "@0xsequence/core": "^2.3.38",
+    "@0xsequence/design-system": "2.1.11",
+=======
     "@0xsequence/dapp-client": ">=3.0.1",
     "@0xsequence/api": ">=3.0.1",
     "@0xsequence/auth": "^2.3.43",
     "@0xsequence/core": "^2.3.43",
     "@0xsequence/design-system": "3.2.9",
+>>>>>>> upstream/master
     "@0xsequence/ethauth": "^1.0.0",
     "@0xsequence/indexer": ">=3.0.1",
     "@0xsequence/wallet-primitives": ">=3.0.1",

@@ -1,8 +1,14 @@
 'use client'
 
+<<<<<<< HEAD
+import { Modal, ModalPrimitive, Spinner } from '@0xsequence/design-system'
+import { useEffect, type ReactNode } from 'react'
+import { useAccount, useConnect } from 'wagmi'
+=======
 import { DialogPrimitive, Modal, Spinner } from '@0xsequence/design-system'
 import { useEffect, type ReactNode } from 'react'
 import { useConnect, useConnection, useConnectors } from 'wagmi'
+>>>>>>> upstream/master
 
 import { EpicLogo } from '../../connectors/epic/EpicLogo.js'
 import { LocalStorageKey } from '../../constants/localStorage.js'
@@ -11,10 +17,15 @@ import type { ExtendedConnector } from '../../types.js'
 
 // Handles Epic Games OAuth redirects for WaaS by capturing the Epic JWT and triggering a reconnect.
 export const EpicAuthProvider = ({ children }: { children: ReactNode }) => {
+<<<<<<< HEAD
+  const { connectors, connect, isPending } = useConnect()
+  const { isConnected } = useAccount()
+=======
   const connect = useConnect()
   const connectors = useConnectors()
   const { isPending } = connect
   const { isConnected } = useConnection()
+>>>>>>> upstream/master
 
   const storage = useStorage()
 

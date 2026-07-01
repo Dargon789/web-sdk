@@ -1,13 +1,18 @@
+<<<<<<< HEAD
+import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/connect'
+import { findSupportedNetwork } from '@0xsequence/network'
+=======
 import { findSupportedNetwork } from '@0xsequence/connect'
 import { useGetContractInfo, useGetTokenMetadata } from '@0xsequence/hooks'
+>>>>>>> upstream/master
 import type { Hex } from 'viem'
 
-import type { TransakConfig } from '../../contexts/CheckoutModal.js'
-import type { Collectible, CreditCardProviders } from '../../contexts/SelectPaymentModal.js'
+import type { TransakConfig } from '../../contexts/CheckoutModal'
+import type { Collectible, CreditCardProviders } from '../../contexts/SelectPaymentModal'
 
-import { useCreditCardPayment, type UseCreditCardPaymentReturn } from './useCreditCardPayment.js'
-import { useCryptoPayment, type UseCryptoPaymentReturn } from './useCryptoPayment.js'
-import { useOrderSummary, type UseOrderSummaryReturn } from './useOrderSummary.js'
+import { useCreditCardPayment, type UseCreditCardPaymentReturn } from './useCreditCardPayment'
+import { useCryptoPayment, type UseCryptoPaymentReturn } from './useCryptoPayment'
+import { useOrderSummary, type UseOrderSummaryReturn } from './useOrderSummary'
 
 interface UseCheckoutUIArgs {
   chain: string | number
@@ -55,16 +60,11 @@ export const useCheckoutUI = ({
     data: tokenMetadatas,
     isLoading: isLoadingTokenMetadatas,
     error: errorTokenMetadata
-  } = useGetTokenMetadata(
-    {
-      chainID: String(chainId),
-      contractAddress: collectionAddress,
-      tokenIDs: [collectible.tokenId ?? '']
-    },
-    {
-      disabled: !collectible.tokenId
-    }
-  )
+  } = useGetTokenMetadata({
+    chainID: String(chainId),
+    contractAddress: collectionAddress,
+    tokenIDs: [collectible.tokenId]
+  })
 
   const {
     data: dataCollectionInfo,

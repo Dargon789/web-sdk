@@ -1,5 +1,8 @@
+import { chains } from '@0xsequence/web-sdk-core'
 import type { Chain } from 'viem'
 
+<<<<<<< HEAD
+=======
 import { chains } from '../chains/index.js'
 
 const getAllSupportedChains = (): [Chain, ...Chain[]] => {
@@ -12,6 +15,7 @@ const getAllSupportedChains = (): [Chain, ...Chain[]] => {
   return allSupportedChains as [Chain, ...Chain[]]
 }
 
+>>>>>>> upstream/master
 // Sequence supported Chain configs
 // you may filter list of chains by passing chainIdsFilter
 export const getDefaultChains = (chainIdsFilter?: number[]): [Chain, ...Chain[]] => {

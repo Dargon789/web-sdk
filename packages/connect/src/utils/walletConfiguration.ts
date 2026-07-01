@@ -1,7 +1,11 @@
 import { WALLET_CONFIGURATION_TIMEOUT_MS } from '../constants.js'
 import type { ConnectConfig } from '../types.js'
 
+<<<<<<< HEAD
+export type WalletConfigurationProvider = 'EMAIL' | 'GOOGLE' | 'APPLE' | 'PASSKEY'
+=======
 export type WalletConfigurationProvider = 'EMAIL' | 'GOOGLE' | 'APPLE' | 'PASSKEY' | 'GUEST' | 'X' | 'EPIC'
+>>>>>>> upstream/master
 
 type WalletConfigurationMetaTags = {
   title?: string
@@ -34,6 +38,8 @@ type WalletConfigurationResponse = {
   themes?: Record<string, WalletConfigurationTheme>
   enabledProviders?: string[]
   supportedChains?: number[]
+<<<<<<< HEAD
+=======
   sdkConfig?: {
     brandedSignIn?: boolean
     signInButtonTitle?: string | null
@@ -45,6 +51,7 @@ export type WalletConfigurationSdkConfig = {
   brandedSignIn?: boolean
   signInButtonTitle?: string
   signInButtonLogo?: string
+>>>>>>> upstream/master
 }
 
 export type WalletConfigurationOverrides = {
@@ -53,9 +60,13 @@ export type WalletConfigurationOverrides = {
     logoUrl?: string
   }
   chainIds?: number[]
+<<<<<<< HEAD
+  enabledProviders?: WalletConfigurationProvider[]
+=======
   defaultChainId?: number
   enabledProviders?: WalletConfigurationProvider[]
   sdkConfig?: WalletConfigurationSdkConfig
+>>>>>>> upstream/master
 }
 
 type CachedWalletConfiguration = {
@@ -64,10 +75,16 @@ type CachedWalletConfiguration = {
 }
 
 const CACHE_TTL_MS = 1000 * 60 * 60 * 4
+<<<<<<< HEAD
+const allowedProviders: WalletConfigurationProvider[] = ['EMAIL', 'GOOGLE', 'APPLE', 'PASSKEY']
+const walletConfigurationPromises = new Map<string, Promise<WalletConfigurationResponse>>()
+const walletConfigurationCache = new Map<string, CachedWalletConfiguration>()
+=======
 const allowedProviders: WalletConfigurationProvider[] = ['EMAIL', 'GOOGLE', 'APPLE', 'PASSKEY', 'GUEST', 'X', 'EPIC']
 const walletConfigurationPromises = new Map<string, Promise<WalletConfigurationResponse>>()
 const walletConfigurationCache = new Map<string, CachedWalletConfiguration>()
 const WALLET_CONFIGURATION_CACHE_KEY_PREFIX = '@0xsequence.wallet-config:config:'
+>>>>>>> upstream/master
 const PROJECT_NAME_CACHE_KEY_PREFIX = '@0xsequence.wallet-config.projectName:'
 
 export const normalizeWalletUrl = (walletUrl: string): string => {
@@ -80,7 +97,11 @@ export const normalizeWalletUrl = (walletUrl: string): string => {
   return withProtocol.replace(/\/+$/, '')
 }
 
+<<<<<<< HEAD
+const getCachedWalletConfiguration = (normalizedUrl: string): WalletConfigurationResponse | undefined => {
+=======
 const getCachedWalletConfigurationFromMemory = (normalizedUrl: string): WalletConfigurationResponse | undefined => {
+>>>>>>> upstream/master
   const cached = walletConfigurationCache.get(normalizedUrl)
 
   if (!cached) {
@@ -95,6 +116,9 @@ const getCachedWalletConfigurationFromMemory = (normalizedUrl: string): WalletCo
   return cached.data
 }
 
+<<<<<<< HEAD
+export const fetchWalletConfiguration = async (walletUrl: string): Promise<WalletConfigurationResponse> => {
+=======
 const buildWalletConfigurationCacheKey = (normalizedUrl: string) => `${WALLET_CONFIGURATION_CACHE_KEY_PREFIX}${normalizedUrl}`
 
 const readWalletConfigurationFromStorage = (normalizedUrl: string): WalletConfigurationResponse | undefined => {
@@ -150,17 +174,24 @@ export const fetchWalletConfiguration = async (
   walletUrl: string,
   options?: { force?: boolean }
 ): Promise<WalletConfigurationResponse> => {
+>>>>>>> upstream/master
   const normalizedUrl = normalizeWalletUrl(walletUrl)
 
   if (!normalizedUrl) {
     throw new Error('walletUrl is required to fetch wallet configuration')
   }
 
+<<<<<<< HEAD
+  const cached = getCachedWalletConfiguration(normalizedUrl)
+  if (cached) {
+    return cached
+=======
   if (!options?.force) {
     const cached = getCachedWalletConfigurationFromMemory(normalizedUrl)
     if (cached) {
       return cached
     }
+>>>>>>> upstream/master
   }
 
   if (walletConfigurationPromises.has(normalizedUrl)) {
@@ -182,7 +213,10 @@ export const fetchWalletConfiguration = async (
 
       const result = (await response.json()) as WalletConfigurationResponse
       walletConfigurationCache.set(normalizedUrl, { data: result, expiresAt: Date.now() + CACHE_TTL_MS })
+<<<<<<< HEAD
+=======
       writeWalletConfigurationToStorage(normalizedUrl, result)
+>>>>>>> upstream/master
       return result
     } catch (error) {
       if ((error as Error | undefined)?.name === 'AbortError') {
@@ -264,6 +298,11 @@ export const mapWalletConfigurationToOverrides = (config: WalletConfigurationRes
   const logoUrl = pickLogoUrl(config)
 
   const chainIds = Array.isArray(config.supportedChains) && config.supportedChains.length > 0 ? config.supportedChains : undefined
+<<<<<<< HEAD
+
+  const enabledProviders = normalizeEnabledProviders(config.enabledProviders)
+
+=======
   const defaultChainId = chainIds?.[0]
 
   const enabledProviders = normalizeEnabledProviders(config.enabledProviders)
@@ -279,6 +318,7 @@ export const mapWalletConfigurationToOverrides = (config: WalletConfigurationRes
       }
     : undefined
 
+>>>>>>> upstream/master
   return {
     signIn:
       projectName || logoUrl
@@ -288,9 +328,13 @@ export const mapWalletConfigurationToOverrides = (config: WalletConfigurationRes
           }
         : undefined,
     chainIds,
+<<<<<<< HEAD
+    enabledProviders
+=======
     defaultChainId,
     enabledProviders,
     sdkConfig
+>>>>>>> upstream/master
   }
 }
 
@@ -310,9 +354,12 @@ export const mergeConnectConfigWithWalletConfiguration = (
     mergedConfig.chainIds = overrides.chainIds
   }
 
+<<<<<<< HEAD
+=======
   if (overrides.defaultChainId !== undefined && mergedConfig.defaultChainId === undefined) {
     mergedConfig.defaultChainId = overrides.defaultChainId
   }
 
+>>>>>>> upstream/master
   return mergedConfig
 }

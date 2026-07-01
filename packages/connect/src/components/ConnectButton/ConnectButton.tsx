@@ -113,6 +113,10 @@ export const GuestWaasConnectButton = (
   )
 }
 
+<<<<<<< HEAD
+export const GoogleWaasConnectButton = (props: ConnectButtonProps) => {
+  const { connector, onConnect, isDescriptive = false, label } = props
+=======
 export const GoogleWaasConnectButton = (
   props: ConnectButtonProps & {
     setIsLoading?: (isLoading: boolean) => void
@@ -120,6 +124,7 @@ export const GoogleWaasConnectButton = (
   }
 ) => {
   const { connector, onConnect, isDescriptive = false, label, setIsLoading, setConnectingConnector } = props
+>>>>>>> upstream/master
   const storage = useStorage()
 
   const { theme } = useTheme()

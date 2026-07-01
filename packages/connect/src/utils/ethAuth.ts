@@ -7,6 +7,8 @@ import type { GetWalletClientData } from 'wagmi/query'
 import { DEFAULT_SESSION_EXPIRATION, LocalStorageKey } from '../constants/index.js'
 import type { StorageItem } from '../types.js'
 
+<<<<<<< HEAD
+=======
 const matchesExpectedProofClaims = (
   decodedProof: Awaited<ReturnType<ETHAuth['decodeProof']>>,
   normalizedWalletAddress: string,
@@ -25,6 +27,7 @@ const matchesExpectedProofClaims = (
   )
 }
 
+>>>>>>> upstream/master
 export const signEthAuthProof = async (
   walletClient: GetWalletClientData<any, any>,
   storage: Storage<StorageItem>
@@ -55,7 +58,20 @@ export const signEthAuthProof = async (
   if (proofInformation) {
     try {
       const decodedProof = await ethAuth.decodeProof(proofInformation.proofString, true)
+<<<<<<< HEAD
+      const cachedExpiry =
+        decodedProof.claims.exp && decodedProof.claims.iat ? decodedProof.claims.exp - decodedProof.claims.iat : null
+
+      const isMatchingProof =
+        decodedProof.address === normalizedWalletAddress &&
+        (decodedProof.claims.app || 'app') === expectedApp &&
+        (decodedProof.claims.ogn ?? undefined) === (expectedOrigin ?? undefined) &&
+        (decodedProof.claims.n ?? undefined) === (expectedNonce ?? undefined) &&
+        cachedExpiry !== null &&
+        Math.abs(cachedExpiry - expectedExpiry) <= 1
+=======
       const isMatchingProof = matchesExpectedProofClaims(decodedProof, normalizedWalletAddress, expectedOrigin, expectedNonce)
+>>>>>>> upstream/master
 
       if (isMatchingProof) {
         return proofInformation
@@ -66,6 +82,8 @@ export const signEthAuthProof = async (
       await clearCachedProof()
     }
   }
+<<<<<<< HEAD
+=======
 
   // Fall back to dapp-client ETHAuth cache (stored as `ewtString`) before creating a new signature.
   const dappClientStorage = new WebStorage()
@@ -88,6 +106,7 @@ export const signEthAuthProof = async (
       // ignore malformed dapp-client proof and continue with fresh signing
     }
   }
+>>>>>>> upstream/master
 
   const proof = new Proof()
   proof.address = walletAddress

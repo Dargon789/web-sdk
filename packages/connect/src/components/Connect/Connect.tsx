@@ -4,10 +4,17 @@ import {
   ArrowRightIcon,
   Button,
   Card,
+<<<<<<< HEAD
+  Divider,
+  IconButton,
+  Image,
+  ModalPrimitive,
+=======
   DialogPrimitive,
   IconButton,
   Image,
   Separator,
+>>>>>>> upstream/master
   Spinner,
   Text,
   TextInput,
@@ -34,11 +41,15 @@ import { useWallets } from '../../hooks/useWallets.js'
 import { useWalletSettings } from '../../hooks/useWalletSettings.js'
 import type { ConnectConfig, ExtendedConnector, LogoProps } from '../../types.js'
 import { formatAddress, isEmailValid } from '../../utils/helpers.js'
+<<<<<<< HEAD
+import type { WalletConfigurationOverrides, WalletConfigurationProvider } from '../../utils/walletConfiguration.js'
+=======
 import type {
   WalletConfigurationOverrides,
   WalletConfigurationProvider,
   WalletConfigurationSdkConfig
 } from '../../utils/walletConfiguration.js'
+>>>>>>> upstream/master
 import {
   AppleWaasConnectButton,
   ConnectButton,
@@ -75,6 +86,8 @@ const getConnectorProvider = (connector: ExtendedConnector): WalletConfiguration
   if (walletId.includes('passkey')) {
     return 'PASSKEY'
   }
+<<<<<<< HEAD
+=======
   if (walletId.includes('guest')) {
     return 'GUEST'
   }
@@ -84,6 +97,7 @@ const getConnectorProvider = (connector: ExtendedConnector): WalletConfiguration
   if (walletId.includes('epic')) {
     return 'EPIC'
   }
+>>>>>>> upstream/master
 
   return null
 }
@@ -104,7 +118,10 @@ interface ConnectProps extends SequenceConnectProviderProps {
   isAuthStatusLoading?: boolean
   resolvedConfig?: ConnectConfig
   walletConfigurationSignIn?: WalletConfigurationOverrides['signIn']
+<<<<<<< HEAD
+=======
   sdkConfig?: WalletConfigurationSdkConfig
+>>>>>>> upstream/master
 }
 
 export const Connect = (props: ConnectProps) => {
@@ -115,12 +132,19 @@ export const Connect = (props: ConnectProps) => {
   const { analytics } = useAnalyticsContext()
   const { hideExternalConnectOptions, hideConnectedWallets, hideSocialConnectOptions } = useWalletSettings()
 
+<<<<<<< HEAD
+  const { onClose, emailConflictInfo, config: baseConfig = {} as ConnectConfig, isInline = false } = props
+=======
   const { onClose, onLoadingChange, emailConflictInfo, config: baseConfig = {} as ConnectConfig, isInline = false } = props
+>>>>>>> upstream/master
   const config = props.resolvedConfig ?? baseConfig
   const isV3WalletSignedIn = props.isV3WalletSignedIn ?? null
   const isAuthStatusLoading = props.isAuthStatusLoading ?? false
   const walletConfigurationSignIn = props.walletConfigurationSignIn
+<<<<<<< HEAD
+=======
   const sdkConfig = props.sdkConfig
+>>>>>>> upstream/master
   const { signIn = {} } = config
   const baseSignIn = baseConfig.signIn ?? {}
   const storage = useStorage()
@@ -128,11 +152,14 @@ export const Connect = (props: ConnectProps) => {
   const descriptiveSocials = !!config?.signIn?.descriptiveSocials
   const showWalletAuthOptionsFirst = config?.signIn?.showWalletAuthOptionsFirst ?? false
   const [isLoading, setIsLoading] = useState<boolean>(false)
+<<<<<<< HEAD
+=======
 
   useEffect(() => {
     onLoadingChange?.(isLoading)
   }, [isLoading, onLoadingChange])
 
+>>>>>>> upstream/master
   const projectName = baseSignIn?.projectName
   const ecosystemProjectName = walletConfigurationSignIn?.projectName ?? baseSignIn?.projectName
   const ecosystemLogoUrl = walletConfigurationSignIn?.logoUrl ?? baseSignIn?.logoUrl
@@ -141,9 +168,13 @@ export const Connect = (props: ConnectProps) => {
   const [showEmailWaasPinInput, setShowEmailWaasPinInput] = useState(false)
 
   const [showExtendedList, setShowExtendedList] = useState<null | 'social' | 'wallet'>(null)
+<<<<<<< HEAD
+  const { status, connectors, connect } = useConnect()
+=======
   const connect = useConnect()
   const { status } = connect
   const connectors = useConnectors()
+>>>>>>> upstream/master
   const { signMessageAsync } = useSignMessage()
 
   const enabledProviderSet = useMemo(() => {
@@ -205,7 +236,10 @@ export const Connect = (props: ConnectProps) => {
   const [isRestoringSession, setIsRestoringSession] = useState(false)
   const [restorableSessionDismissed, setRestorableSessionDismissed] = useState(false)
   const [restorableSession, setRestorableSession] = useState<RestorableSessionState | null>(null)
+<<<<<<< HEAD
+=======
   const [connectingConnector, setConnectingConnector] = useState<ExtendedConnector | null>(null)
+>>>>>>> upstream/master
 
   const handleUnlinkWallet = async (address: string) => {
     try {
@@ -534,6 +568,18 @@ export const Connect = (props: ConnectProps) => {
       return new Set<string>()
     }
 
+<<<<<<< HEAD
+    if (isV3WalletSignedIn === true) {
+      // Logged in (status.js returned authState === 'signed-in'): only show ecosystem connector
+      return ecosystemConnector ? new Set([ecosystemConnector.uid]) : new Set<string>()
+    } else if (isV3WalletSignedIn === false) {
+      // Not logged in (status.js returned authState !== 'signed-in'): show regular v3 connectors (not ecosystem)
+      return new Set(regularV3Connectors.map(c => c.uid))
+    }
+    // Fallback: default to showing standard v3 socials to avoid empty space
+    return new Set(regularV3Connectors.map(c => c.uid))
+  }, [isAuthStatusLoading, isV3WalletSignedIn, ecosystemConnector, regularV3Connectors, sequenceConnectors.length])
+=======
     if (isV3WalletSignedIn === true && sdkConfig?.brandedSignIn === true) {
       // Logged in and branded sign-in enabled: only show ecosystem connector
       return ecosystemConnector ? new Set([ecosystemConnector.uid]) : new Set<string>()
@@ -549,6 +595,7 @@ export const Connect = (props: ConnectProps) => {
     sequenceConnectors.length,
     sdkConfig?.brandedSignIn
   ])
+>>>>>>> upstream/master
 
   const socialAuthConnectors = extendedConnectors
     .filter(c => c._wallet?.type === 'social')
@@ -578,8 +625,14 @@ export const Connect = (props: ConnectProps) => {
     return hasPrimarySequenceConnection ? true : !connector._wallet?.isEcosystemWallet
   })
 
+<<<<<<< HEAD
+  // For v3: hide standard social only if logged in and ecosystem connector exists
+  // For non-v3: hide standard social if ecosystem connector exists
+  const shouldHideStandardSocial = isV3WalletSignedIn === true ? !!ecosystemConnector : false
+=======
   // When brandedSignIn is enabled, hide standard social connectors in favor of the ecosystem button
   const shouldHideStandardSocial = sdkConfig?.brandedSignIn === true
+>>>>>>> upstream/master
 
   const emailConnector =
     !hideSocialConnectOptions && !shouldHideStandardSocial
@@ -600,6 +653,9 @@ export const Connect = (props: ConnectProps) => {
     // Special handling for ecosystem connector - use config data for display
     if (connector._wallet?.isEcosystemWallet) {
       const projectName = ecosystemProjectName || connector._wallet.name
+<<<<<<< HEAD
+      const logoUrl = ecosystemLogoUrl
+=======
       const logoUrl = sdkConfig?.brandedSignIn && sdkConfig?.signInButtonLogo ? sdkConfig.signInButtonLogo : ecosystemLogoUrl
       const ctaText =
         sdkConfig?.brandedSignIn && sdkConfig?.signInButtonTitle
@@ -607,11 +663,16 @@ export const Connect = (props: ConnectProps) => {
           : ecosystemProjectName
             ? `Connect with ${ecosystemProjectName}`
             : connector._wallet.ctaText
+>>>>>>> upstream/master
 
       const renderEcosystemLogo = (logoProps: LogoProps) => (
         <Image
           src={logoUrl || ''}
           alt={projectName}
+<<<<<<< HEAD
+          disableAnimation
+=======
+>>>>>>> upstream/master
           {...logoProps}
           style={{
             objectFit: 'contain',
@@ -632,7 +693,11 @@ export const Connect = (props: ConnectProps) => {
         _wallet: {
           ...connector._wallet,
           name: projectName,
+<<<<<<< HEAD
+          ctaText: ecosystemProjectName ? `Connect with ${ecosystemProjectName}` : connector._wallet.ctaText,
+=======
           ctaText,
+>>>>>>> upstream/master
           // Override logos if logoUrl is available
           ...(logoUrl && {
             logoDark: renderEcosystemLogo,
@@ -646,6 +711,17 @@ export const Connect = (props: ConnectProps) => {
 
     switch (connector._wallet?.id) {
       case 'guest-waas':
+<<<<<<< HEAD
+        return <GuestWaasConnectButton {...commonProps} setIsLoading={setIsLoading} />
+      case 'google-waas':
+        return <GoogleWaasConnectButton {...commonProps} />
+      case 'apple-waas':
+        return <AppleWaasConnectButton {...commonProps} />
+      case 'epic-waas':
+        return <EpicWaasConnectButton {...commonProps} />
+      case 'X-waas':
+        return <XWaasConnectButton {...commonProps} />
+=======
         return (
           <GuestWaasConnectButton {...commonProps} setIsLoading={setIsLoading} setConnectingConnector={setConnectingConnector} />
         )
@@ -661,6 +737,7 @@ export const Connect = (props: ConnectProps) => {
         return <EpicWaasConnectButton {...commonProps} />
       case 'X-waas':
         return <XWaasConnectButton {...commonProps} setIsLoading={setIsLoading} setConnectingConnector={setConnectingConnector} />
+>>>>>>> upstream/master
       default:
         return <ConnectButton {...commonProps} />
     }
@@ -688,7 +765,11 @@ export const Connect = (props: ConnectProps) => {
       await sequenceWaaS.signIn({ guest: true }, 'Guest')
     }
 
+<<<<<<< HEAD
+    return connect(
+=======
     return connect.mutate(
+>>>>>>> upstream/master
       { connector },
       {
         onSuccess: result => {
@@ -824,8 +905,14 @@ export const Connect = (props: ConnectProps) => {
     }
   }, [emailConflictInfo])
 
+<<<<<<< HEAD
+  // For v3: only show ecosystem connector section if logged in
+  // For non-v3: show ecosystem connector section if it exists
+  const showEcosystemConnectorSection = !hideSocialConnectOptions && !!ecosystemConnector && isV3WalletSignedIn === true
+=======
   // Show ecosystem connector section when brandedSignIn is enabled
   const showEcosystemConnectorSection = !hideSocialConnectOptions && !!ecosystemConnector && sdkConfig?.brandedSignIn === true
+>>>>>>> upstream/master
   const showSocialConnectorSection = !hideSocialConnectOptions && !shouldHideStandardSocial && socialAuthConnectors.length > 0
   const showEmailInputSection = !hideSocialConnectOptions && !shouldHideStandardSocial && !!emailConnector
 
@@ -896,12 +983,19 @@ export const Connect = (props: ConnectProps) => {
               </Text>
             </div>
           </Card>
+<<<<<<< HEAD
+          <Button label="Cancel" variant="glass" onClick={onDismissRestorableSession} disabled={isRestoringSession} />
+        </div>
+        <div className="mt-6">
+          <PoweredBySequence />
+=======
           <Button variant="ghost" onClick={onDismissRestorableSession} disabled={isRestoringSession}>
             Cancel
           </Button>
         </div>
         <div className="mt-6">
           <PoweredByPolygon />
+>>>>>>> upstream/master
         </div>
       </div>
     )
@@ -964,6 +1058,28 @@ export const Connect = (props: ConnectProps) => {
 
   return (
     <div className={isInline ? 'p-0' : 'p-4'}>
+<<<<<<< HEAD
+      <div
+        className="flex flex-col justify-center text-primary items-center font-medium"
+        style={{
+          marginTop: isInline ? '0' : '2px'
+        }}
+      >
+        <TitleWrapper isInline={isInline}>
+          <Text color="secondary">
+            {isLoading
+              ? `Connecting...`
+              : hasPrimarySequenceConnection
+                ? 'Wallets'
+                : `Connect ${projectName ? `to ${projectName}` : ''}`}
+          </Text>
+        </TitleWrapper>
+
+        {isSigningLinkMessage && (
+          <div className="mt-4">
+            <Text variant="small" color="muted">
+              Confirm the signature request to link your account
+=======
       {!showLoader && (
         <div
           className="flex flex-col justify-center text-primary items-center font-medium"
@@ -978,6 +1094,7 @@ export const Connect = (props: ConnectProps) => {
                 : hasPrimarySequenceConnection
                   ? 'Wallets'
                   : `Connect ${projectName ? `to ${projectName}` : ''}`}
+>>>>>>> upstream/master
             </Text>
           </TitleWrapper>
 
@@ -1120,7 +1237,11 @@ export const Connect = (props: ConnectProps) => {
                   <WalletConnectorsSection />
                 )}
                 <div className="mt-6">
+<<<<<<< HEAD
+                  <PoweredBySequence />
+=======
                   <PoweredByPolygon />
+>>>>>>> upstream/master
                 </div>
               </>
             )}

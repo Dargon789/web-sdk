@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+import { allNetworks } from '@0xsequence/network'
+=======
 import { allNetworks } from '@0xsequence/connect'
+>>>>>>> upstream/master
 
 const NODES_URL = 'https://nodes.sequence.app/{network}'
 

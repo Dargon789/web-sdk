@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+import { useGetSwapQuote, useGetSwapRoutes, useGetTokenBalancesSummary, useIndexerClient } from '@0xsequence/hooks'
+import type { ContractInfo, TokenMetadata } from '@0xsequence/metadata'
+import { findSupportedNetwork } from '@0xsequence/network'
+import { compareAddress, ContractVerificationStatus, formatDisplay, sendTransactions } from '@0xsequence/web-sdk-core'
+=======
 import { compareAddress, ContractVerificationStatus, formatDisplay, sendTransactions } from '@0xsequence/connect'
 import { findSupportedNetwork } from '@0xsequence/connect'
 import {
@@ -8,6 +14,7 @@ import {
   useIndexerClient
 } from '@0xsequence/hooks'
 import type { ContractInfo, TokenMetadata } from '@0xsequence/metadata'
+>>>>>>> upstream/master
 import { useState } from 'react'
 import { encodeFunctionData, formatUnits, zeroAddress, type Hex } from 'viem'
 import { useConnection, usePublicClient, useReadContract, useWalletClient } from 'wagmi'
@@ -148,7 +155,7 @@ export const useCryptoPayment = ({
         fromTokenAmount: '0',
         chainId: chainId,
         includeApprove: true,
-        slippageBps: slippageBps || DEFAULT_SLIPPAGE_BPS
+        slippageBps: slippageBps || 100
       }
     },
     {
@@ -238,8 +245,7 @@ export const useCryptoPayment = ({
           }
         ]
 
-        let txHash: string | undefined
-        const txs = await sendTransactions({
+        const txHash = await sendTransactions({
           chainId,
           senderAddress: userAddress,
           publicClient,
@@ -251,25 +257,7 @@ export const useCryptoPayment = ({
           waitConfirmationForLastTransaction: false
         })
 
-        if (txs.length === 0) {
-          throw new Error('No transactions to send')
-        }
-
-        for (const [index, tx] of txs.entries()) {
-          const currentTxHash = await tx()
-
-          const isLastTransaction = index === txs.length - 1
-
-          if (isLastTransaction) {
-            onSuccess?.(currentTxHash)
-            txHash = currentTxHash
-          }
-        }
-
-        if (!txHash) {
-          throw new Error('Transaction hash is not available')
-        }
-
+        onSuccess?.(txHash)
         return txHash
       } else {
         const swapOption = swapRoutes
@@ -341,8 +329,7 @@ export const useCryptoPayment = ({
           }
         ]
 
-        let txHash: string | undefined
-        const txs = await sendTransactions({
+        const txHash = await sendTransactions({
           chainId,
           senderAddress: userAddress,
           publicClient,
@@ -354,25 +341,7 @@ export const useCryptoPayment = ({
           waitConfirmationForLastTransaction: false
         })
 
-        if (txs.length === 0) {
-          throw new Error('No transactions to send')
-        }
-
-        for (const [index, tx] of txs.entries()) {
-          const currentTxHash = await tx()
-
-          const isLastTransaction = index === txs.length - 1
-
-          if (isLastTransaction) {
-            onSuccess?.(currentTxHash)
-            txHash = currentTxHash
-          }
-        }
-
-        if (!txHash) {
-          throw new Error('Transaction hash is not available')
-        }
-
+        onSuccess?.(txHash)
         return txHash
       }
     } catch (error) {

@@ -1,6 +1,10 @@
 'use client'
 
+<<<<<<< HEAD
+import { Button, Card, Modal, ModalPrimitive, Spinner, Text, ToastProvider, type Theme } from '@0xsequence/design-system'
+=======
 import { Button, Card, DialogPrimitive, Modal, Spinner, Text, ToastProvider, type Theme } from '@0xsequence/design-system'
+>>>>>>> upstream/master
 import { SequenceHooksProvider } from '@0xsequence/hooks'
 import { SequenceClient, setupAnalytics, type Analytics } from '@0xsequence/provider'
 import { GoogleOAuthProvider } from '@react-oauth/google'
@@ -56,8 +60,12 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
     enabledProviders,
     isV3WalletSignedIn,
     isAuthStatusLoading,
+<<<<<<< HEAD
+    walletConfigurationSignIn
+=======
     walletConfigurationSignIn,
     sdkConfig
+>>>>>>> upstream/master
   } = useResolvedConnectConfig(incomingConfig)
   const {
     defaultTheme = 'dark',
@@ -265,7 +273,10 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
                                 <EpicAuthProvider>
                                   <Connect
                                     onClose={() => setOpenConnectModal(false)}
+<<<<<<< HEAD
+=======
                                     onLoadingChange={setIsConnectLoading}
+>>>>>>> upstream/master
                                     emailConflictInfo={emailConflictInfo}
                                     {...props}
                                     config={incomingConfig}
@@ -274,7 +285,10 @@ export const SequenceConnectProvider = (props: SequenceConnectProviderProps) => 
                                     isAuthStatusLoading={isAuthStatusLoading}
                                     enabledProviders={enabledProviders}
                                     walletConfigurationSignIn={walletConfigurationSignIn}
+<<<<<<< HEAD
+=======
                                     sdkConfig={sdkConfig}
+>>>>>>> upstream/master
                                   />
                                 </EpicAuthProvider>
                               )}

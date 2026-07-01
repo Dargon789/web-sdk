@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { type Chain, type Transport } from 'viem'
+<<<<<<< HEAD
+import { type Config } from 'wagmi'
+=======
 import { type Config, type Connector } from 'wagmi'
+>>>>>>> upstream/master
 
 import { getDefaultChains } from '../config/defaultChains.js'
 import { getDefaultTransports } from '../config/defaultTransports.js'
@@ -18,7 +22,10 @@ const haveSameChainIds = (current: readonly Chain[], next: readonly Chain[]) => 
 export const useSyncWagmiChains = (config: ConnectConfig, wagmiConfig: Config) => {
   const initialChainsRef = useRef<readonly [Chain, ...Chain[]] | undefined>(undefined)
   const initialTransportsRef = useRef<Record<number, Transport> | undefined>(undefined)
+<<<<<<< HEAD
+=======
   const lastAppliedChainIdRef = useRef<number | undefined>(undefined)
+>>>>>>> upstream/master
 
   useEffect(() => {
     const chainState = ((wagmiConfig as any)._internal?.chains?.getState?.() ?? wagmiConfig.chains) as readonly [
@@ -59,6 +66,8 @@ export const useSyncWagmiChains = (config: ConnectConfig, wagmiConfig: Config) =
       transports
     })
   }, [config.chainIds, config.projectAccessKey, wagmiConfig])
+<<<<<<< HEAD
+=======
 
   useEffect(() => {
     const hasConfiguredChains = Array.isArray(config.chainIds) && config.chainIds.length > 0
@@ -98,4 +107,5 @@ export const useSyncWagmiChains = (config: ConnectConfig, wagmiConfig: Config) =
       })
     })
   }, [config.chainIds, config.defaultChainId, wagmiConfig])
+>>>>>>> upstream/master
 }

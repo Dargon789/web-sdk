@@ -1,4 +1,16 @@
 import {
+<<<<<<< HEAD
+  createContractPermission,
+  createExplicitSessionConfig,
+  getNetwork,
+  LocalStorageKey,
+  SEQUENCE_VALUE_FORWARDER,
+  type ExplicitSessionParams,
+  type Permission
+} from '@0xsequence/connect'
+import {
+=======
+>>>>>>> upstream/master
   DappClient,
   type ExplicitSessionConfig,
   type FeeOption,
@@ -22,6 +34,11 @@ import {
 } from 'viem'
 import { createConnector, type Connector } from 'wagmi'
 
+<<<<<<< HEAD
+// Helper types
+type EIP1193RequestArgs = Parameters<EIP1193RequestFn>[0]
+
+=======
 import { LocalStorageKey } from '../../constants/localStorage.js'
 import type { EthAuthSettings } from '../../types.js'
 import { normalizeSequenceNodesUrl } from '../../utils/helpers.js'
@@ -46,6 +63,7 @@ const resolveConnectAccounts = <withCapabilities extends boolean>(
   ) as ConnectAccounts<withCapabilities>
 }
 
+>>>>>>> upstream/master
 export interface SequenceV3Connector extends Connector {
   type: 'sequence-v3-wallet'
   setEmail: (email: string) => void
@@ -71,7 +89,10 @@ export interface BaseSequenceV3ConnectorOptions {
   explicitSessionParams?: ExplicitSessionParams
   enableImplicitSession?: boolean
   includeFeeOptionPermissions?: boolean
+<<<<<<< HEAD
+=======
   ethAuth?: EthAuthSettings | false
+>>>>>>> upstream/master
   nodesUrl?: string
   relayerUrl?: string
 }
@@ -95,22 +116,35 @@ export function sequenceV3Wallet(params: BaseSequenceV3ConnectorOptions) {
     [LocalStorageKey.V3ActiveLoginType]: string
   }
 
+<<<<<<< HEAD
+  const client = new DappClient(params.walletUrl, params.dappOrigin, params.projectAccessKey, {
+    nodesUrl: params.nodesUrl,
+=======
   const normalizedNodesUrl = normalizeSequenceNodesUrl(params.nodesUrl)
 
   const client = new DappClient(params.walletUrl, params.dappOrigin, params.projectAccessKey, {
     nodesUrl: normalizedNodesUrl,
+>>>>>>> upstream/master
     relayerUrl: params.relayerUrl
   })
   const provider = new SequenceV3Provider(
     client,
     params.defaultNetwork,
+<<<<<<< HEAD
+    params.nodesUrl,
+=======
     normalizedNodesUrl,
+>>>>>>> upstream/master
     params.projectAccessKey,
     params.loginType,
     params.explicitSessionParams ? createExplicitSessionConfig(params.explicitSessionParams) : undefined,
     params.enableImplicitSession,
+<<<<<<< HEAD
+    params.includeFeeOptionPermissions
+=======
     params.includeFeeOptionPermissions,
     params.ethAuth
+>>>>>>> upstream/master
   )
 
   const loginStorageKey = params.loginStorageKey ?? params.loginType
@@ -155,6 +189,10 @@ export function sequenceV3Wallet(params: BaseSequenceV3ConnectorOptions) {
         }
       },
 
+<<<<<<< HEAD
+      async connect() {
+        const accounts = await provider.request({ method: 'eth_requestAccounts' })
+=======
       async connect<withCapabilities extends boolean = false>(_connectInfo?: {
         chainId?: number
         isReconnecting?: boolean
@@ -163,6 +201,7 @@ export function sequenceV3Wallet(params: BaseSequenceV3ConnectorOptions) {
         const accounts = await provider.request({ method: 'eth_requestAccounts' })
         const normalizedAccounts = accounts.map((account: string) => getAddress(account))
         const resolvedAccounts = resolveConnectAccounts(normalizedAccounts, _connectInfo?.withCapabilities)
+>>>>>>> upstream/master
         if (accounts.length) {
           if (loginStorageKey) {
             await config.storage?.setItem(LocalStorageKey.V3ActiveLoginType, loginStorageKey)
@@ -173,7 +212,11 @@ export function sequenceV3Wallet(params: BaseSequenceV3ConnectorOptions) {
           throw new Error('No accounts found')
         }
         const chainId = await this.getChainId()
+<<<<<<< HEAD
+        return { accounts, chainId }
+=======
         return { accounts: resolvedAccounts, chainId }
+>>>>>>> upstream/master
       },
 
       async disconnect() {
@@ -249,12 +292,18 @@ export class SequenceV3Provider implements EIP1193Provider {
   private currentChainId: number
   private nodesUrl: string
   private projectAccessKey: string
+<<<<<<< HEAD
+=======
   private useWalletTransactionForSend = false
+>>>>>>> upstream/master
   private enableImplicitSession?: boolean
   private loginType?: SequenceV3LoginType
   private initialSessionConfig?: ExplicitSessionConfig
   private includeFeeOptionPermissions?: boolean
+<<<<<<< HEAD
+=======
   private ethAuth?: EthAuthSettings | false
+>>>>>>> upstream/master
 
   email?: string
 
@@ -272,13 +321,21 @@ export class SequenceV3Provider implements EIP1193Provider {
   constructor(
     private client: DappClient,
     defaultNetwork: number,
+<<<<<<< HEAD
+    nodesUrl = 'https://nodes.sequence.app',
+=======
     nodesUrl = 'https://nodes.sequence.app/{network}',
+>>>>>>> upstream/master
     projectAccessKey: string,
     loginType?: SequenceV3LoginType,
     initialSessionConfig?: ExplicitSessionConfig,
     enableImplicitSession?: boolean,
+<<<<<<< HEAD
+    includeFeeOptionPermissions?: boolean
+=======
     includeFeeOptionPermissions?: boolean,
     ethAuth?: EthAuthSettings | false
+>>>>>>> upstream/master
   ) {
     this.currentChainId = defaultNetwork
     this.nodesUrl = nodesUrl
@@ -287,6 +344,8 @@ export class SequenceV3Provider implements EIP1193Provider {
     this.projectAccessKey = projectAccessKey
     this.enableImplicitSession = enableImplicitSession
     this.includeFeeOptionPermissions = includeFeeOptionPermissions || false
+<<<<<<< HEAD
+=======
     this.ethAuth = ethAuth
   }
 
@@ -296,6 +355,7 @@ export class SequenceV3Provider implements EIP1193Provider {
     }
 
     return this.ethAuth ?? {}
+>>>>>>> upstream/master
   }
 
   on<TEvent extends keyof EIP1193EventMap>(event: TEvent, listener: EIP1193EventMap[TEvent]): void {
@@ -325,6 +385,13 @@ export class SequenceV3Provider implements EIP1193Provider {
     return this.currentChainId
   }
 
+<<<<<<< HEAD
+  async request(args: EIP1193RequestArgs): Promise<any> {
+    const { method, params } = args
+
+    console.log(`Request method: ${method}`, params)
+
+=======
   /**
    * Toggles wallet-action based transaction sending for eth_sendTransaction.
    * Used by Trails flows where V3 should route through sendWalletTransaction.
@@ -336,6 +403,7 @@ export class SequenceV3Provider implements EIP1193Provider {
   async request(args: EIP1193RequestArgs): Promise<any> {
     const { method, params } = args
 
+>>>>>>> upstream/master
     switch (method) {
       case 'eth_accounts': {
         if (this.client.isInitialized) {
@@ -401,8 +469,11 @@ export class SequenceV3Provider implements EIP1193Provider {
           }
         }
 
+<<<<<<< HEAD
+=======
         const ethAuth = this.resolveEthAuthSettings()
 
+>>>>>>> upstream/master
         await this.client.connect(
           this.currentChainId,
           this.initialSessionConfig
@@ -424,8 +495,12 @@ export class SequenceV3Provider implements EIP1193Provider {
           {
             ...(this.loginType ? { preferredLoginMethod: this.loginType } : {}),
             ...(this.loginType === 'email' && this.email ? { email: this.email } : {}),
+<<<<<<< HEAD
+            ...(this.enableImplicitSession ? { includeImplicitSession: this.enableImplicitSession } : {})
+=======
             ...(this.enableImplicitSession ? { includeImplicitSession: this.enableImplicitSession } : {}),
             ...(ethAuth ? { ethAuth } : {})
+>>>>>>> upstream/master
           }
         )
         const walletAddress = this.client.getWalletAddress()
@@ -522,6 +597,79 @@ export class SequenceV3Provider implements EIP1193Provider {
           })
         }
         const tx = params[0] as TransactionRequest
+<<<<<<< HEAD
+        const transactions = [{ to: tx.to!, value: BigInt(tx.value?.toString() ?? '0'), data: tx.data ?? '0x' }]
+
+        const hasPermission = await this.client.hasPermission(this.currentChainId, transactions)
+
+        if (hasPermission) {
+          // @note feeConfirmationHandler will only be defined if the useFeeOptions hook is used anywhere in the app
+          // if it is not used, we do not query fee options at all
+          if (this.feeConfirmationHandler) {
+            const feeOptions = await this.client.getFeeOptions(this.currentChainId, transactions)
+            let selectedFeeOption: FeeOption | undefined
+
+            if (feeOptions && feeOptions.length > 0) {
+              const id = uuidv4()
+              const confirmation = await this.feeConfirmationHandler.confirmFeeOption(id, feeOptions, [tx], this.currentChainId)
+
+              if (!confirmation.confirmed) {
+                throw new RpcError(new Error('User rejected the request.'), {
+                  code: 4001,
+                  shortMessage: 'User rejected send transaction request.'
+                })
+              }
+
+              if (id !== confirmation.id) {
+                throw new RpcError(new Error('User confirmation ids do not match'), {
+                  code: -32000,
+                  shortMessage: 'Confirmation ID mismatch'
+                })
+              }
+              selectedFeeOption = confirmation.feeOption
+            }
+            // @note if dApp has permission and there is a confirmation handler
+            // if there is no selectedFeeOption, dapp should sponsor the transaction or network used should be testnet
+            return this.client.sendTransaction(this.currentChainId, transactions, selectedFeeOption)
+          } else {
+            // @note if dApp has permission but there is no confirmation handler, in this case dapp should sponsor the transaction
+            return this.client.sendTransaction(this.currentChainId, transactions)
+          }
+        } else {
+          return new Promise((resolve, reject) => {
+            const unsubscribe = this.client.on('walletActionResponse', (data: any) => {
+              unsubscribe()
+              if (data.error) {
+                reject(new RpcError(new Error(data.error), { code: 4001, shortMessage: data.error }))
+              } else {
+                resolve(data.response.transactionHash)
+              }
+            })
+
+            if (!tx.to) {
+              const error = new RpcError(new Error('Transaction requires a "to" address.'), {
+                code: -32602,
+                shortMessage: 'Invalid transaction params'
+              })
+              unsubscribe()
+              reject(error)
+              return
+            }
+
+            const walletTransactionRequest: DappClientTransactionRequest = {
+              to: tx.to,
+              value: tx.value,
+              data: tx.data,
+              gasLimit: tx.gas
+            }
+
+            this.client.sendWalletTransaction(this.currentChainId, walletTransactionRequest).catch((err: unknown) => {
+              unsubscribe()
+              reject(err)
+            })
+          })
+        }
+=======
         if (!tx.to) {
           throw new RpcError(new Error('Transaction requires a "to" address.'), {
             code: -32602,
@@ -666,6 +814,7 @@ export class SequenceV3Provider implements EIP1193Provider {
           }
           throw error
         }
+>>>>>>> upstream/master
       }
 
       case 'wallet_switchEthereumChain': {
@@ -704,6 +853,9 @@ const getRpcUrl = (nodesUrl: string, projectAccessKey: string, networkName: stri
   let url = applyTemplate(nodesUrl, { network: networkName })
 
   if (nodesUrl.includes('sequence')) {
+<<<<<<< HEAD
+    url = `${url}/${projectAccessKey}`
+=======
     const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url
     const hasTemplate = nodesUrl.includes('{network}')
     const withNetwork = hasTemplate ? cleanUrl : `${cleanUrl}/${networkName}`
@@ -713,6 +865,7 @@ const getRpcUrl = (nodesUrl: string, projectAccessKey: string, networkName: stri
     }
 
     url = `${withNetwork}/${projectAccessKey}`
+>>>>>>> upstream/master
   }
 
   return url
@@ -727,6 +880,8 @@ function applyTemplate(template: string, values: Record<string, string>) {
     return value
   })
 }
+<<<<<<< HEAD
+=======
 
 const getSelector = (data: unknown) => {
   if (typeof data !== 'string') {
@@ -751,3 +906,4 @@ const formatProviderError = (error: unknown) => {
   }
   return String(error)
 }
+>>>>>>> upstream/master

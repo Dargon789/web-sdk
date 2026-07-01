@@ -245,7 +245,7 @@ function App() {
   }, [usdcAllowance])
 
   const handleConnect = () => setOpenConnectModal(true)
-  const handleDisconnect = () => disconnect.mutate()
+  const handleDisconnect = () => disconnect.disconnect()
 
   const handleSupply = (isNative: boolean = false) => {
     if (isNative) {

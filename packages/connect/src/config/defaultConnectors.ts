@@ -26,6 +26,8 @@ export interface CommonConnectorOptions {
   defaultChainId?: number
 }
 
+<<<<<<< HEAD
+=======
 const resolveDappOrigin = (dappOrigin?: string) => {
   if (dappOrigin) {
     return dappOrigin
@@ -38,6 +40,7 @@ const resolveDappOrigin = (dappOrigin?: string) => {
   return undefined
 }
 
+>>>>>>> upstream/master
 const resolveAppName = (options: CommonConnectorOptions & { signIn?: { projectName?: string } }) => {
   if (options.appName) {
     return options.appName
@@ -51,9 +54,12 @@ const resolveAppName = (options: CommonConnectorOptions & { signIn?: { projectNa
 }
 
 export interface DefaultV3ConnectorOptions extends CommonConnectorOptions {
+<<<<<<< HEAD
+=======
   signIn?: {
     projectName?: string
   }
+>>>>>>> upstream/master
   email?: boolean
   google?: boolean
   apple?: boolean
@@ -74,11 +80,16 @@ export interface DefaultV3ConnectorOptions extends CommonConnectorOptions {
   explicitSessionParams?: ExplicitSessionParams
   includeFeeOptionPermissions?: boolean
   enableImplicitSession?: boolean
+<<<<<<< HEAD
+=======
   ethAuth?: EthAuthSettings | false
+>>>>>>> upstream/master
   nodesUrl?: string
   relayerUrl?: string
 }
 
+<<<<<<< HEAD
+=======
 const resolveV3EthAuthSettings = (
   options: DefaultV3ConnectorOptions,
   defaultAppName: string,
@@ -98,6 +109,7 @@ const resolveV3EthAuthSettings = (
   }
 }
 
+>>>>>>> upstream/master
 export interface DefaultWaasConnectorOptions extends CommonConnectorOptions {
   waasConfigKey: string
   enableConfirmationModal?: boolean
@@ -300,15 +312,23 @@ export const getDefaultWaasConnectors = (options: DefaultWaasConnectorOptions): 
 
 export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): CreateConnectorFn[] => {
   const { projectAccessKey, walletUrl, dappOrigin, defaultChainId = 1 } = options
+<<<<<<< HEAD
+  const appName = resolveAppName(options)
+=======
   const resolvedDappOrigin = resolveDappOrigin(dappOrigin)
   const appName = resolveAppName(options)
   const defaultEthAuthAppName = options.signIn?.projectName || 'app'
   const ethAuth = resolveV3EthAuthSettings(options, defaultEthAuthAppName, resolvedDappOrigin)
+>>>>>>> upstream/master
 
   const wallets: Wallet[] = []
 
   if (options.email !== false) {
+<<<<<<< HEAD
+    if (!walletUrl || !dappOrigin) {
+=======
     if (!walletUrl || !resolvedDappOrigin) {
+>>>>>>> upstream/master
       throw new Error('Email wallet requires walletUrl and dappOrigin to be set')
     }
     wallets.push(
@@ -316,11 +336,18 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
+<<<<<<< HEAD
+        dappOrigin: dappOrigin,
+        explicitSessionParams: options.explicitSessionParams,
+        enableImplicitSession: options.enableImplicitSession,
+        includeFeeOptionPermissions: options.includeFeeOptionPermissions,
+=======
         dappOrigin: resolvedDappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
         ethAuth,
+>>>>>>> upstream/master
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
@@ -328,7 +355,11 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
   }
 
   if (options.google !== false) {
+<<<<<<< HEAD
+    if (!walletUrl || !dappOrigin) {
+=======
     if (!walletUrl || !resolvedDappOrigin) {
+>>>>>>> upstream/master
       throw new Error('Google wallet requires walletUrl and dappOrigin to be set')
     }
     wallets.push(
@@ -336,11 +367,18 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
+<<<<<<< HEAD
+        dappOrigin: dappOrigin,
+        explicitSessionParams: options.explicitSessionParams,
+        enableImplicitSession: options.enableImplicitSession,
+        includeFeeOptionPermissions: options.includeFeeOptionPermissions,
+=======
         dappOrigin: resolvedDappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
         ethAuth,
+>>>>>>> upstream/master
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
@@ -348,7 +386,11 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
   }
 
   if (options.apple !== false) {
+<<<<<<< HEAD
+    if (!walletUrl || !dappOrigin) {
+=======
     if (!walletUrl || !resolvedDappOrigin) {
+>>>>>>> upstream/master
       throw new Error('Apple wallet requires walletUrl and dappOrigin to be set')
     }
     wallets.push(
@@ -356,11 +398,18 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
+<<<<<<< HEAD
+        dappOrigin: dappOrigin,
+        explicitSessionParams: options.explicitSessionParams,
+        enableImplicitSession: options.enableImplicitSession,
+        includeFeeOptionPermissions: options.includeFeeOptionPermissions,
+=======
         dappOrigin: resolvedDappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
         ethAuth,
+>>>>>>> upstream/master
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
@@ -368,7 +417,11 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
   }
 
   if (options.passkey !== false) {
+<<<<<<< HEAD
+    if (!walletUrl || !dappOrigin) {
+=======
     if (!walletUrl || !resolvedDappOrigin) {
+>>>>>>> upstream/master
       throw new Error('Passkey wallet requires walletUrl and dappOrigin to be set')
     }
     wallets.push(
@@ -376,28 +429,46 @@ export const getDefaultV3Connectors = (options: DefaultV3ConnectorOptions): Crea
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
+<<<<<<< HEAD
+        dappOrigin: dappOrigin,
+        explicitSessionParams: options.explicitSessionParams,
+        enableImplicitSession: options.enableImplicitSession,
+        includeFeeOptionPermissions: options.includeFeeOptionPermissions,
+=======
         dappOrigin: resolvedDappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
         ethAuth,
+>>>>>>> upstream/master
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })
     )
   }
 
+<<<<<<< HEAD
+  if (walletUrl && dappOrigin) {
+=======
   if (walletUrl && resolvedDappOrigin) {
+>>>>>>> upstream/master
     wallets.push(
       ecosystemV3({
         projectAccessKey: projectAccessKey,
         walletUrl: walletUrl,
         defaultNetwork: defaultChainId,
+<<<<<<< HEAD
+        dappOrigin: dappOrigin,
+        explicitSessionParams: options.explicitSessionParams,
+        enableImplicitSession: options.enableImplicitSession,
+        includeFeeOptionPermissions: options.includeFeeOptionPermissions,
+=======
         dappOrigin: resolvedDappOrigin,
         explicitSessionParams: options.explicitSessionParams,
         enableImplicitSession: options.enableImplicitSession,
         includeFeeOptionPermissions: options.includeFeeOptionPermissions,
         ethAuth,
+>>>>>>> upstream/master
         nodesUrl: options.nodesUrl,
         relayerUrl: options.relayerUrl
       })

@@ -2,27 +2,51 @@ import {
   signEthAuthProof,
   useExplicitSessions,
   useFeeOptions,
+<<<<<<< HEAD
+  useOpenConnectModal,
+=======
   useHasPermission,
   useOpenConnectModal,
   useSendWalletTransaction,
+>>>>>>> upstream/master
   useSequenceSessionState,
   useStorage,
   useWallets,
-  validateEthProof
+  validateEthProof,
+  type ParameterRule,
+  type Permission
 } from '@0xsequence/connect'
+<<<<<<< HEAD
+import { Button, Card, Text } from '@0xsequence/design-system'
+import { allNetworks, ChainId } from '@0xsequence/network'
+=======
 import { allNetworks, ChainId } from '@0xsequence/connect'
 import { Button, Card, Select, Separator, Text } from '@0xsequence/design-system'
+>>>>>>> upstream/master
 import { useOpenWalletModal } from '@0xsequence/wallet-widget'
 import { Alert, CardButton, Header, WalletListItem, type AlertProps } from 'example-shared-components'
 import { AbiFunction } from 'ox'
 import React, { useEffect } from 'react'
+<<<<<<< HEAD
+import { formatUnits, zeroAddress } from 'viem'
+=======
 import { createPublicClient, encodeFunctionData, formatUnits, http, zeroAddress, type TransactionRequest } from 'viem'
 import { polygon } from 'viem/chains'
+>>>>>>> upstream/master
 import { createSiweMessage, generateSiweNonce } from 'viem/siwe'
 import { useChainId, useConnection, usePublicClient, useSendTransaction, useSwitchChain, useWalletClient } from 'wagmi'
 
 import { messageToSign } from '../constants'
 import { abi } from '../constants/nft-abi'
+<<<<<<< HEAD
+import { EMITTER_ABI, getEmitterContractAddress, getSessionConfigForType, PermissionsType } from '../constants/permissions'
+
+import { Select } from './Select'
+
+export const Connected = () => {
+  const { setOpenConnectModal } = useOpenConnectModal()
+  const { address } = useAccount()
+=======
 import {
   EMITTER_ABI,
   getEmitterContractAddress,
@@ -63,6 +87,7 @@ const setStoredInitialV3ChainId = (chainId?: number) => {
 export const Connected = () => {
   const { setOpenConnectModal } = useOpenConnectModal()
   const { address, chainId: connectedChainId } = useConnection()
+>>>>>>> upstream/master
 
   const { setOpenWalletModal } = useOpenWalletModal()
 
@@ -80,6 +105,10 @@ export const Connected = () => {
   const sessionState = useSequenceSessionState()
 
   const [hasPermission, setHasPermission] = React.useState(false)
+<<<<<<< HEAD
+  const [isCheckingPermission, setIsCheckingPermission] = React.useState(false)
+=======
+>>>>>>> upstream/master
 
   // console.log('sessionState', sessionState)
 
@@ -112,6 +141,8 @@ export const Connected = () => {
     error: permissionedTxnError,
     reset: resetPermissionedTxn
   } = useSendTransaction()
+<<<<<<< HEAD
+=======
 
   const {
     data: walletTxnData,
@@ -120,6 +151,7 @@ export const Connected = () => {
     error: sendWalletTransactionError,
     reset: resetWalletTransaction
   } = useSendWalletTransaction()
+>>>>>>> upstream/master
 
   const [isSigningMessage, setIsSigningMessage] = React.useState(false)
   const [isMessageValid, setIsMessageValid] = React.useState<boolean | undefined>()
@@ -135,16 +167,25 @@ export const Connected = () => {
   const [lastTxnDataHash2, setLastTxnDataHash2] = React.useState<string | undefined>()
   const [lastTxnDataHash3, setLastTxnDataHash3] = React.useState<string | undefined>()
   const [lastPermissionedTxnDataHash, setLastPermissionedTxnDataHash] = React.useState<string | undefined>()
+<<<<<<< HEAD
+
+  const chainId = useChainId()
+=======
   const [lastWalletTxnDataHash, setLastWalletTxnDataHash] = React.useState<string | undefined>()
 
   const chainId = useChainId()
   const { switchChainAsync } = useSwitchChain()
+>>>>>>> upstream/master
   const [pendingFeeOptionConfirmation, confirmPendingFeeOption] = useFeeOptions()
 
   const [selectedFeeOptionTokenName, setSelectedFeeOptionTokenName] = React.useState<string | undefined>()
 
   const { addExplicitSession, isLoading: isAddingExplicitSession, error: addExplicitSessionError } = useExplicitSessions()
   const [permissionType, setPermissionType] = React.useState<PermissionsType>('contractCall')
+<<<<<<< HEAD
+
+  const [hasImplicitSession, setHasImplicitSession] = React.useState(false)
+=======
   const { checkPermission, isLoading: isCheckingPermission, error: checkPermissionError } = useHasPermission()
 
   const [hasImplicitSession, setHasImplicitSession] = React.useState(false)
@@ -195,6 +236,7 @@ export const Connected = () => {
       isCancelled = true
     }
   }, [isV3WalletConnectionActive, initialV3ChainId, connectedChainId, chainId, walletClient])
+>>>>>>> upstream/master
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -205,12 +247,137 @@ export const Connected = () => {
 
       setHasImplicitSession(sessionState.sessions.some(s => s.type === 'implicit'))
 
+<<<<<<< HEAD
+      // 1. Get all sessions (without pre-filtering by chainId)
+      const sessions = sessionState.sessions.filter(s => s.type === 'explicit')
+
+      if (sessions.length === 0) {
+        setHasPermission(false)
+        return
+      }
+
+      setIsCheckingPermission(true)
+      setHasPermission(false) // Assume no permission until one is found
+
+      try {
+        const expectedSessionConfig = getSessionConfigForType(window.location.origin, chainId, permissionType)
+
+        if (!expectedSessionConfig || !expectedSessionConfig.permissions) {
+=======
       try {
         if (permissionType === 'none') {
+>>>>>>> upstream/master
           setHasPermission(true)
           return
         }
 
+<<<<<<< HEAD
+        // 2. Check all sessionSigners to see if any have the expected permission config
+        for (const session of sessions) {
+          console.log('Checking permissions for signer:', session, 'on chainId:', chainId)
+          console.log('existingPermissionConfig:', session)
+
+          // Validate the received permission config
+          if (
+            !session ||
+            !('permissions' in session) ||
+            !session.permissions ||
+            // We need to check the chainId from the returned config
+            session.chainId !== chainId
+          ) {
+            // This signer does not have valid permissions for the current chain, try the next one.
+            continue
+          }
+
+          const arePermissionsSubset = (expectedPerms: Permission[], existingPerms: Permission[]) => {
+            if (expectedPerms.length > existingPerms.length) {
+              return false
+            }
+            if (expectedPerms.length === 0) {
+              return true
+            }
+
+            // Helper to compare two Uint8Arrays by their contents
+            const areByteArraysEqual = (a: Uint8Array, b: Uint8Array): boolean => {
+              if (a.length !== b.length) {
+                return false
+              }
+              for (let i = 0; i < a.length; i++) {
+                if (a[i] !== b[i]) {
+                  return false
+                }
+              }
+              return true
+            }
+
+            // Helper to compare two arrays of rules, order-independent
+            const compareRulesets = (rulesA: ParameterRule[], rulesB: ParameterRule[]) => {
+              if (rulesA.length !== rulesB.length) {
+                return false
+              }
+              if (rulesA.length === 0) {
+                return true
+              }
+
+              const matchedB = new Array(rulesB.length).fill(false)
+              return rulesA.every(ruleA => {
+                const foundMatch = rulesB.some((ruleB, index) => {
+                  if (matchedB[index]) {
+                    return false
+                  }
+                  // Compare individual rule properties, using the byte array helper for mask and value
+                  if (
+                    ruleA.cumulative === ruleB.cumulative &&
+                    areByteArraysEqual(ruleA.mask, ruleB.mask) &&
+                    ruleA.offset === ruleB.offset &&
+                    ruleA.operation === ruleB.operation &&
+                    areByteArraysEqual(ruleA.value, ruleB.value)
+                  ) {
+                    matchedB[index] = true
+                    return true
+                  }
+                  return false
+                })
+                return foundMatch
+              })
+            }
+
+            const matchedExisting = new Array(existingPerms.length).fill(false)
+
+            // Main logic: check if every expected permission is present in existing permissions
+            return expectedPerms.every(expectedPerm => {
+              return existingPerms.some((existingPerm, index) => {
+                if (matchedExisting[index]) {
+                  return false
+                }
+
+                const isTargetMatch = expectedPerm.target.toLowerCase() === existingPerm.target.toLowerCase()
+                const areRulesMatch = compareRulesets(expectedPerm.rules ?? [], existingPerm.rules ?? [])
+
+                if (isTargetMatch && areRulesMatch) {
+                  matchedExisting[index] = true
+                  return true
+                }
+                return false
+              })
+            })
+          }
+
+          const isSubset = arePermissionsSubset(expectedSessionConfig.permissions, session.permissions)
+          console.log('isSubset for signer', session.sessionAddress, ':', isSubset)
+
+          // If we find a signer that has the required permissions, we can stop checking
+          if (isSubset) {
+            setHasPermission(true)
+            break
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check permissions:', error)
+        setHasPermission(false)
+      } finally {
+        setIsCheckingPermission(false)
+=======
         const emitterTxData = encodeFunctionData({
           abi: [
             {
@@ -270,11 +437,16 @@ export const Connected = () => {
       } catch (error) {
         console.error('Failed to check permissions:', error)
         setHasPermission(false)
+>>>>>>> upstream/master
       }
     }
 
     checkPermissions()
+<<<<<<< HEAD
+  }, [sessionState, address, chainId, permissionType, isV3WalletConnectionActive])
+=======
   }, [sessionState, address, chainId, permissionType, isV3WalletConnectionActive, checkPermission])
+>>>>>>> upstream/master
 
   useEffect(() => {
     if (pendingFeeOptionConfirmation) {
@@ -335,6 +507,10 @@ export const Connected = () => {
       console.log('proof:', proof)
 
       // @ts-ignore
+<<<<<<< HEAD
+      const isValid = await validateEthProof(walletClient, publicClient, proof)
+      console.log('isValid?:', isValid)
+=======
       const isValidOnCurrentChain = await validateEthProof(walletClient, publicClient, proof)
 
       if (isValidOnCurrentChain) {
@@ -359,6 +535,7 @@ export const Connected = () => {
         console.log('[ETHAuth validate] success chain:', polygon.id)
       }
       console.log('isValid?:', isValidOnPolygon, { attemptedChains: [chainId, polygon.id] })
+>>>>>>> upstream/master
     } catch (e) {
       console.error(e)
     }
@@ -377,10 +554,14 @@ export const Connected = () => {
     if (permissionedTxnData) {
       setLastPermissionedTxnDataHash((permissionedTxnData as any).hash ?? permissionedTxnData)
     }
+<<<<<<< HEAD
+  }, [implicitTestTxnData, txnData2, txnData3, permissionedTxnData])
+=======
     if (walletTxnData) {
       setLastWalletTxnDataHash(walletTxnData)
     }
   }, [implicitTestTxnData, mintTxnData, txnData3, permissionedTxnData, walletTxnData])
+>>>>>>> upstream/master
 
   const domain = {
     name: 'Sequence Example',
@@ -536,9 +717,31 @@ export const Connected = () => {
       return
     }
 
+<<<<<<< HEAD
+    sendImplicitTestTransaction({
+      to: getEmitterContractAddress(window.location.origin),
+      value: 0n,
+      data: AbiFunction.getSelector(EMITTER_ABI[1])
+    })
+  }
+
+  const handleAddPermissions = async () => {
+    try {
+      const session = getSessionConfigForType(window.location.origin, chainId, permissionType)
+      if (session) {
+        await addExplicitSession(session, true)
+        alert('Permission added successfully!')
+      } else {
+        alert('No permissions to request for the selected type.')
+      }
+    } catch (e) {
+      console.error('Failed to add permissions:', e)
+      alert('Failed to add permissions.')
+=======
     const targetChainId = initialV3ChainId ?? connectedChainId ?? chainId
     if (!targetChainId) {
       return
+>>>>>>> upstream/master
     }
 
     try {
@@ -609,6 +812,16 @@ export const Connected = () => {
     })
   }
 
+  const runSendConditionallyAllowedV3Transaction = async () => {
+    if (!walletClient) {
+      return
+    }
+    sendPermissionedTransaction({
+      to: getEmitterContractAddress(window.location.origin),
+      data: AbiFunction.getSelector(EMITTER_ABI[0])
+    })
+  }
+
   const runSendUnsponsoredTransaction = async () => {
     if (!walletClient) {
       return
@@ -620,6 +833,19 @@ export const Connected = () => {
   }
 
   const runMintNFT = async () => {
+<<<<<<< HEAD
+    if (!walletClient) {
+      return
+    }
+
+    const [account] = await walletClient.getAddresses()
+
+    writeContract({
+      address: '0x0d402C63cAe0200F0723B3e6fa0914627a48462E',
+      abi,
+      functionName: 'awardItem',
+      args: [account, 'https://dev-metadata.sequence.app/projects/277/collections/62/tokens/0.json']
+=======
     if (!address) {
       return
     }
@@ -636,6 +862,7 @@ export const Connected = () => {
         to: '0x0d402C63cAe0200F0723B3e6fa0914627a48462E',
         data
       }
+>>>>>>> upstream/master
     })
   }
 
@@ -648,14 +875,20 @@ export const Connected = () => {
     setLastTxnDataHash2(undefined)
     setLastTxnDataHash3(undefined)
     setLastPermissionedTxnDataHash(undefined)
+<<<<<<< HEAD
+=======
     setLastWalletTxnDataHash(undefined)
+>>>>>>> upstream/master
     setIsMessageValid(undefined)
     setTypedDataSig(undefined)
     resetMintWalletTransaction()
     resetSendUnsponsoredTransaction()
     resetImplicitTestTransaction()
     resetPermissionedTxn()
+<<<<<<< HEAD
+=======
     resetWalletTransaction()
+>>>>>>> upstream/master
   }, [chainId, address])
 
   return (
@@ -756,7 +989,11 @@ export const Connected = () => {
             {hasImplicitSession && (
               <>
                 <Text className="mt-4" variant="small-bold" color="muted">
+<<<<<<< HEAD
+                  Test Implicit Permission transactions
+=======
                   with Implicit permission
+>>>>>>> upstream/master
                 </Text>
 
                 <CardButton
@@ -779,6 +1016,26 @@ export const Connected = () => {
               </>
             )}
 
+<<<<<<< HEAD
+            {isV3WalletConnectionActive && (
+              <>
+                <Text variant="small-bold" className="mt-4" color="muted">
+                  with V3 Explicit Permissions
+                </Text>
+
+                <div className="mb-2">
+                  <Select
+                    name="permissionType"
+                    label="Pick a permission type"
+                    onValueChange={val => setPermissionType(val as PermissionsType)}
+                    value={permissionType}
+                    options={[
+                      { label: 'Contract call (explicitEmit)', value: 'contractCall' },
+                      { label: 'USDC Transfer (Optimism only)', value: 'usdcTransfer' },
+                      { label: 'Combined (explicitEmit() + USDC transfer)', value: 'combined' }
+                    ]}
+                  />
+=======
             <Separator />
 
             {isV3WalletConnectionActive && (
@@ -804,6 +1061,7 @@ export const Connected = () => {
                       ]}
                     />
                   </div>
+>>>>>>> upstream/master
                   <div className="my-2 text-center">
                     {isCheckingPermission && (
                       <Text variant="small" color="muted">
@@ -815,11 +1073,14 @@ export const Connected = () => {
                         Permission already granted for this session.
                       </Text>
                     )}
+<<<<<<< HEAD
+=======
                     {checkPermissionError && (
                       <Text variant="small" color="negative">
                         Permission check failed: {checkPermissionError.message}
                       </Text>
                     )}
+>>>>>>> upstream/master
                   </div>
                 </div>
 
@@ -870,6 +1131,8 @@ export const Connected = () => {
                     Transaction failed: {permissionedTxnError.message}
                   </Text>
                 )}
+<<<<<<< HEAD
+=======
 
                 <CardButton
                   title="Send via wallet popup"
@@ -893,6 +1156,7 @@ export const Connected = () => {
                     Wallet transaction failed: {sendWalletTransactionError.message}
                   </Text>
                 )}
+>>>>>>> upstream/master
               </>
             )}
 

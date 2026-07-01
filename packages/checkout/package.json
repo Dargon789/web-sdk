@@ -18,7 +18,12 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
+    "!src/**/*.test-d.ts"
   ],
   "scripts": {
     "build": "pnpm build:clean && pnpm build:esm",

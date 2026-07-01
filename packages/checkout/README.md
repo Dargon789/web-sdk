@@ -36,13 +36,13 @@ const App = () => {
 }
 ```
 
-# NFT Checkout
+# NFT Checkout (Sequence Pay)
 
 <div align="center">
   <img src="../../public/docs/checkout-modal.png">
 </div>
 
-NFT Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
+Sequence Pay Checkout allows users to purchase NFTs using various payment methods. Users can pay with the main currency (e.g., ETH), swap tokens for payment, or use a credit card provided the smart contract is whitelisted (contact a member of the Sequence team to whitelist your contract for credit card payments).
 
 ## Basic Usage
 
@@ -100,7 +100,7 @@ const MyComponent = () => {
       recipientAddress: address,
       currencyAddress,
       collectionAddress,
-      creditCardProviders: ['transak'],
+      creditCardProviders: ['sardine'],
       copyrightText: 'ⓒ2024 Sequence',
       onSuccess: (txnHash?: string) => {
         console.log('success!', txnHash)
@@ -134,6 +134,8 @@ const MyComponent = () => {
 - **blockConfirmations**: The number of block confirmations required for the transaction to be considered successful and trigger `onSuccess`.
 - **onError**: Callback function triggered if an error has occurred before or after sending the transaction.
 
+<<<<<<< HEAD
+=======
 ## Utility functions
 
 The `@0xsequence/checkout` library indeed simplifies the integration of Web3 payment solutions by providing utility functions. One such function, `useERC1155SaleContractPaymentModal`, is tailored for use cases involving the minting of ERC-1155 tokens. This function works in conjunction with Sequence's wallet ecosystem and its deployable smart contract infrastructure, such as the ERC-1155 sale contract available through the [Sequence Builder](https://sequence.build).
@@ -175,6 +177,7 @@ const MyComponent = () => {
 };
 ```
 
+>>>>>>> upstream/master
 # Swap
 
 <div align="center">
@@ -274,6 +277,10 @@ const CustomCheckoutUI = () => {
     currencyAddress,
     collectionAddress,
     creditCardProvider: 'transak' as CreditCardProviders,
+    transakConfig: {
+      contractId,
+      apiKey: '5911d9ec-46b5-48fa-a755-d59a715ff0cf'
+    },
     onSuccess: (txnHash?: string) => {
       console.log('success!', txnHash)
     },

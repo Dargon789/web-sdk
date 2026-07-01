@@ -5,7 +5,10 @@ import {
   truncateAtMiddle,
   useAnalyticsContext,
   useFeeOptions,
+<<<<<<< HEAD
+=======
   useSendWalletTransaction,
+>>>>>>> upstream/master
   useWaasFeeOptions,
   useWallets,
   waitForTransactionReceipt,
@@ -33,7 +36,11 @@ import {
 import type { TokenBalance } from '@0xsequence/indexer'
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { encodeFunctionData, formatUnits, parseUnits, toHex, zeroAddress, type Hex } from 'viem'
+<<<<<<< HEAD
+import { useAccount, useChainId, useConfig, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+=======
 import { useChainId, useConfig, useConnection, usePublicClient, useSwitchChain, useWalletClient } from 'wagmi'
+>>>>>>> upstream/master
 
 import { AllButActiveWalletSelect } from '../../components/Select/AllButActiveWalletSelect.js'
 import { SendItemInfo } from '../../components/SendItemInfo.js'
@@ -75,7 +82,10 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
 
   const [pendingV3FeeConfirmation, confirmV3FeeOption, rejectV3FeeOption] = useFeeOptions()
   const [pendingWaasFeeConfirmation, confirmWaasFeeOption, rejectWaasFeeOption] = useWaasFeeOptions()
+<<<<<<< HEAD
+=======
   const { sendTransactionAsync: sendWalletTransactionAsync } = useSendWalletTransaction()
+>>>>>>> upstream/master
 
   const connectorType = (connector as ExtendedConnector | undefined)?.type
   const isWaasConnectorActive = connectorType === 'sequence-waas'
@@ -434,10 +444,16 @@ export const SendCoin = ({ chainId, contractAddress }: SendCoinProps) => {
                 size="lg"
                 type="submit"
                 disabled={!isNonZeroAmount || !isEthAddress(toAddress) || insufficientFunds || isSendTxnPending}
+<<<<<<< HEAD
+                label="Send"
+                rightIcon={ChevronRightIcon}
+              />
+=======
               >
                 Send
                 <ChevronRightIcon />
               </Button>
+>>>>>>> upstream/master
             )}
           </div>
         </>
