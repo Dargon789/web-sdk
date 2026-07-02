@@ -1,0 +1,4 @@
+{
+  "main": "dist/0xsequence-kit-hooks.cjs.js",
+  "module": "dist/0xsequence-kit-hooks.esm.js"
+}

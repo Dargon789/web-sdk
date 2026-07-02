@@ -7,10 +7,8 @@ export const useSequenceWaaS = () => {
   const { projectAccessKey } = useConfig()
   const { waasConfigKey } = useSocialLink()
 
-  const sequenceWaaS = new SequenceWaaS({
+  return new SequenceWaaS({
     projectAccessKey: projectAccessKey,
     waasConfigKey: waasConfigKey
   })
-
-  return sequenceWaaS
 }

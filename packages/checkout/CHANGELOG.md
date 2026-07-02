@@ -1,5 +1,25 @@
 # @0xsequence/checkout
 
+## 6.0.8
+
+### Patch Changes
+
+- Bug fixes
+- Updated dependencies
+- Updated dependencies [2112c21]
+  - @0xsequence/connect@6.0.8
+  - @0xsequence/hooks@6.0.8
+
+## 6.0.7
+
+### Patch Changes
+
+- Minor fee options improvement
+- Updated dependencies
+- Updated dependencies [96e70de]
+  - @0xsequence/connect@6.0.7
+  - @0xsequence/hooks@6.0.7
+
 ## 6.0.6
 
 ### Patch Changes
