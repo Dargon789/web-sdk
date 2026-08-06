@@ -37,7 +37,7 @@ const connectors = [
 ]
 
 /* @ts-expect-error-next-line */
-const transports: Record<number, HttpTransport> = {}
+import { WagmiProvider, createConfig, http, type HttpTransport } from 'wagmi'
 
 chains.forEach(chain => {
   const network = sequence.network.findNetworkConfig(sequence.network.allNetworks, chain.id)

@@ -17,7 +17,7 @@ import {
 } from '@0xsequence/design-system'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import { useMemo, useState } from 'react'
-import { useChainId, useChains, useConnection, useDisconnect, useSwitchChain } from 'wagmi'
+import { useAccount, useChainId, useChains, useDisconnect, useSwitchChain } from 'wagmi'
 
 export const Header = () => {
   const { theme, setTheme } = useTheme()
